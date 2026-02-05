@@ -1,0 +1,12 @@
+instance_id,engine,version,current_class,graviton_class,current_monthly_cost,projected_cost,monthly_savings,migration_risk,migration_method
+aws-luckyus-difynew-rw,postgres,16.10,db.r5.xlarge,db.r6g.xlarge,$483.55,$459.37,$24.18,MEDIUM,Modify with failover
+aws-luckyus-dify-rw,postgres,16.8,db.r5.xlarge,db.r6g.xlarge,$483.55,$459.37,$24.18,MEDIUM,Modify with failover
+aws-luckyus-pgilkmap-rw,postgres,17.4,db.m5.large,db.m6g.large,$172.27,$155.14,$17.13,MEDIUM,Modify with failover
+aws-luckyus-iluckyhealth-rw,mysql,8.0.40,db.t3.small,db.t4g.small,$34.25,$32.24,$2.01,MEDIUM,Modify with failover
+recovery-dbatest,mysql,8.0.40,db.t3.small,db.t4g.small,$34.25,$32.24,$2.01,MEDIUM,Modify with failover
+docdb-devops,docdb,5.0.0,db.t3.medium,db.t4g.medium,$34.25,$32.74,$1.51,MEDIUM,Modify with scheduled downtime
+docdb-devops2,docdb,5.0.0,db.t3.medium,db.t4g.medium,$34.25,$32.74,$1.51,MEDIUM,Modify with scheduled downtime
+docdb-devops3,docdb,5.0.0,db.t3.medium,db.t4g.medium,$34.25,$32.74,$1.51,MEDIUM,Modify with scheduled downtime
+docdb-iot,docdb,5.0.0,db.t3.medium,db.t4g.medium,$34.25,$32.74,$1.51,MEDIUM,Modify with scheduled downtime
+docdb-iot2,docdb,5.0.0,db.t3.medium,db.t4g.medium,$34.25,$32.74,$1.51,MEDIUM,Modify with scheduled downtime
+docdb-iot3,docdb,5.0.0,db.t3.medium,db.t4g.medium,$34.25,$32.74,$1.51,MEDIUM,Modify with scheduled downtime
