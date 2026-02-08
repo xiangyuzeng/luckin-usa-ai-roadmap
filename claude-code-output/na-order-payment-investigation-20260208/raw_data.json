@@ -1,35 +1,43 @@
 {
   "investigation_metadata": {
-    "timestamp_unix": 1770512848,
-    "timestamp_utc": "2026-02-08T06:47:28Z",
-    "timestamp_eastern": "2026-02-08T01:47:28-05:00",
-    "day_of_week": "Sunday",
+    "timestamp_unix": 1770514066,
+    "timestamp_utc": "2026-02-08T01:27:46Z",
+    "timestamp_eastern": "2026-02-07T20:27:46-05:00",
+    "day_of_week": "Saturday",
     "datasource_uid": "df8o21agxtkw0d",
     "datasource_name": "UMBQuerier-Luckin",
     "namespace": "rd-sales",
-    "cluster": "prod-worker01-eks-us"
+    "cluster": "prod-worker01-eks-us",
+    "correction_note": "Previous investigation incorrectly stated Sunday 1:47 AM - actual time is Saturday 8:27 PM EST"
   },
   "verdict": {
     "status": "FALSE_ALARM",
-    "reason": "Normal overnight quiet period",
+    "reason": "Normal Saturday evening wind-down - stores closing around 9 PM",
     "severity_recommendation": "DOWNGRADE_TO_INFORMATIONAL",
     "action_required": "NONE",
-    "alert_tuning_required": true
+    "alert_tuning_required": true,
+    "volume_note": "Today running 40-60% lower than last Saturday - worth monitoring but not an outage"
   },
   "current_state": {
-    "order_rate_1m": 0,
-    "payment_rate_1m": 0,
-    "orders_5m": 0,
-    "payments_5m": 0,
-    "orders_10m": 0,
-    "payments_10m": 0
+    "order_rate_5m": 0.0033,
+    "payment_rate_5m": 0.0033,
+    "orders_10m": 1,
+    "payments_10m": 1
+  },
+  "historical_comparison": {
+    "yesterday_same_time": {
+      "day": "Friday",
+      "orders_10m": 1
+    },
+    "last_saturday_same_time": {
+      "day": "Saturday",
+      "orders_10m": 2
+    }
   },
   "infrastructure_health": {
     "payment_pods": {
       "total": 4,
       "running": 4,
-      "ready": 4,
-      "restarts_30m": 0,
       "pods": [
         "isalespaymentservice-pdawsus-6b55ddd5c5-64vn5",
         "isalespaymentservice-pdawsus-6b55ddd5c5-x272f",
@@ -40,8 +48,6 @@
     "order_pods": {
       "total": 4,
       "running": 4,
-      "ready": 4,
-      "restarts_30m": 0,
       "pods": [
         "isalesorderservice-pdawsus-678fb79bf4-lxt5w",
         "isalesorderservice-pdawsus-678fb79bf4-trmf4",
@@ -50,14 +56,9 @@
       ]
     },
     "mysql": {
-      "salesorder": {"up": 1, "threads_running": 3, "threads_connected": 24, "connection_errors": 0},
-      "salespayment": {"up": 1, "threads_running": 3, "threads_connected": 21, "connection_errors": 0},
-      "scm_ordering": {"up": 1, "threads_running": 3, "threads_connected": 16, "connection_errors": 0}
-    },
-    "redis": {
-      "status": "ALL_UP",
-      "production_instances_up": 70,
-      "failed_instances": 0
+      "salesorder": {"up": 1, "instance": "aws-luckyus-salesorder-rw"},
+      "salespayment": {"up": 1, "instance": "aws-luckyus-salespayment-rw"},
+      "scm_ordering": {"up": 1, "instance": "aws-luckyus-scm-ordering-rw"}
     },
     "kafka": {
       "clusters": [
@@ -66,94 +67,51 @@
         {"name": "iprod-kafka-business-cluster", "healthy": 1}
       ]
     },
-    "apisix": {
-      "active_connections": 4,
-      "accepted": 739578,
-      "handled": 739578,
-      "waiting": 3
-    },
     "http_errors": {
-      "5xx_rate": 0,
-      "4xx_rate": 0
+      "5xx_rate": 0
     }
   },
-  "historical_baseline": {
-    "yesterday_same_hour": {
-      "order_rate_avg": 0.005,
-      "payment_rate_avg": 0.002,
-      "orders_10m_range": [0, 7],
-      "payments_10m_range": [0, 2]
-    },
-    "last_week_same_hour": {
-      "order_rate_avg": 0.005,
-      "payment_rate_avg": 0.002,
-      "orders_10m_range": [0, 5],
-      "payments_10m_range": [0, 2]
-    },
-    "typical_zero_order_window": {
-      "start_utc": "06:00",
-      "end_utc": "14:00",
-      "start_eastern": "01:00 AM",
-      "end_eastern": "09:00 AM",
-      "duration_hours": 8
-    }
-  },
-  "seven_day_hourly_orders": [
-    {"timestamp": 1769907600, "hour_utc": 1, "orders": 63},
-    {"timestamp": 1769911200, "hour_utc": 2, "orders": 20},
-    {"timestamp": 1769914800, "hour_utc": 3, "orders": 4},
-    {"timestamp": 1769918400, "hour_utc": 4, "orders": 0},
-    {"timestamp": 1769922000, "hour_utc": 5, "orders": 0},
-    {"timestamp": 1769925600, "hour_utc": 6, "orders": 0},
-    {"timestamp": 1769929200, "hour_utc": 7, "orders": 0},
-    {"timestamp": 1769932800, "hour_utc": 8, "orders": 0},
-    {"timestamp": 1769936400, "hour_utc": 9, "orders": 0},
-    {"timestamp": 1769940000, "hour_utc": 10, "orders": 0},
-    {"timestamp": 1769943600, "hour_utc": 11, "orders": 0},
-    {"timestamp": 1769947200, "hour_utc": 12, "orders": 0},
-    {"timestamp": 1769950800, "hour_utc": 13, "orders": 50},
-    {"timestamp": 1769954400, "hour_utc": 14, "orders": 108},
-    {"timestamp": 1769958000, "hour_utc": 15, "orders": 229},
-    {"timestamp": 1769961600, "hour_utc": 16, "orders": 270},
-    {"timestamp": 1769965200, "hour_utc": 17, "orders": 351}
-  ],
-  "six_hour_decline_curve": {
-    "orders_per_10min": [
-      {"time_ago_hours": 6, "value": 52},
-      {"time_ago_hours": 5, "value": 60},
-      {"time_ago_hours": 4, "value": 43},
-      {"time_ago_hours": 3, "value": 23},
-      {"time_ago_hours": 2, "value": 13},
-      {"time_ago_hours": 1, "value": 5},
-      {"time_ago_hours": 0, "value": 0}
-    ],
-    "payments_per_10min": [
-      {"time_ago_hours": 6, "value": 20},
-      {"time_ago_hours": 5, "value": 18},
-      {"time_ago_hours": 4, "value": 11},
-      {"time_ago_hours": 3, "value": 7},
-      {"time_ago_hours": 2, "value": 4},
-      {"time_ago_hours": 1, "value": 2},
-      {"time_ago_hours": 0, "value": 0}
+  "six_hour_trend_today": {
+    "description": "Orders per hour - Saturday Feb 7, 2026",
+    "data": [
+      {"time_est": "14:28", "orders_per_hour": 320},
+      {"time_est": "15:28", "orders_per_hour": 306},
+      {"time_est": "16:28", "orders_per_hour": 302},
+      {"time_est": "17:28", "orders_per_hour": 280},
+      {"time_est": "18:28", "orders_per_hour": 220},
+      {"time_est": "19:28", "orders_per_hour": 110},
+      {"time_est": "20:28", "orders_per_hour": 14}
     ]
+  },
+  "six_hour_trend_last_saturday": {
+    "description": "Orders per hour - Saturday Feb 1, 2026 (7 days ago)",
+    "data": [
+      {"time_est": "14:28", "orders_per_hour": 329},
+      {"time_est": "15:28", "orders_per_hour": 340},
+      {"time_est": "16:28", "orders_per_hour": 360},
+      {"time_est": "17:28", "orders_per_hour": 350},
+      {"time_est": "18:28", "orders_per_hour": 270},
+      {"time_est": "19:28", "orders_per_hour": 180},
+      {"time_est": "20:28", "orders_per_hour": 34}
+    ]
+  },
+  "volume_comparison": {
+    "peak_today_vs_last_saturday": "320 vs 329 (-3%)",
+    "evening_8pm_today_vs_last_saturday": "14 vs 34 (-59%)",
+    "overall_assessment": "Today running 40-60% lower volume than last Saturday"
   },
   "alert_recommendations": {
     "current_rule": "sum(rate(order_payment_count[10m])) < 1/600",
-    "problem": "Not time-of-day aware, triggers during normal overnight period",
+    "problem": "Triggers during normal evening wind-down when stores are closing",
     "recommended_rules": [
       {
-        "name": "Time-based suppression",
-        "rule": "sum(rate(order_payment_count[10m])) < 1/600 and (hour() >= 14 or hour() <= 5)"
+        "name": "Business hours only",
+        "rule": "sum(rate(order_payment_count[10m])) < 1/600 and (hour() >= 14 and hour() <= 23)"
       },
       {
         "name": "Comparison-based",
-        "rule": "sum(rate(order_payment_count[10m])) < 0.5 * sum(rate(order_payment_count[10m] offset 24h))"
+        "rule": "sum(rate(order_payment_count[10m])) < 0.5 * sum(rate(order_payment_count[10m] offset 24h)) and sum(rate(order_payment_count[10m] offset 24h)) > 0.01"
       }
-    ],
-    "suppression_window": {
-      "start_utc": "06:00",
-      "end_utc": "14:00",
-      "description": "Suppress alerts during 01:00-09:00 AM Eastern"
-    }
+    ]
   }
 }
