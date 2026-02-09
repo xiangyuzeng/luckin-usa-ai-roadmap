@@ -1,0 +1,12 @@
+# 独立 Git 仓库目录（不应被父仓库追踪）
+claude-code-output/
+eks-graviton-migration/
+elasticache-analysis/
+skills/
+sopprompt/
+
+# 常见忽略文件
+.DS_Store
+*.pyc
+__pycache__/
+.env
