@@ -1,0 +1,9 @@
+area_type,sample_stores,sample_count,avg_daily_cups,min_cups,max_cups,avg_weekday_pct,model_score,performance_tier,management_guidance
+university_tourist,"8th & Broadway",1,660,660,660,0.55,35,Tier 1 - Premium,"Best performing category. High foot traffic from students + tourists. Strong weekends. Priority target."
+commercial_transit_hub,"37th & Broadway",1,497,497,497,0.72,30,Tier 1 - Premium,"Major transit nodes with office + retail mix. High weekday volume. Pipeline: 211 Schermerhorn, 128 W 32nd."
+financial_office,"102 Fulton, 100 Maiden Ln",2,345,273,417,0.70,20,Tier 2 - Good,"Strong weekday performance but 40-60% weekend drop. Avoid opening two stores in same FiDi area."
+mixed_commercial,"28th & 6th",1,374,374,374,0.60,16,Tier 2 - Good,"Mixed-use neighborhoods provide balanced traffic. Moderate but sustainable."
+tourist_ethnic_enclave,"221 Grand",1,373,373,373,0.48,26,Tier 2 - Good,"Strong weekend tourist traffic. Chinatown/ethnic areas have Asian brand affinity advantage."
+theater_tourist,"54th & 8th",1,310,310,310,0.52,22,Tier 3 - Moderate,"Theater district has seasonal/show-dependent traffic. Good evenings but morning-weak."
+residential_mixed,"15th & 3rd",1,139,139,139,0.55,10,Tier 4 - Avoid,"WORST PERFORMING category. Despite 8 subway lines, residential areas cannot generate volume. Avoid."
+residential,None (projected),0,120,100,150,0.50,5,Tier 4 - Avoid,"Pure residential locations project below breakeven. 29th & 3rd and 23rd & 1st expected to lose money."

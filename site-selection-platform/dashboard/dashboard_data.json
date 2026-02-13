@@ -1,0 +1,108 @@
+{
+  "metadata": {
+    "report_date": "2026-02-13",
+    "model_version": "1.0",
+    "budget_constraint": 20000,
+    "budget_unit": "USD/month",
+    "location_scope": "New York City",
+    "data_period": "2025-06-30 to 2026-02-13",
+    "active_stores_analyzed": 8,
+    "pipeline_locations_scored": 19
+  },
+  "kpi_summary": {
+    "avg_cups_all_stores": 380,
+    "median_cups_all_stores": 373,
+    "top_performer": {"name": "8th & Broadway", "cups": 660},
+    "bottom_performer": {"name": "15th & 3rd", "cups": 139},
+    "breakeven_cups_at_budget": 290,
+    "locations_within_budget": 17,
+    "locations_above_breakeven": 11,
+    "avg_contribution_margin": 2.30,
+    "avg_cup_price": 5.50
+  },
+  "scoring_model": {
+    "factors": [
+      {"name": "Area Type", "max_score": 35, "weight": "35%", "insight": "Strongest predictor. University/tourist=660cups vs residential=139cups"},
+      {"name": "Subway Access", "max_score": 20, "weight": "20%", "insight": "Amplifies good locations. Does NOT save bad ones (15th & 3rd: 8 lines, 139 cups)"},
+      {"name": "Weekend Resilience", "max_score": 15, "weight": "15%", "insight": "Balanced stores outperform office-only by 40-60% on weekends"},
+      {"name": "Cannibalization", "max_score": -15, "weight": "15%", "insight": "Stores <0.25mi apart see 35% lower performance (100 Maiden vs 102 Fulton)"},
+      {"name": "Rent Value", "max_score": 15, "weight": "15%", "insight": "Lower rent = faster breakeven. $14K rent needs 203 cups vs $20K needs 290"}
+    ]
+  },
+  "active_stores": [
+    {"name": "8th & Broadway", "lat": 40.730548, "lon": -73.992624, "cups": 660, "area_type": "university_tourist", "subway": 7, "trend": "Growing", "tier": "Top"},
+    {"name": "37th & Broadway", "lat": 40.752559, "lon": -73.987833, "cups": 497, "area_type": "commercial_transit_hub", "subway": 11, "trend": "Stable", "tier": "Top"},
+    {"name": "102 Fulton", "lat": 40.709656, "lon": -74.00679, "cups": 417, "area_type": "financial_office", "subway": 8, "trend": "Declining", "tier": "Mid"},
+    {"name": "28th & 6th", "lat": 40.745666, "lon": -73.990592, "cups": 374, "area_type": "mixed_commercial", "subway": 3, "trend": "Declining", "tier": "Mid"},
+    {"name": "221 Grand", "lat": 40.718571, "lon": -73.995919, "cups": 373, "area_type": "tourist_ethnic_enclave", "subway": 7, "trend": "Stable/Mixed", "tier": "Mid"},
+    {"name": "54th & 8th", "lat": 40.76465, "lon": -73.984773, "cups": 310, "area_type": "theater_tourist", "subway": 4, "trend": "Declining", "tier": "Mid"},
+    {"name": "100 Maiden Ln", "lat": 40.706675, "lon": -74.007198, "cups": 273, "area_type": "financial_office", "subway": 8, "trend": "Declining", "tier": "Low"},
+    {"name": "15th & 3rd", "lat": 40.734028, "lon": -73.986224, "cups": 139, "area_type": "residential_mixed", "subway": 8, "trend": "Stable", "tier": "Bottom"}
+  ],
+  "pipeline_ranked": [
+    {"rank": 1, "name": "211 Schermerhorn", "lat": 40.688944, "lon": -73.985381, "score": 75, "cups_proj": 607, "rent": 14000, "rent_rev_pct": 14, "profit_est": 25776, "budget_ok": true, "recommendation": "Strongly Recommended"},
+    {"rank": 2, "name": "154 Bleecker", "lat": 40.728185, "lon": -73.999602, "score": 73, "cups_proj": 586, "rent": 18000, "rent_rev_pct": 19, "profit_est": 37277, "budget_ok": true, "recommendation": "Strongly Recommended"},
+    {"rank": 3, "name": "128 W 32nd St", "lat": 40.748921, "lon": -73.990053, "score": 63, "cups_proj": 481, "rent": 15000, "rent_rev_pct": 19, "profit_est": 28187, "budget_ok": true, "recommendation": "Recommended"},
+    {"rank": 4, "name": "Jackson Ave - LIC", "lat": 40.748002, "lon": -73.941039, "score": 58, "cups_proj": 429, "rent": 11000, "rent_rev_pct": 16, "profit_est": 21957, "budget_ok": true, "recommendation": "Recommended"},
+    {"rank": 5, "name": "35th & 5th", "lat": 40.749116, "lon": -73.984616, "score": 56, "cups_proj": 408, "rent": 19000, "rent_rev_pct": 28, "profit_est": 12254, "budget_ok": true, "recommendation": "Recommended with Caution"},
+    {"rank": 6, "name": "108th & Broadway", "lat": 40.802905, "lon": -73.967925, "score": 56, "cups_proj": 408, "rent": 12000, "rent_rev_pct": 18, "profit_est": 15254, "budget_ok": true, "recommendation": "Recommended with Caution"},
+    {"rank": 7, "name": "16th & 6th", "lat": 40.738418, "lon": -73.996378, "score": 54, "cups_proj": 387, "rent": 17000, "rent_rev_pct": 27, "profit_est": 8967, "budget_ok": true, "recommendation": "Moderate"},
+    {"rank": 8, "name": "180 Varick", "lat": 40.727598, "lon": -74.005142, "score": 51, "cups_proj": 355, "rent": 16000, "rent_rev_pct": 27, "profit_est": 5535, "budget_ok": true, "recommendation": "Moderate"},
+    {"rank": 9, "name": "41st & Lexington", "lat": 40.750579, "lon": -73.976431, "score": 47, "cups_proj": 313, "rent": 17000, "rent_rev_pct": 33, "profit_est": 775, "budget_ok": true, "recommendation": "Marginal"},
+    {"rank": 10, "name": "23rd & 8th", "lat": 40.744798, "lon": -73.998477, "score": 46, "cups_proj": 303, "rent": 14000, "rent_rev_pct": 28, "profit_est": 1999, "budget_ok": true, "recommendation": "Marginal"},
+    {"rank": 11, "name": "48th & 3rd", "lat": 40.754363, "lon": -73.972121, "score": 45, "cups_proj": 292, "rent": 14000, "rent_rev_pct": 29, "profit_est": 876, "budget_ok": true, "recommendation": "Marginal"},
+    {"rank": 12, "name": "Reade & Broadway", "lat": 40.714923, "lon": -74.006079, "score": 44, "cups_proj": 282, "rent": 13000, "rent_rev_pct": 28, "profit_est": 4490, "budget_ok": true, "recommendation": "Marginal"},
+    {"rank": 13, "name": "25 Park Row", "lat": 40.715592, "lon": -74.009858, "score": 44, "cups_proj": 282, "rent": 14000, "rent_rev_pct": 30, "profit_est": 2530, "budget_ok": true, "recommendation": "Marginal"},
+    {"rank": 14, "name": "40th & 10th", "lat": 40.758497, "lon": -73.996096, "score": 42, "cups_proj": 261, "rent": 16000, "rent_rev_pct": 37, "profit_est": -3935, "budget_ok": true, "recommendation": "Not Recommended"},
+    {"rank": 15, "name": "29th & 3rd", "lat": 40.742275, "lon": -73.980474, "score": 41, "cups_proj": 250, "rent": 11000, "rent_rev_pct": 27, "profit_est": -2175, "budget_ok": true, "recommendation": "Not Recommended"},
+    {"rank": 16, "name": "148 Chambers", "lat": 40.715636, "lon": -74.009908, "score": 40, "cups_proj": 240, "rent": 15000, "rent_rev_pct": 38, "profit_est": -6600, "budget_ok": true, "recommendation": "Not Recommended"},
+    {"rank": 17, "name": "Grand Central Terminal", "lat": 40.754291, "lon": -73.977128, "score": 56, "cups_proj": 408, "rent": 25000, "rent_rev_pct": 37, "profit_est": 5320, "budget_ok": false, "recommendation": "Over Budget"},
+    {"rank": 18, "name": "52nd & Madison", "lat": 40.75891, "lon": -73.975197, "score": 32, "cups_proj": 156, "rent": 22000, "rent_rev_pct": 85, "profit_est": -17160, "budget_ok": false, "recommendation": "Over Budget"},
+    {"rank": 19, "name": "23rd & 1st", "lat": 40.736731, "lon": -73.978947, "score": 31, "cups_proj": 145, "rent": 10000, "rent_rev_pct": 42, "profit_est": -7475, "budget_ok": true, "recommendation": "Not Recommended"}
+  ],
+  "chart_data": {
+    "area_type_vs_cups": [
+      {"area_type": "University/Tourist", "avg_cups": 660, "color": "#22c55e"},
+      {"area_type": "Commercial Transit Hub", "avg_cups": 497, "color": "#3b82f6"},
+      {"area_type": "Financial Office", "avg_cups": 345, "color": "#f59e0b"},
+      {"area_type": "Mixed Commercial", "avg_cups": 374, "color": "#8b5cf6"},
+      {"area_type": "Tourist/Ethnic Enclave", "avg_cups": 373, "color": "#06b6d4"},
+      {"area_type": "Theater/Tourist", "avg_cups": 310, "color": "#ec4899"},
+      {"area_type": "Residential Mixed", "avg_cups": 139, "color": "#ef4444"}
+    ],
+    "score_vs_projected_cups": [
+      {"name": "211 Schermerhorn", "score": 75, "cups": 607},
+      {"name": "154 Bleecker", "score": 73, "cups": 586},
+      {"name": "128 W 32nd St", "score": 63, "cups": 481},
+      {"name": "Jackson Ave - LIC", "score": 58, "cups": 429},
+      {"name": "35th & 5th", "score": 56, "cups": 408},
+      {"name": "108th & Broadway", "score": 56, "cups": 408},
+      {"name": "16th & 6th", "score": 54, "cups": 387},
+      {"name": "180 Varick", "score": 51, "cups": 355},
+      {"name": "41st & Lexington", "score": 47, "cups": 313},
+      {"name": "23rd & 8th", "score": 46, "cups": 303}
+    ],
+    "rent_vs_profit": [
+      {"name": "211 Schermerhorn", "rent": 14000, "profit": 25776},
+      {"name": "154 Bleecker", "rent": 18000, "profit": 37277},
+      {"name": "128 W 32nd St", "rent": 15000, "profit": 28187},
+      {"name": "Jackson Ave - LIC", "rent": 11000, "profit": 21957},
+      {"name": "35th & 5th", "rent": 19000, "profit": 12254},
+      {"name": "108th & Broadway", "rent": 12000, "profit": 15254},
+      {"name": "40th & 10th", "rent": 16000, "profit": -3935},
+      {"name": "29th & 3rd", "rent": 11000, "profit": -2175},
+      {"name": "23rd & 1st", "rent": 10000, "profit": -7475}
+    ],
+    "breakeven_analysis": [
+      {"rent_level": 10000, "breakeven_cups": 145, "label": "$10K rent"},
+      {"rent_level": 12000, "breakeven_cups": 174, "label": "$12K rent"},
+      {"rent_level": 14000, "breakeven_cups": 203, "label": "$14K rent"},
+      {"rent_level": 15000, "breakeven_cups": 217, "label": "$15K rent"},
+      {"rent_level": 16000, "breakeven_cups": 232, "label": "$16K rent"},
+      {"rent_level": 18000, "breakeven_cups": 261, "label": "$18K rent"},
+      {"rent_level": 20000, "breakeven_cups": 290, "label": "$20K rent (budget)"},
+      {"rent_level": 22000, "breakeven_cups": 319, "label": "$22K rent"},
+      {"rent_level": 25000, "breakeven_cups": 362, "label": "$25K rent"}
+    ]
+  }
+}

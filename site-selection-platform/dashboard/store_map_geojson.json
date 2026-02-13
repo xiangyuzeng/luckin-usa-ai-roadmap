@@ -1,0 +1,90 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"name": "8th & Broadway", "type": "active", "cups": 660, "trend": "Growing", "area_type": "university_tourist", "tier": "Top", "color": "#22c55e", "icon": "star"},
+      "geometry": {"type": "Point", "coordinates": [-73.992624, 40.730548]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "37th & Broadway", "type": "active", "cups": 497, "trend": "Stable", "area_type": "commercial_transit_hub", "tier": "Top", "color": "#3b82f6", "icon": "circle"},
+      "geometry": {"type": "Point", "coordinates": [-73.987833, 40.752559]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "102 Fulton", "type": "active", "cups": 417, "trend": "Declining", "area_type": "financial_office", "tier": "Mid", "color": "#f59e0b", "icon": "circle"},
+      "geometry": {"type": "Point", "coordinates": [-74.00679, 40.709656]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "28th & 6th", "type": "active", "cups": 374, "trend": "Declining", "area_type": "mixed_commercial", "tier": "Mid", "color": "#f59e0b", "icon": "circle"},
+      "geometry": {"type": "Point", "coordinates": [-73.990592, 40.745666]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "221 Grand", "type": "active", "cups": 373, "trend": "Stable/Mixed", "area_type": "tourist_ethnic_enclave", "tier": "Mid", "color": "#f59e0b", "icon": "circle"},
+      "geometry": {"type": "Point", "coordinates": [-73.995919, 40.718571]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "54th & 8th", "type": "active", "cups": 310, "trend": "Declining", "area_type": "theater_tourist", "tier": "Mid", "color": "#f59e0b", "icon": "circle"},
+      "geometry": {"type": "Point", "coordinates": [-73.984773, 40.76465]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "100 Maiden Ln", "type": "active", "cups": 273, "trend": "Declining", "area_type": "financial_office", "tier": "Low", "color": "#ef4444", "icon": "circle"},
+      "geometry": {"type": "Point", "coordinates": [-74.007198, 40.706675]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "15th & 3rd", "type": "active", "cups": 139, "trend": "Stable", "area_type": "residential_mixed", "tier": "Bottom", "color": "#ef4444", "icon": "triangle-down"},
+      "geometry": {"type": "Point", "coordinates": [-73.986224, 40.734028]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "211 Schermerhorn", "type": "pipeline", "rank": 1, "score": 75, "cups_proj": 607, "rent": 14000, "recommendation": "Strongly Recommended", "color": "#22c55e", "icon": "star"},
+      "geometry": {"type": "Point", "coordinates": [-73.985381, 40.688944]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "154 Bleecker", "type": "pipeline", "rank": 2, "score": 73, "cups_proj": 586, "rent": 18000, "recommendation": "Strongly Recommended", "color": "#22c55e", "icon": "star"},
+      "geometry": {"type": "Point", "coordinates": [-73.999602, 40.728185]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "128 W 32nd St", "type": "pipeline", "rank": 3, "score": 63, "cups_proj": 481, "rent": 15000, "recommendation": "Recommended", "color": "#3b82f6", "icon": "diamond"},
+      "geometry": {"type": "Point", "coordinates": [-73.990053, 40.748921]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Jackson Ave - LIC", "type": "pipeline", "rank": 4, "score": 58, "cups_proj": 429, "rent": 11000, "recommendation": "Recommended", "color": "#3b82f6", "icon": "diamond"},
+      "geometry": {"type": "Point", "coordinates": [-73.941039, 40.748002]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "35th & 5th", "type": "pipeline", "rank": 5, "score": 56, "cups_proj": 408, "rent": 19000, "recommendation": "Caution", "color": "#f59e0b", "icon": "square"},
+      "geometry": {"type": "Point", "coordinates": [-73.984616, 40.749116]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "108th & Broadway", "type": "pipeline", "rank": 6, "score": 56, "cups_proj": 408, "rent": 12000, "recommendation": "Caution", "color": "#f59e0b", "icon": "square"},
+      "geometry": {"type": "Point", "coordinates": [-73.967925, 40.802905]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Grand Central Terminal", "type": "pipeline", "rank": 17, "score": 56, "cups_proj": 408, "rent": 25000, "recommendation": "Over Budget", "color": "#ef4444", "icon": "x"},
+      "geometry": {"type": "Point", "coordinates": [-73.977128, 40.754291]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "52nd & Madison", "type": "pipeline", "rank": 18, "score": 32, "cups_proj": 156, "rent": 22000, "recommendation": "Over Budget", "color": "#ef4444", "icon": "x"},
+      "geometry": {"type": "Point", "coordinates": [-73.975197, 40.75891]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "23rd & 1st", "type": "pipeline", "rank": 19, "score": 31, "cups_proj": 145, "rent": 10000, "recommendation": "Not Recommended", "color": "#ef4444", "icon": "x"},
+      "geometry": {"type": "Point", "coordinates": [-73.978947, 40.736731]}
+    }
+  ]
+}

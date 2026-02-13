@@ -1,0 +1,1139 @@
+store_name,date,day_of_week,cup_count
+100 Maiden Ln,2025-09-09,Tuesday,367.0
+100 Maiden Ln,2025-09-10,Wednesday,327.0
+100 Maiden Ln,2025-09-11,Thursday,284.0
+100 Maiden Ln,2025-09-12,Friday,256.0
+100 Maiden Ln,2025-09-13,Saturday,214.0
+100 Maiden Ln,2025-09-14,Sunday,180.0
+100 Maiden Ln,2025-09-15,Monday,297.0
+100 Maiden Ln,2025-09-16,Tuesday,333.0
+100 Maiden Ln,2025-09-17,Wednesday,339.0
+100 Maiden Ln,2025-09-18,Thursday,393.0
+100 Maiden Ln,2025-09-19,Friday,334.0
+100 Maiden Ln,2025-09-20,Saturday,255.0
+100 Maiden Ln,2025-09-21,Sunday,239.0
+100 Maiden Ln,2025-09-22,Monday,314.0
+100 Maiden Ln,2025-09-23,Tuesday,374.0
+100 Maiden Ln,2025-09-24,Wednesday,412.0
+100 Maiden Ln,2025-09-25,Thursday,311.0
+100 Maiden Ln,2025-09-26,Friday,355.0
+100 Maiden Ln,2025-09-27,Saturday,275.0
+100 Maiden Ln,2025-09-28,Sunday,235.0
+100 Maiden Ln,2025-09-29,Monday,316.0
+100 Maiden Ln,2025-09-30,Tuesday,361.0
+100 Maiden Ln,2025-10-01,Wednesday,388.0
+100 Maiden Ln,2025-10-02,Thursday,406.0
+100 Maiden Ln,2025-10-03,Friday,363.0
+100 Maiden Ln,2025-10-04,Saturday,242.0
+100 Maiden Ln,2025-10-05,Sunday,255.0
+100 Maiden Ln,2025-10-06,Monday,342.0
+100 Maiden Ln,2025-10-07,Tuesday,357.0
+100 Maiden Ln,2025-10-08,Wednesday,325.0
+100 Maiden Ln,2025-10-09,Thursday,322.0
+100 Maiden Ln,2025-10-10,Friday,268.0
+100 Maiden Ln,2025-10-11,Saturday,245.0
+100 Maiden Ln,2025-10-12,Sunday,187.0
+100 Maiden Ln,2025-10-13,Monday,196.0
+100 Maiden Ln,2025-10-14,Tuesday,294.0
+100 Maiden Ln,2025-10-15,Wednesday,353.0
+100 Maiden Ln,2025-10-16,Thursday,324.0
+100 Maiden Ln,2025-10-17,Friday,291.0
+100 Maiden Ln,2025-10-18,Saturday,223.0
+100 Maiden Ln,2025-10-19,Sunday,199.0
+100 Maiden Ln,2025-10-20,Monday,290.0
+100 Maiden Ln,2025-10-21,Tuesday,309.0
+100 Maiden Ln,2025-10-22,Wednesday,315.0
+100 Maiden Ln,2025-10-23,Thursday,294.0
+100 Maiden Ln,2025-10-24,Friday,318.0
+100 Maiden Ln,2025-10-25,Saturday,188.0
+100 Maiden Ln,2025-10-26,Sunday,192.0
+100 Maiden Ln,2025-10-27,Monday,263.0
+100 Maiden Ln,2025-10-28,Tuesday,285.0
+100 Maiden Ln,2025-10-29,Wednesday,329.0
+100 Maiden Ln,2025-10-30,Thursday,234.0
+100 Maiden Ln,2025-10-31,Friday,280.0
+100 Maiden Ln,2025-11-01,Saturday,199.0
+100 Maiden Ln,2025-11-02,Sunday,210.0
+100 Maiden Ln,2025-11-03,Monday,303.0
+100 Maiden Ln,2025-11-04,Tuesday,362.0
+100 Maiden Ln,2025-11-05,Wednesday,375.0
+100 Maiden Ln,2025-11-06,Thursday,282.0
+100 Maiden Ln,2025-11-07,Friday,279.0
+100 Maiden Ln,2025-11-08,Saturday,194.0
+100 Maiden Ln,2025-11-09,Sunday,155.0
+100 Maiden Ln,2025-11-10,Monday,243.0
+100 Maiden Ln,2025-11-11,Tuesday,206.0
+100 Maiden Ln,2025-11-12,Wednesday,319.0
+100 Maiden Ln,2025-11-13,Thursday,302.0
+100 Maiden Ln,2025-11-14,Friday,249.0
+100 Maiden Ln,2025-11-15,Saturday,199.0
+100 Maiden Ln,2025-11-16,Sunday,173.0
+100 Maiden Ln,2025-11-17,Monday,278.0
+100 Maiden Ln,2025-11-18,Tuesday,291.0
+100 Maiden Ln,2025-11-19,Wednesday,272.0
+100 Maiden Ln,2025-11-20,Thursday,270.0
+100 Maiden Ln,2025-11-21,Friday,243.0
+100 Maiden Ln,2025-11-22,Saturday,145.0
+100 Maiden Ln,2025-11-23,Sunday,161.0
+100 Maiden Ln,2025-11-24,Monday,249.0
+100 Maiden Ln,2025-11-25,Tuesday,271.0
+100 Maiden Ln,2025-11-26,Wednesday,193.0
+100 Maiden Ln,2025-11-27,Thursday,5.0
+100 Maiden Ln,2025-11-28,Friday,124.0
+100 Maiden Ln,2025-11-29,Saturday,96.0
+100 Maiden Ln,2025-11-30,Sunday,124.0
+100 Maiden Ln,2025-12-01,Monday,267.0
+100 Maiden Ln,2025-12-02,Tuesday,229.0
+100 Maiden Ln,2025-12-03,Wednesday,285.0
+100 Maiden Ln,2025-12-04,Thursday,284.0
+100 Maiden Ln,2025-12-05,Friday,207.0
+100 Maiden Ln,2025-12-06,Saturday,173.0
+100 Maiden Ln,2025-12-07,Sunday,133.0
+100 Maiden Ln,2025-12-08,Monday,224.0
+100 Maiden Ln,2025-12-09,Tuesday,253.0
+100 Maiden Ln,2025-12-10,Wednesday,244.0
+100 Maiden Ln,2025-12-11,Thursday,236.0
+100 Maiden Ln,2025-12-12,Friday,205.0
+100 Maiden Ln,2025-12-13,Saturday,151.0
+100 Maiden Ln,2025-12-14,Sunday,131.0
+100 Maiden Ln,2025-12-15,Monday,163.0
+100 Maiden Ln,2025-12-16,Tuesday,231.0
+100 Maiden Ln,2025-12-17,Wednesday,216.0
+100 Maiden Ln,2025-12-18,Thursday,231.0
+100 Maiden Ln,2025-12-19,Friday,174.0
+100 Maiden Ln,2025-12-20,Saturday,139.0
+100 Maiden Ln,2025-12-21,Sunday,138.0
+100 Maiden Ln,2025-12-22,Monday,203.0
+100 Maiden Ln,2025-12-23,Tuesday,186.0
+100 Maiden Ln,2025-12-24,Wednesday,125.0
+100 Maiden Ln,2025-12-26,Friday,124.0
+100 Maiden Ln,2025-12-27,Saturday,86.0
+100 Maiden Ln,2025-12-28,Sunday,75.0
+100 Maiden Ln,2025-12-29,Monday,157.0
+100 Maiden Ln,2025-12-30,Tuesday,163.0
+100 Maiden Ln,2025-12-31,Wednesday,162.0
+100 Maiden Ln,2026-01-01,Thursday,121.0
+100 Maiden Ln,2026-01-02,Friday,148.0
+100 Maiden Ln,2026-01-03,Saturday,100.0
+100 Maiden Ln,2026-01-04,Sunday,111.0
+100 Maiden Ln,2026-01-05,Monday,237.0
+100 Maiden Ln,2026-01-06,Tuesday,249.0
+100 Maiden Ln,2026-01-07,Wednesday,246.0
+100 Maiden Ln,2026-01-08,Thursday,268.0
+100 Maiden Ln,2026-01-09,Friday,222.0
+100 Maiden Ln,2026-01-10,Saturday,121.0
+100 Maiden Ln,2026-01-11,Sunday,124.0
+100 Maiden Ln,2026-01-12,Monday,228.0
+100 Maiden Ln,2026-01-13,Tuesday,262.0
+100 Maiden Ln,2026-01-14,Wednesday,253.0
+100 Maiden Ln,2026-01-15,Thursday,262.0
+100 Maiden Ln,2026-01-16,Friday,230.0
+100 Maiden Ln,2026-01-17,Saturday,146.0
+100 Maiden Ln,2026-01-18,Sunday,105.0
+100 Maiden Ln,2026-01-19,Monday,162.0
+100 Maiden Ln,2026-01-20,Tuesday,253.0
+100 Maiden Ln,2026-01-21,Wednesday,225.0
+100 Maiden Ln,2026-01-22,Thursday,266.0
+100 Maiden Ln,2026-01-23,Friday,193.0
+100 Maiden Ln,2026-01-24,Saturday,118.0
+100 Maiden Ln,2026-01-26,Monday,132.0
+100 Maiden Ln,2026-01-27,Tuesday,213.0
+100 Maiden Ln,2026-01-28,Wednesday,207.0
+100 Maiden Ln,2026-01-29,Thursday,203.0
+100 Maiden Ln,2026-01-30,Friday,196.0
+100 Maiden Ln,2026-01-31,Saturday,116.0
+100 Maiden Ln,2026-02-01,Sunday,105.0
+100 Maiden Ln,2026-02-02,Monday,189.0
+100 Maiden Ln,2026-02-03,Tuesday,232.0
+100 Maiden Ln,2026-02-04,Wednesday,238.0
+100 Maiden Ln,2026-02-05,Thursday,223.0
+100 Maiden Ln,2026-02-06,Friday,201.0
+100 Maiden Ln,2026-02-07,Saturday,125.0
+100 Maiden Ln,2026-02-08,Sunday,110.0
+100 Maiden Ln,2026-02-09,Monday,79.0
+100 Maiden Ln,2026-02-10,Tuesday,217.0
+102 Fulton,2025-08-28,Thursday,575.0
+102 Fulton,2025-08-29,Friday,510.0
+102 Fulton,2025-08-30,Saturday,497.0
+102 Fulton,2025-08-31,Sunday,414.0
+102 Fulton,2025-09-01,Monday,401.0
+102 Fulton,2025-09-02,Tuesday,430.0
+102 Fulton,2025-09-03,Wednesday,520.0
+102 Fulton,2025-09-04,Thursday,532.0
+102 Fulton,2025-09-05,Friday,506.0
+102 Fulton,2025-09-06,Saturday,326.0
+102 Fulton,2025-09-07,Sunday,297.0
+102 Fulton,2025-09-08,Monday,461.0
+102 Fulton,2025-09-09,Tuesday,470.0
+102 Fulton,2025-09-10,Wednesday,430.0
+102 Fulton,2025-09-11,Thursday,489.0
+102 Fulton,2025-09-12,Friday,409.0
+102 Fulton,2025-09-13,Saturday,381.0
+102 Fulton,2025-09-14,Sunday,357.0
+102 Fulton,2025-09-15,Monday,490.0
+102 Fulton,2025-09-16,Tuesday,511.0
+102 Fulton,2025-09-17,Wednesday,488.0
+102 Fulton,2025-09-18,Thursday,496.0
+102 Fulton,2025-09-19,Friday,485.0
+102 Fulton,2025-09-20,Saturday,311.0
+102 Fulton,2025-09-21,Sunday,331.0
+102 Fulton,2025-09-22,Monday,410.0
+102 Fulton,2025-09-23,Tuesday,487.0
+102 Fulton,2025-09-24,Wednesday,546.0
+102 Fulton,2025-09-25,Thursday,477.0
+102 Fulton,2025-09-26,Friday,453.0
+102 Fulton,2025-09-27,Saturday,362.0
+102 Fulton,2025-09-28,Sunday,373.0
+102 Fulton,2025-09-29,Monday,460.0
+102 Fulton,2025-09-30,Tuesday,541.0
+102 Fulton,2025-10-01,Wednesday,568.0
+102 Fulton,2025-10-02,Thursday,488.0
+102 Fulton,2025-10-03,Friday,515.0
+102 Fulton,2025-10-04,Saturday,422.0
+102 Fulton,2025-10-05,Sunday,361.0
+102 Fulton,2025-10-06,Monday,505.0
+102 Fulton,2025-10-07,Tuesday,539.0
+102 Fulton,2025-10-08,Wednesday,508.0
+102 Fulton,2025-10-09,Thursday,543.0
+102 Fulton,2025-10-10,Friday,466.0
+102 Fulton,2025-10-11,Saturday,340.0
+102 Fulton,2025-10-12,Sunday,253.0
+102 Fulton,2025-10-13,Monday,278.0
+102 Fulton,2025-10-14,Tuesday,488.0
+102 Fulton,2025-10-15,Wednesday,505.0
+102 Fulton,2025-10-16,Thursday,483.0
+102 Fulton,2025-10-17,Friday,472.0
+102 Fulton,2025-10-18,Saturday,392.0
+102 Fulton,2025-10-19,Sunday,311.0
+102 Fulton,2025-10-20,Monday,379.0
+102 Fulton,2025-10-21,Tuesday,452.0
+102 Fulton,2025-10-22,Wednesday,496.0
+102 Fulton,2025-10-23,Thursday,479.0
+102 Fulton,2025-10-24,Friday,472.0
+102 Fulton,2025-10-25,Saturday,380.0
+102 Fulton,2025-10-26,Sunday,320.0
+102 Fulton,2025-10-27,Monday,411.0
+102 Fulton,2025-10-28,Tuesday,449.0
+102 Fulton,2025-10-29,Wednesday,578.0
+102 Fulton,2025-10-30,Thursday,380.0
+102 Fulton,2025-10-31,Friday,471.0
+102 Fulton,2025-11-01,Saturday,357.0
+102 Fulton,2025-11-02,Sunday,288.0
+102 Fulton,2025-11-03,Monday,455.0
+102 Fulton,2025-11-04,Tuesday,481.0
+102 Fulton,2025-11-05,Wednesday,533.0
+102 Fulton,2025-11-06,Thursday,516.0
+102 Fulton,2025-11-07,Friday,450.0
+102 Fulton,2025-11-08,Saturday,349.0
+102 Fulton,2025-11-09,Sunday,261.0
+102 Fulton,2025-11-10,Monday,446.0
+102 Fulton,2025-11-11,Tuesday,376.0
+102 Fulton,2025-11-12,Wednesday,521.0
+102 Fulton,2025-11-13,Thursday,412.0
+102 Fulton,2025-11-14,Friday,418.0
+102 Fulton,2025-11-15,Saturday,307.0
+102 Fulton,2025-11-16,Sunday,266.0
+102 Fulton,2025-11-17,Monday,404.0
+102 Fulton,2025-11-18,Tuesday,505.0
+102 Fulton,2025-11-19,Wednesday,412.0
+102 Fulton,2025-11-20,Thursday,509.0
+102 Fulton,2025-11-21,Friday,459.0
+102 Fulton,2025-11-22,Saturday,285.0
+102 Fulton,2025-11-23,Sunday,231.0
+102 Fulton,2025-11-24,Monday,406.0
+102 Fulton,2025-11-25,Tuesday,417.0
+102 Fulton,2025-11-26,Wednesday,367.0
+102 Fulton,2025-11-27,Thursday,272.0
+102 Fulton,2025-11-28,Friday,232.0
+102 Fulton,2025-11-29,Saturday,240.0
+102 Fulton,2025-11-30,Sunday,205.0
+102 Fulton,2025-12-01,Monday,463.0
+102 Fulton,2025-12-02,Tuesday,403.0
+102 Fulton,2025-12-03,Wednesday,490.0
+102 Fulton,2025-12-04,Thursday,433.0
+102 Fulton,2025-12-05,Friday,379.0
+102 Fulton,2025-12-06,Saturday,274.0
+102 Fulton,2025-12-07,Sunday,248.0
+102 Fulton,2025-12-08,Monday,386.0
+102 Fulton,2025-12-09,Tuesday,454.0
+102 Fulton,2025-12-10,Wednesday,430.0
+102 Fulton,2025-12-11,Thursday,440.0
+102 Fulton,2025-12-12,Friday,359.0
+102 Fulton,2025-12-13,Saturday,238.0
+102 Fulton,2025-12-14,Sunday,201.0
+102 Fulton,2025-12-15,Monday,354.0
+102 Fulton,2025-12-16,Tuesday,414.0
+102 Fulton,2025-12-17,Wednesday,433.0
+102 Fulton,2025-12-18,Thursday,400.0
+102 Fulton,2025-12-19,Friday,295.0
+102 Fulton,2025-12-20,Saturday,246.0
+102 Fulton,2025-12-21,Sunday,198.0
+102 Fulton,2025-12-22,Monday,287.0
+102 Fulton,2025-12-23,Tuesday,263.0
+102 Fulton,2025-12-24,Wednesday,269.0
+102 Fulton,2025-12-25,Thursday,192.0
+102 Fulton,2025-12-26,Friday,204.0
+102 Fulton,2025-12-27,Saturday,151.0
+102 Fulton,2025-12-28,Sunday,167.0
+102 Fulton,2025-12-29,Monday,205.0
+102 Fulton,2025-12-30,Tuesday,261.0
+102 Fulton,2025-12-31,Wednesday,268.0
+102 Fulton,2026-01-01,Thursday,205.0
+102 Fulton,2026-01-02,Friday,242.0
+102 Fulton,2026-01-03,Saturday,172.0
+102 Fulton,2026-01-04,Sunday,178.0
+102 Fulton,2026-01-05,Monday,327.0
+102 Fulton,2026-01-06,Tuesday,414.0
+102 Fulton,2026-01-07,Wednesday,405.0
+102 Fulton,2026-01-08,Thursday,401.0
+102 Fulton,2026-01-09,Friday,330.0
+102 Fulton,2026-01-10,Saturday,220.0
+102 Fulton,2026-01-11,Sunday,194.0
+102 Fulton,2026-01-12,Monday,299.0
+102 Fulton,2026-01-13,Tuesday,358.0
+102 Fulton,2026-01-14,Wednesday,382.0
+102 Fulton,2026-01-15,Thursday,369.0
+102 Fulton,2026-01-16,Friday,307.0
+102 Fulton,2026-01-17,Saturday,195.0
+102 Fulton,2026-01-18,Sunday,223.0
+102 Fulton,2026-01-19,Monday,182.0
+102 Fulton,2026-01-20,Tuesday,318.0
+102 Fulton,2026-01-21,Wednesday,354.0
+102 Fulton,2026-01-22,Thursday,351.0
+102 Fulton,2026-01-23,Friday,282.0
+102 Fulton,2026-01-24,Saturday,203.0
+102 Fulton,2026-01-25,Sunday,125.0
+102 Fulton,2026-01-26,Monday,145.0
+102 Fulton,2026-01-27,Tuesday,338.0
+102 Fulton,2026-01-28,Wednesday,340.0
+102 Fulton,2026-01-29,Thursday,361.0
+102 Fulton,2026-01-30,Friday,308.0
+102 Fulton,2026-01-31,Saturday,205.0
+102 Fulton,2026-02-01,Sunday,174.0
+102 Fulton,2026-02-02,Monday,274.0
+102 Fulton,2026-02-03,Tuesday,372.0
+102 Fulton,2026-02-04,Wednesday,416.0
+102 Fulton,2026-02-05,Thursday,361.0
+102 Fulton,2026-02-06,Friday,337.0
+102 Fulton,2026-02-07,Saturday,170.0
+102 Fulton,2026-02-08,Sunday,152.0
+102 Fulton,2026-02-09,Monday,298.0
+102 Fulton,2026-02-10,Tuesday,390.0
+15th & 3rd,2025-12-14,Sunday,143.0
+15th & 3rd,2025-12-15,Monday,137.0
+15th & 3rd,2025-12-16,Tuesday,162.0
+15th & 3rd,2025-12-17,Wednesday,202.0
+15th & 3rd,2025-12-18,Thursday,226.0
+15th & 3rd,2025-12-19,Friday,161.0
+15th & 3rd,2025-12-20,Saturday,193.0
+15th & 3rd,2025-12-21,Sunday,164.0
+15th & 3rd,2025-12-22,Monday,152.0
+15th & 3rd,2025-12-23,Tuesday,151.0
+15th & 3rd,2025-12-24,Wednesday,122.0
+15th & 3rd,2025-12-25,Thursday,112.0
+15th & 3rd,2025-12-26,Friday,101.0
+15th & 3rd,2025-12-27,Saturday,84.0
+15th & 3rd,2025-12-28,Sunday,114.0
+15th & 3rd,2025-12-29,Monday,113.0
+15th & 3rd,2025-12-30,Tuesday,135.0
+15th & 3rd,2025-12-31,Wednesday,163.0
+15th & 3rd,2026-01-01,Thursday,136.0
+15th & 3rd,2026-01-02,Friday,139.0
+15th & 3rd,2026-01-03,Saturday,154.0
+15th & 3rd,2026-01-04,Sunday,149.0
+15th & 3rd,2026-01-05,Monday,146.0
+15th & 3rd,2026-01-06,Tuesday,179.0
+15th & 3rd,2026-01-07,Wednesday,203.0
+15th & 3rd,2026-01-08,Thursday,206.0
+15th & 3rd,2026-01-09,Friday,206.0
+15th & 3rd,2026-01-10,Saturday,162.0
+15th & 3rd,2026-01-11,Sunday,182.0
+15th & 3rd,2026-01-12,Monday,167.0
+15th & 3rd,2026-01-13,Tuesday,202.0
+15th & 3rd,2026-01-14,Wednesday,196.0
+15th & 3rd,2026-01-15,Thursday,217.0
+15th & 3rd,2026-01-16,Friday,230.0
+15th & 3rd,2026-01-17,Saturday,161.0
+15th & 3rd,2026-01-18,Sunday,154.0
+15th & 3rd,2026-01-19,Monday,170.0
+15th & 3rd,2026-01-20,Tuesday,187.0
+15th & 3rd,2026-01-21,Wednesday,188.0
+15th & 3rd,2026-01-22,Thursday,210.0
+15th & 3rd,2026-01-23,Friday,170.0
+15th & 3rd,2026-01-24,Saturday,164.0
+15th & 3rd,2026-01-25,Sunday,61.0
+15th & 3rd,2026-01-26,Monday,169.0
+15th & 3rd,2026-01-27,Tuesday,180.0
+15th & 3rd,2026-01-28,Wednesday,191.0
+15th & 3rd,2026-01-29,Thursday,210.0
+15th & 3rd,2026-01-30,Friday,181.0
+15th & 3rd,2026-01-31,Saturday,169.0
+15th & 3rd,2026-02-01,Sunday,139.0
+15th & 3rd,2026-02-02,Monday,172.0
+15th & 3rd,2026-02-03,Tuesday,220.0
+15th & 3rd,2026-02-04,Wednesday,236.0
+15th & 3rd,2026-02-05,Thursday,209.0
+15th & 3rd,2026-02-06,Friday,186.0
+15th & 3rd,2026-02-07,Saturday,129.0
+15th & 3rd,2026-02-08,Sunday,150.0
+15th & 3rd,2026-02-09,Monday,156.0
+15th & 3rd,2026-02-10,Tuesday,179.0
+221 Grand,2025-12-15,Monday,346.0
+221 Grand,2025-12-16,Tuesday,440.0
+221 Grand,2025-12-17,Wednesday,490.0
+221 Grand,2025-12-18,Thursday,517.0
+221 Grand,2025-12-19,Friday,474.0
+221 Grand,2025-12-20,Saturday,572.0
+221 Grand,2025-12-21,Sunday,565.0
+221 Grand,2025-12-22,Monday,506.0
+221 Grand,2025-12-23,Tuesday,393.0
+221 Grand,2025-12-24,Wednesday,446.0
+221 Grand,2025-12-25,Thursday,372.0
+221 Grand,2025-12-26,Friday,385.0
+221 Grand,2025-12-27,Saturday,363.0
+221 Grand,2025-12-28,Sunday,420.0
+221 Grand,2025-12-29,Monday,403.0
+221 Grand,2025-12-30,Tuesday,425.0
+221 Grand,2025-12-31,Wednesday,435.0
+221 Grand,2026-01-01,Thursday,341.0
+221 Grand,2026-01-02,Friday,439.0
+221 Grand,2026-01-03,Saturday,466.0
+221 Grand,2026-01-04,Sunday,497.0
+221 Grand,2026-01-05,Monday,422.0
+221 Grand,2026-01-06,Tuesday,470.0
+221 Grand,2026-01-07,Wednesday,470.0
+221 Grand,2026-01-08,Thursday,501.0
+221 Grand,2026-01-09,Friday,470.0
+221 Grand,2026-01-10,Saturday,508.0
+221 Grand,2026-01-11,Sunday,516.0
+221 Grand,2026-01-12,Monday,443.0
+221 Grand,2026-01-13,Tuesday,447.0
+221 Grand,2026-01-14,Wednesday,425.0
+221 Grand,2026-01-15,Thursday,446.0
+221 Grand,2026-01-16,Friday,475.0
+221 Grand,2026-01-17,Saturday,447.0
+221 Grand,2026-01-18,Sunday,425.0
+221 Grand,2026-01-19,Monday,463.0
+221 Grand,2026-01-20,Tuesday,358.0
+221 Grand,2026-01-21,Wednesday,399.0
+221 Grand,2026-01-22,Thursday,433.0
+221 Grand,2026-01-23,Friday,429.0
+221 Grand,2026-01-24,Saturday,369.0
+221 Grand,2026-01-25,Sunday,104.0
+221 Grand,2026-01-26,Monday,180.0
+221 Grand,2026-01-27,Tuesday,322.0
+221 Grand,2026-01-28,Wednesday,312.0
+221 Grand,2026-01-29,Thursday,302.0
+221 Grand,2026-01-30,Friday,339.0
+221 Grand,2026-01-31,Saturday,402.0
+221 Grand,2026-02-01,Sunday,322.0
+221 Grand,2026-02-02,Monday,311.0
+221 Grand,2026-02-03,Tuesday,310.0
+221 Grand,2026-02-04,Wednesday,339.0
+221 Grand,2026-02-05,Thursday,324.0
+221 Grand,2026-02-06,Friday,381.0
+221 Grand,2026-02-07,Saturday,389.0
+221 Grand,2026-02-08,Sunday,70.0
+221 Grand,2026-02-09,Monday,258.0
+221 Grand,2026-02-10,Tuesday,292.0
+28th & 6th,2025-06-30,Monday,820.0
+28th & 6th,2025-07-01,Tuesday,776.0
+28th & 6th,2025-07-02,Wednesday,690.0
+28th & 6th,2025-07-03,Thursday,756.0
+28th & 6th,2025-07-04,Friday,768.0
+28th & 6th,2025-07-05,Saturday,874.0
+28th & 6th,2025-07-06,Sunday,762.0
+28th & 6th,2025-07-07,Monday,532.0
+28th & 6th,2025-07-08,Tuesday,633.0
+28th & 6th,2025-07-09,Wednesday,591.0
+28th & 6th,2025-07-10,Thursday,619.0
+28th & 6th,2025-07-11,Friday,584.0
+28th & 6th,2025-07-12,Saturday,791.0
+28th & 6th,2025-07-13,Sunday,656.0
+28th & 6th,2025-07-14,Monday,458.0
+28th & 6th,2025-07-15,Tuesday,511.0
+28th & 6th,2025-07-16,Wednesday,496.0
+28th & 6th,2025-07-17,Thursday,525.0
+28th & 6th,2025-07-18,Friday,582.0
+28th & 6th,2025-07-19,Saturday,662.0
+28th & 6th,2025-07-20,Sunday,536.0
+28th & 6th,2025-07-21,Monday,389.0
+28th & 6th,2025-07-22,Tuesday,524.0
+28th & 6th,2025-07-23,Wednesday,526.0
+28th & 6th,2025-07-24,Thursday,573.0
+28th & 6th,2025-07-25,Friday,477.0
+28th & 6th,2025-07-26,Saturday,728.0
+28th & 6th,2025-07-27,Sunday,660.0
+28th & 6th,2025-07-28,Monday,515.0
+28th & 6th,2025-07-29,Tuesday,577.0
+28th & 6th,2025-07-30,Wednesday,538.0
+28th & 6th,2025-07-31,Thursday,532.0
+28th & 6th,2025-08-01,Friday,536.0
+28th & 6th,2025-08-02,Saturday,881.0
+28th & 6th,2025-08-03,Sunday,775.0
+28th & 6th,2025-08-04,Monday,594.0
+28th & 6th,2025-08-05,Tuesday,629.0
+28th & 6th,2025-08-06,Wednesday,617.0
+28th & 6th,2025-08-07,Thursday,693.0
+28th & 6th,2025-08-08,Friday,717.0
+28th & 6th,2025-08-09,Saturday,845.0
+28th & 6th,2025-08-10,Sunday,644.0
+28th & 6th,2025-08-11,Monday,527.0
+28th & 6th,2025-08-12,Tuesday,619.0
+28th & 6th,2025-08-13,Wednesday,577.0
+28th & 6th,2025-08-14,Thursday,565.0
+28th & 6th,2025-08-15,Friday,550.0
+28th & 6th,2025-08-16,Saturday,712.0
+28th & 6th,2025-08-17,Sunday,536.0
+28th & 6th,2025-08-18,Monday,453.0
+28th & 6th,2025-08-19,Tuesday,564.0
+28th & 6th,2025-08-20,Wednesday,483.0
+28th & 6th,2025-08-21,Thursday,491.0
+28th & 6th,2025-08-22,Friday,520.0
+28th & 6th,2025-08-23,Saturday,691.0
+28th & 6th,2025-08-24,Sunday,513.0
+28th & 6th,2025-08-25,Monday,459.0
+28th & 6th,2025-08-26,Tuesday,527.0
+28th & 6th,2025-08-27,Wednesday,554.0
+28th & 6th,2025-08-28,Thursday,568.0
+28th & 6th,2025-08-29,Friday,457.0
+28th & 6th,2025-08-30,Saturday,580.0
+28th & 6th,2025-08-31,Sunday,535.0
+28th & 6th,2025-09-01,Monday,498.0
+28th & 6th,2025-09-02,Tuesday,454.0
+28th & 6th,2025-09-03,Wednesday,500.0
+28th & 6th,2025-09-04,Thursday,502.0
+28th & 6th,2025-09-05,Friday,436.0
+28th & 6th,2025-09-06,Saturday,473.0
+28th & 6th,2025-09-07,Sunday,408.0
+28th & 6th,2025-09-08,Monday,437.0
+28th & 6th,2025-09-09,Tuesday,484.0
+28th & 6th,2025-09-10,Wednesday,461.0
+28th & 6th,2025-09-11,Thursday,302.0
+28th & 6th,2025-09-12,Friday,505.0
+28th & 6th,2025-09-13,Saturday,491.0
+28th & 6th,2025-09-14,Sunday,392.0
+28th & 6th,2025-09-15,Monday,415.0
+28th & 6th,2025-09-16,Tuesday,434.0
+28th & 6th,2025-09-17,Wednesday,448.0
+28th & 6th,2025-09-18,Thursday,473.0
+28th & 6th,2025-09-19,Friday,461.0
+28th & 6th,2025-09-20,Saturday,551.0
+28th & 6th,2025-09-21,Sunday,435.0
+28th & 6th,2025-09-22,Monday,394.0
+28th & 6th,2025-09-23,Tuesday,397.0
+28th & 6th,2025-09-24,Wednesday,422.0
+28th & 6th,2025-09-25,Thursday,389.0
+28th & 6th,2025-09-26,Friday,460.0
+28th & 6th,2025-09-27,Saturday,508.0
+28th & 6th,2025-09-28,Sunday,403.0
+28th & 6th,2025-09-29,Monday,389.0
+28th & 6th,2025-09-30,Tuesday,474.0
+28th & 6th,2025-10-01,Wednesday,470.0
+28th & 6th,2025-10-02,Thursday,438.0
+28th & 6th,2025-10-03,Friday,435.0
+28th & 6th,2025-10-04,Saturday,523.0
+28th & 6th,2025-10-05,Sunday,495.0
+28th & 6th,2025-10-06,Monday,430.0
+28th & 6th,2025-10-07,Tuesday,465.0
+28th & 6th,2025-10-08,Wednesday,421.0
+28th & 6th,2025-10-09,Thursday,434.0
+28th & 6th,2025-10-10,Friday,460.0
+28th & 6th,2025-10-11,Saturday,241.0
+28th & 6th,2025-10-12,Sunday,326.0
+28th & 6th,2025-10-13,Monday,283.0
+28th & 6th,2025-10-14,Tuesday,419.0
+28th & 6th,2025-10-15,Wednesday,454.0
+28th & 6th,2025-10-16,Thursday,429.0
+28th & 6th,2025-10-17,Friday,410.0
+28th & 6th,2025-10-18,Saturday,488.0
+28th & 6th,2025-10-19,Sunday,353.0
+28th & 6th,2025-10-20,Monday,415.0
+28th & 6th,2025-10-21,Tuesday,425.0
+28th & 6th,2025-10-22,Wednesday,410.0
+28th & 6th,2025-10-23,Thursday,394.0
+28th & 6th,2025-10-24,Friday,312.0
+28th & 6th,2025-10-25,Saturday,426.0
+28th & 6th,2025-10-26,Sunday,363.0
+28th & 6th,2025-10-27,Monday,371.0
+28th & 6th,2025-10-28,Tuesday,404.0
+28th & 6th,2025-10-29,Wednesday,502.0
+28th & 6th,2025-10-30,Thursday,301.0
+28th & 6th,2025-10-31,Friday,425.0
+28th & 6th,2025-11-01,Saturday,414.0
+28th & 6th,2025-11-02,Sunday,312.0
+28th & 6th,2025-11-03,Monday,421.0
+28th & 6th,2025-11-04,Tuesday,521.0
+28th & 6th,2025-11-05,Wednesday,507.0
+28th & 6th,2025-11-06,Thursday,443.0
+28th & 6th,2025-11-07,Friday,390.0
+28th & 6th,2025-11-08,Saturday,425.0
+28th & 6th,2025-11-09,Sunday,312.0
+28th & 6th,2025-11-10,Monday,365.0
+28th & 6th,2025-11-11,Tuesday,408.0
+28th & 6th,2025-11-12,Wednesday,403.0
+28th & 6th,2025-11-13,Thursday,424.0
+28th & 6th,2025-11-14,Friday,418.0
+28th & 6th,2025-11-15,Saturday,401.0
+28th & 6th,2025-11-16,Sunday,298.0
+28th & 6th,2025-11-17,Monday,369.0
+28th & 6th,2025-11-18,Tuesday,437.0
+28th & 6th,2025-11-19,Wednesday,434.0
+28th & 6th,2025-11-20,Thursday,387.0
+28th & 6th,2025-11-21,Friday,430.0
+28th & 6th,2025-11-22,Saturday,390.0
+28th & 6th,2025-11-23,Sunday,312.0
+28th & 6th,2025-11-24,Monday,358.0
+28th & 6th,2025-11-25,Tuesday,370.0
+28th & 6th,2025-11-26,Wednesday,379.0
+28th & 6th,2025-11-27,Thursday,269.0
+28th & 6th,2025-11-28,Friday,284.0
+28th & 6th,2025-11-29,Saturday,308.0
+28th & 6th,2025-11-30,Sunday,228.0
+28th & 6th,2025-12-01,Monday,371.0
+28th & 6th,2025-12-02,Tuesday,263.0
+28th & 6th,2025-12-03,Wednesday,354.0
+28th & 6th,2025-12-04,Thursday,323.0
+28th & 6th,2025-12-05,Friday,293.0
+28th & 6th,2025-12-06,Saturday,337.0
+28th & 6th,2025-12-07,Sunday,282.0
+28th & 6th,2025-12-08,Monday,280.0
+28th & 6th,2025-12-09,Tuesday,302.0
+28th & 6th,2025-12-10,Wednesday,374.0
+28th & 6th,2025-12-11,Thursday,343.0
+28th & 6th,2025-12-12,Friday,273.0
+28th & 6th,2025-12-13,Saturday,305.0
+28th & 6th,2025-12-14,Sunday,196.0
+28th & 6th,2025-12-15,Monday,251.0
+28th & 6th,2025-12-16,Tuesday,262.0
+28th & 6th,2025-12-17,Wednesday,345.0
+28th & 6th,2025-12-18,Thursday,324.0
+28th & 6th,2025-12-19,Friday,188.0
+28th & 6th,2025-12-20,Saturday,289.0
+28th & 6th,2025-12-21,Sunday,228.0
+28th & 6th,2025-12-22,Monday,275.0
+28th & 6th,2025-12-23,Tuesday,184.0
+28th & 6th,2025-12-24,Wednesday,189.0
+28th & 6th,2025-12-25,Thursday,156.0
+28th & 6th,2025-12-26,Friday,170.0
+28th & 6th,2025-12-27,Saturday,141.0
+28th & 6th,2025-12-28,Sunday,162.0
+28th & 6th,2025-12-29,Monday,216.0
+28th & 6th,2025-12-30,Tuesday,221.0
+28th & 6th,2025-12-31,Wednesday,186.0
+28th & 6th,2026-01-01,Thursday,154.0
+28th & 6th,2026-01-02,Friday,212.0
+28th & 6th,2026-01-03,Saturday,242.0
+28th & 6th,2026-01-04,Sunday,157.0
+28th & 6th,2026-01-05,Monday,244.0
+28th & 6th,2026-01-06,Tuesday,266.0
+28th & 6th,2026-01-07,Wednesday,308.0
+28th & 6th,2026-01-08,Thursday,275.0
+28th & 6th,2026-01-09,Friday,271.0
+28th & 6th,2026-01-10,Saturday,214.0
+28th & 6th,2026-01-11,Sunday,210.0
+28th & 6th,2026-01-12,Monday,226.0
+28th & 6th,2026-01-13,Tuesday,259.0
+28th & 6th,2026-01-14,Wednesday,285.0
+28th & 6th,2026-01-15,Thursday,258.0
+28th & 6th,2026-01-16,Friday,232.0
+28th & 6th,2026-01-17,Saturday,238.0
+28th & 6th,2026-01-18,Sunday,194.0
+28th & 6th,2026-01-19,Monday,240.0
+28th & 6th,2026-01-20,Tuesday,206.0
+28th & 6th,2026-01-21,Wednesday,241.0
+28th & 6th,2026-01-22,Thursday,285.0
+28th & 6th,2026-01-23,Friday,218.0
+28th & 6th,2026-01-24,Saturday,224.0
+28th & 6th,2026-01-25,Sunday,81.0
+28th & 6th,2026-01-26,Monday,128.0
+28th & 6th,2026-01-27,Tuesday,271.0
+28th & 6th,2026-01-28,Wednesday,286.0
+28th & 6th,2026-01-29,Thursday,253.0
+28th & 6th,2026-01-30,Friday,210.0
+28th & 6th,2026-01-31,Saturday,176.0
+28th & 6th,2026-02-01,Sunday,187.0
+28th & 6th,2026-02-02,Monday,239.0
+28th & 6th,2026-02-03,Tuesday,312.0
+28th & 6th,2026-02-04,Wednesday,293.0
+28th & 6th,2026-02-05,Thursday,265.0
+28th & 6th,2026-02-06,Friday,249.0
+28th & 6th,2026-02-07,Saturday,139.0
+28th & 6th,2026-02-08,Sunday,139.0
+28th & 6th,2026-02-09,Monday,236.0
+28th & 6th,2026-02-10,Tuesday,299.0
+37th & Broadway,2025-11-20,Thursday,526.0
+37th & Broadway,2025-11-21,Friday,349.0
+37th & Broadway,2025-11-22,Saturday,179.0
+37th & Broadway,2025-11-23,Sunday,136.0
+37th & Broadway,2025-11-24,Monday,382.0
+37th & Broadway,2025-11-25,Tuesday,501.0
+37th & Broadway,2025-11-26,Wednesday,414.0
+37th & Broadway,2025-11-27,Thursday,175.0
+37th & Broadway,2025-11-28,Friday,324.0
+37th & Broadway,2025-11-29,Saturday,261.0
+37th & Broadway,2025-11-30,Sunday,143.0
+37th & Broadway,2025-12-01,Monday,440.0
+37th & Broadway,2025-12-02,Tuesday,387.0
+37th & Broadway,2025-12-03,Wednesday,538.0
+37th & Broadway,2025-12-04,Thursday,478.0
+37th & Broadway,2025-12-05,Friday,311.0
+37th & Broadway,2025-12-06,Saturday,252.0
+37th & Broadway,2025-12-07,Sunday,220.0
+37th & Broadway,2025-12-08,Monday,395.0
+37th & Broadway,2025-12-09,Tuesday,469.0
+37th & Broadway,2025-12-10,Wednesday,489.0
+37th & Broadway,2025-12-11,Thursday,439.0
+37th & Broadway,2025-12-12,Friday,296.0
+37th & Broadway,2025-12-13,Saturday,211.0
+37th & Broadway,2025-12-14,Sunday,144.0
+37th & Broadway,2025-12-15,Monday,338.0
+37th & Broadway,2025-12-16,Tuesday,456.0
+37th & Broadway,2025-12-17,Wednesday,517.0
+37th & Broadway,2025-12-18,Thursday,470.0
+37th & Broadway,2025-12-19,Friday,243.0
+37th & Broadway,2025-12-20,Saturday,249.0
+37th & Broadway,2025-12-21,Sunday,199.0
+37th & Broadway,2025-12-22,Monday,363.0
+37th & Broadway,2025-12-23,Tuesday,334.0
+37th & Broadway,2025-12-24,Wednesday,273.0
+37th & Broadway,2025-12-25,Thursday,173.0
+37th & Broadway,2025-12-26,Friday,223.0
+37th & Broadway,2025-12-27,Saturday,156.0
+37th & Broadway,2025-12-28,Sunday,170.0
+37th & Broadway,2025-12-29,Monday,283.0
+37th & Broadway,2025-12-30,Tuesday,320.0
+37th & Broadway,2025-12-31,Wednesday,231.0
+37th & Broadway,2026-01-01,Thursday,145.0
+37th & Broadway,2026-01-02,Friday,250.0
+37th & Broadway,2026-01-03,Saturday,147.0
+37th & Broadway,2026-01-04,Sunday,123.0
+37th & Broadway,2026-01-05,Monday,407.0
+37th & Broadway,2026-01-06,Tuesday,500.0
+37th & Broadway,2026-01-07,Wednesday,541.0
+37th & Broadway,2026-01-08,Thursday,579.0
+37th & Broadway,2026-01-09,Friday,351.0
+37th & Broadway,2026-01-10,Saturday,156.0
+37th & Broadway,2026-01-11,Sunday,176.0
+37th & Broadway,2026-01-12,Monday,436.0
+37th & Broadway,2026-01-13,Tuesday,549.0
+37th & Broadway,2026-01-14,Wednesday,544.0
+37th & Broadway,2026-01-15,Thursday,514.0
+37th & Broadway,2026-01-16,Friday,339.0
+37th & Broadway,2026-01-17,Saturday,139.0
+37th & Broadway,2026-01-18,Sunday,137.0
+37th & Broadway,2026-01-19,Monday,276.0
+37th & Broadway,2026-01-20,Tuesday,436.0
+37th & Broadway,2026-01-21,Wednesday,519.0
+37th & Broadway,2026-01-22,Thursday,541.0
+37th & Broadway,2026-01-23,Friday,364.0
+37th & Broadway,2026-01-24,Saturday,44.0
+37th & Broadway,2026-01-29,Thursday,474.0
+37th & Broadway,2026-01-30,Friday,294.0
+37th & Broadway,2026-01-31,Saturday,135.0
+37th & Broadway,2026-02-01,Sunday,122.0
+37th & Broadway,2026-02-02,Monday,349.0
+37th & Broadway,2026-02-03,Tuesday,483.0
+37th & Broadway,2026-02-04,Wednesday,545.0
+37th & Broadway,2026-02-05,Thursday,477.0
+37th & Broadway,2026-02-06,Friday,334.0
+37th & Broadway,2026-02-07,Saturday,134.0
+37th & Broadway,2026-02-08,Sunday,116.0
+37th & Broadway,2026-02-09,Monday,386.0
+37th & Broadway,2026-02-10,Tuesday,571.0
+54th & 8th,2025-08-24,Sunday,477.0
+54th & 8th,2025-08-25,Monday,328.0
+54th & 8th,2025-08-26,Tuesday,359.0
+54th & 8th,2025-08-27,Wednesday,396.0
+54th & 8th,2025-08-28,Thursday,414.0
+54th & 8th,2025-08-29,Friday,383.0
+54th & 8th,2025-08-30,Saturday,422.0
+54th & 8th,2025-08-31,Sunday,424.0
+54th & 8th,2025-09-01,Monday,340.0
+54th & 8th,2025-09-02,Tuesday,337.0
+54th & 8th,2025-09-03,Wednesday,338.0
+54th & 8th,2025-09-04,Thursday,377.0
+54th & 8th,2025-09-05,Friday,342.0
+54th & 8th,2025-09-06,Saturday,340.0
+54th & 8th,2025-09-07,Sunday,347.0
+54th & 8th,2025-09-08,Monday,296.0
+54th & 8th,2025-09-09,Tuesday,331.0
+54th & 8th,2025-09-10,Wednesday,310.0
+54th & 8th,2025-09-11,Thursday,342.0
+54th & 8th,2025-09-12,Friday,367.0
+54th & 8th,2025-09-13,Saturday,424.0
+54th & 8th,2025-09-14,Sunday,349.0
+54th & 8th,2025-09-15,Monday,327.0
+54th & 8th,2025-09-16,Tuesday,362.0
+54th & 8th,2025-09-17,Wednesday,367.0
+54th & 8th,2025-09-18,Thursday,435.0
+54th & 8th,2025-09-19,Friday,426.0
+54th & 8th,2025-09-20,Saturday,475.0
+54th & 8th,2025-09-21,Sunday,461.0
+54th & 8th,2025-09-22,Monday,370.0
+54th & 8th,2025-09-23,Tuesday,405.0
+54th & 8th,2025-09-24,Wednesday,400.0
+54th & 8th,2025-09-25,Thursday,339.0
+54th & 8th,2025-09-26,Friday,424.0
+54th & 8th,2025-09-27,Saturday,439.0
+54th & 8th,2025-09-28,Sunday,430.0
+54th & 8th,2025-09-29,Monday,361.0
+54th & 8th,2025-09-30,Tuesday,429.0
+54th & 8th,2025-10-01,Wednesday,413.0
+54th & 8th,2025-10-02,Thursday,424.0
+54th & 8th,2025-10-03,Friday,422.0
+54th & 8th,2025-10-04,Saturday,514.0
+54th & 8th,2025-10-05,Sunday,486.0
+54th & 8th,2025-10-06,Monday,401.0
+54th & 8th,2025-10-07,Tuesday,409.0
+54th & 8th,2025-10-08,Wednesday,368.0
+54th & 8th,2025-10-09,Thursday,442.0
+54th & 8th,2025-10-10,Friday,426.0
+54th & 8th,2025-10-11,Saturday,399.0
+54th & 8th,2025-10-12,Sunday,317.0
+54th & 8th,2025-10-13,Monday,258.0
+54th & 8th,2025-10-14,Tuesday,365.0
+54th & 8th,2025-10-15,Wednesday,472.0
+54th & 8th,2025-10-16,Thursday,388.0
+54th & 8th,2025-10-17,Friday,381.0
+54th & 8th,2025-10-18,Saturday,483.0
+54th & 8th,2025-10-19,Sunday,379.0
+54th & 8th,2025-10-20,Monday,386.0
+54th & 8th,2025-10-21,Tuesday,374.0
+54th & 8th,2025-10-22,Wednesday,370.0
+54th & 8th,2025-10-23,Thursday,388.0
+54th & 8th,2025-10-24,Friday,421.0
+54th & 8th,2025-10-25,Saturday,411.0
+54th & 8th,2025-10-26,Sunday,407.0
+54th & 8th,2025-10-27,Monday,337.0
+54th & 8th,2025-10-28,Tuesday,374.0
+54th & 8th,2025-10-29,Wednesday,411.0
+54th & 8th,2025-10-30,Thursday,256.0
+54th & 8th,2025-10-31,Friday,395.0
+54th & 8th,2025-11-01,Saturday,449.0
+54th & 8th,2025-11-02,Sunday,383.0
+54th & 8th,2025-11-03,Monday,404.0
+54th & 8th,2025-11-04,Tuesday,390.0
+54th & 8th,2025-11-05,Wednesday,409.0
+54th & 8th,2025-11-06,Thursday,391.0
+54th & 8th,2025-11-07,Friday,391.0
+54th & 8th,2025-11-08,Saturday,448.0
+54th & 8th,2025-11-09,Sunday,334.0
+54th & 8th,2025-11-10,Monday,360.0
+54th & 8th,2025-11-11,Tuesday,314.0
+54th & 8th,2025-11-12,Wednesday,353.0
+54th & 8th,2025-11-13,Thursday,339.0
+54th & 8th,2025-11-14,Friday,311.0
+54th & 8th,2025-11-15,Saturday,411.0
+54th & 8th,2025-11-16,Sunday,405.0
+54th & 8th,2025-11-17,Monday,334.0
+54th & 8th,2025-11-18,Tuesday,353.0
+54th & 8th,2025-11-19,Wednesday,366.0
+54th & 8th,2025-11-20,Thursday,395.0
+54th & 8th,2025-11-21,Friday,364.0
+54th & 8th,2025-11-22,Saturday,378.0
+54th & 8th,2025-11-23,Sunday,334.0
+54th & 8th,2025-11-24,Monday,359.0
+54th & 8th,2025-11-25,Tuesday,360.0
+54th & 8th,2025-11-26,Wednesday,352.0
+54th & 8th,2025-11-27,Thursday,343.0
+54th & 8th,2025-11-28,Friday,265.0
+54th & 8th,2025-11-29,Saturday,266.0
+54th & 8th,2025-11-30,Sunday,262.0
+54th & 8th,2025-12-01,Monday,353.0
+54th & 8th,2025-12-02,Tuesday,267.0
+54th & 8th,2025-12-03,Wednesday,345.0
+54th & 8th,2025-12-04,Thursday,328.0
+54th & 8th,2025-12-05,Friday,298.0
+54th & 8th,2025-12-06,Saturday,336.0
+54th & 8th,2025-12-07,Sunday,317.0
+54th & 8th,2025-12-08,Monday,307.0
+54th & 8th,2025-12-09,Tuesday,288.0
+54th & 8th,2025-12-10,Wednesday,327.0
+54th & 8th,2025-12-11,Thursday,300.0
+54th & 8th,2025-12-12,Friday,309.0
+54th & 8th,2025-12-13,Saturday,335.0
+54th & 8th,2025-12-14,Sunday,249.0
+54th & 8th,2025-12-15,Monday,241.0
+54th & 8th,2025-12-16,Tuesday,294.0
+54th & 8th,2025-12-17,Wednesday,290.0
+54th & 8th,2025-12-18,Thursday,301.0
+54th & 8th,2025-12-19,Friday,211.0
+54th & 8th,2025-12-20,Saturday,282.0
+54th & 8th,2025-12-21,Sunday,228.0
+54th & 8th,2025-12-22,Monday,241.0
+54th & 8th,2025-12-23,Tuesday,205.0
+54th & 8th,2025-12-24,Wednesday,256.0
+54th & 8th,2025-12-25,Thursday,241.0
+54th & 8th,2025-12-26,Friday,160.0
+54th & 8th,2025-12-27,Saturday,216.0
+54th & 8th,2025-12-28,Sunday,193.0
+54th & 8th,2025-12-29,Monday,216.0
+54th & 8th,2025-12-30,Tuesday,213.0
+54th & 8th,2025-12-31,Wednesday,265.0
+54th & 8th,2026-01-01,Thursday,203.0
+54th & 8th,2026-01-02,Friday,228.0
+54th & 8th,2026-01-03,Saturday,235.0
+54th & 8th,2026-01-04,Sunday,214.0
+54th & 8th,2026-01-05,Monday,260.0
+54th & 8th,2026-01-06,Tuesday,299.0
+54th & 8th,2026-01-07,Wednesday,302.0
+54th & 8th,2026-01-08,Thursday,333.0
+54th & 8th,2026-01-09,Friday,347.0
+54th & 8th,2026-01-10,Saturday,287.0
+54th & 8th,2026-01-11,Sunday,293.0
+54th & 8th,2026-01-12,Monday,284.0
+54th & 8th,2026-01-13,Tuesday,303.0
+54th & 8th,2026-01-14,Wednesday,325.0
+54th & 8th,2026-01-15,Thursday,311.0
+54th & 8th,2026-01-16,Friday,265.0
+54th & 8th,2026-01-17,Saturday,264.0
+54th & 8th,2026-01-18,Sunday,213.0
+54th & 8th,2026-01-19,Monday,227.0
+54th & 8th,2026-01-20,Tuesday,242.0
+54th & 8th,2026-01-21,Wednesday,270.0
+54th & 8th,2026-01-22,Thursday,311.0
+54th & 8th,2026-01-23,Friday,270.0
+54th & 8th,2026-01-24,Saturday,269.0
+54th & 8th,2026-01-25,Sunday,142.0
+54th & 8th,2026-01-26,Monday,186.0
+54th & 8th,2026-01-27,Tuesday,239.0
+54th & 8th,2026-01-28,Wednesday,299.0
+54th & 8th,2026-01-29,Thursday,245.0
+54th & 8th,2026-01-30,Friday,226.0
+54th & 8th,2026-01-31,Saturday,262.0
+54th & 8th,2026-02-01,Sunday,212.0
+54th & 8th,2026-02-02,Monday,253.0
+54th & 8th,2026-02-03,Tuesday,283.0
+54th & 8th,2026-02-04,Wednesday,302.0
+54th & 8th,2026-02-05,Thursday,287.0
+54th & 8th,2026-02-06,Friday,260.0
+54th & 8th,2026-02-07,Saturday,191.0
+54th & 8th,2026-02-08,Sunday,170.0
+54th & 8th,2026-02-09,Monday,224.0
+54th & 8th,2026-02-10,Tuesday,299.0
+8th & Broadway,2025-06-30,Monday,739.0
+8th & Broadway,2025-07-01,Tuesday,617.0
+8th & Broadway,2025-07-02,Wednesday,719.0
+8th & Broadway,2025-07-03,Thursday,723.0
+8th & Broadway,2025-07-04,Friday,750.0
+8th & Broadway,2025-07-05,Saturday,807.0
+8th & Broadway,2025-07-06,Sunday,713.0
+8th & Broadway,2025-07-07,Monday,552.0
+8th & Broadway,2025-07-08,Tuesday,642.0
+8th & Broadway,2025-07-09,Wednesday,661.0
+8th & Broadway,2025-07-10,Thursday,635.0
+8th & Broadway,2025-07-11,Friday,720.0
+8th & Broadway,2025-07-12,Saturday,897.0
+8th & Broadway,2025-07-13,Sunday,677.0
+8th & Broadway,2025-07-14,Monday,526.0
+8th & Broadway,2025-07-15,Tuesday,626.0
+8th & Broadway,2025-07-16,Wednesday,567.0
+8th & Broadway,2025-07-17,Thursday,612.0
+8th & Broadway,2025-07-18,Friday,634.0
+8th & Broadway,2025-07-19,Saturday,712.0
+8th & Broadway,2025-07-20,Sunday,598.0
+8th & Broadway,2025-07-21,Monday,539.0
+8th & Broadway,2025-07-22,Tuesday,619.0
+8th & Broadway,2025-07-23,Wednesday,558.0
+8th & Broadway,2025-07-24,Thursday,638.0
+8th & Broadway,2025-07-25,Friday,543.0
+8th & Broadway,2025-07-26,Saturday,806.0
+8th & Broadway,2025-07-27,Sunday,663.0
+8th & Broadway,2025-07-28,Monday,542.0
+8th & Broadway,2025-07-29,Tuesday,625.0
+8th & Broadway,2025-07-30,Wednesday,566.0
+8th & Broadway,2025-07-31,Thursday,597.0
+8th & Broadway,2025-08-01,Friday,661.0
+8th & Broadway,2025-08-02,Saturday,975.0
+8th & Broadway,2025-08-03,Sunday,766.0
+8th & Broadway,2025-08-04,Monday,617.0
+8th & Broadway,2025-08-05,Tuesday,653.0
+8th & Broadway,2025-08-06,Wednesday,692.0
+8th & Broadway,2025-08-07,Thursday,774.0
+8th & Broadway,2025-08-08,Friday,800.0
+8th & Broadway,2025-08-09,Saturday,912.0
+8th & Broadway,2025-08-10,Sunday,754.0
+8th & Broadway,2025-08-11,Monday,568.0
+8th & Broadway,2025-08-12,Tuesday,634.0
+8th & Broadway,2025-08-13,Wednesday,586.0
+8th & Broadway,2025-08-14,Thursday,589.0
+8th & Broadway,2025-08-15,Friday,627.0
+8th & Broadway,2025-08-16,Saturday,847.0
+8th & Broadway,2025-08-17,Sunday,585.0
+8th & Broadway,2025-08-18,Monday,534.0
+8th & Broadway,2025-08-19,Tuesday,521.0
+8th & Broadway,2025-08-20,Wednesday,445.0
+8th & Broadway,2025-08-21,Thursday,525.0
+8th & Broadway,2025-08-22,Friday,621.0
+8th & Broadway,2025-08-23,Saturday,761.0
+8th & Broadway,2025-08-24,Sunday,668.0
+8th & Broadway,2025-08-25,Monday,556.0
+8th & Broadway,2025-08-26,Tuesday,635.0
+8th & Broadway,2025-08-27,Wednesday,607.0
+8th & Broadway,2025-08-28,Thursday,623.0
+8th & Broadway,2025-08-29,Friday,601.0
+8th & Broadway,2025-08-30,Saturday,699.0
+8th & Broadway,2025-08-31,Sunday,667.0
+8th & Broadway,2025-09-01,Monday,638.0
+8th & Broadway,2025-09-02,Tuesday,778.0
+8th & Broadway,2025-09-03,Wednesday,682.0
+8th & Broadway,2025-09-04,Thursday,833.0
+8th & Broadway,2025-09-05,Friday,631.0
+8th & Broadway,2025-09-06,Saturday,619.0
+8th & Broadway,2025-09-07,Sunday,498.0
+8th & Broadway,2025-09-08,Monday,802.0
+8th & Broadway,2025-09-09,Tuesday,873.0
+8th & Broadway,2025-09-10,Wednesday,802.0
+8th & Broadway,2025-09-11,Thursday,880.0
+8th & Broadway,2025-09-12,Friday,808.0
+8th & Broadway,2025-09-13,Saturday,689.0
+8th & Broadway,2025-09-14,Sunday,598.0
+8th & Broadway,2025-09-15,Monday,797.0
+8th & Broadway,2025-09-16,Tuesday,875.0
+8th & Broadway,2025-09-17,Wednesday,774.0
+8th & Broadway,2025-09-18,Thursday,884.0
+8th & Broadway,2025-09-19,Friday,798.0
+8th & Broadway,2025-09-20,Saturday,724.0
+8th & Broadway,2025-09-21,Sunday,634.0
+8th & Broadway,2025-09-22,Monday,884.0
+8th & Broadway,2025-09-23,Tuesday,901.0
+8th & Broadway,2025-09-24,Wednesday,919.0
+8th & Broadway,2025-09-25,Thursday,793.0
+8th & Broadway,2025-09-26,Friday,774.0
+8th & Broadway,2025-09-27,Saturday,761.0
+8th & Broadway,2025-09-28,Sunday,637.0
+8th & Broadway,2025-09-29,Monday,801.0
+8th & Broadway,2025-09-30,Tuesday,913.0
+8th & Broadway,2025-10-01,Wednesday,873.0
+8th & Broadway,2025-10-02,Thursday,860.0
+8th & Broadway,2025-10-03,Friday,782.0
+8th & Broadway,2025-10-04,Saturday,852.0
+8th & Broadway,2025-10-05,Sunday,681.0
+8th & Broadway,2025-10-06,Monday,959.0
+8th & Broadway,2025-10-07,Tuesday,912.0
+8th & Broadway,2025-10-08,Wednesday,907.0
+8th & Broadway,2025-10-09,Thursday,802.0
+8th & Broadway,2025-10-10,Friday,716.0
+8th & Broadway,2025-10-11,Saturday,629.0
+8th & Broadway,2025-10-12,Sunday,444.0
+8th & Broadway,2025-10-13,Monday,436.0
+8th & Broadway,2025-10-14,Tuesday,794.0
+8th & Broadway,2025-10-15,Wednesday,911.0
+8th & Broadway,2025-10-16,Thursday,807.0
+8th & Broadway,2025-10-17,Friday,746.0
+8th & Broadway,2025-10-18,Saturday,722.0
+8th & Broadway,2025-10-19,Sunday,714.0
+8th & Broadway,2025-10-20,Monday,878.0
+8th & Broadway,2025-10-21,Tuesday,833.0
+8th & Broadway,2025-10-22,Wednesday,815.0
+8th & Broadway,2025-10-23,Thursday,806.0
+8th & Broadway,2025-10-24,Friday,274.0
+8th & Broadway,2025-10-25,Saturday,738.0
+8th & Broadway,2025-10-26,Sunday,622.0
+8th & Broadway,2025-10-27,Monday,834.0
+8th & Broadway,2025-10-28,Tuesday,873.0
+8th & Broadway,2025-10-29,Wednesday,923.0
+8th & Broadway,2025-10-30,Thursday,651.0
+8th & Broadway,2025-10-31,Friday,749.0
+8th & Broadway,2025-11-01,Saturday,669.0
+8th & Broadway,2025-11-02,Sunday,532.0
+8th & Broadway,2025-11-03,Monday,893.0
+8th & Broadway,2025-11-04,Tuesday,903.0
+8th & Broadway,2025-11-05,Wednesday,904.0
+8th & Broadway,2025-11-06,Thursday,786.0
+8th & Broadway,2025-11-07,Friday,674.0
+8th & Broadway,2025-11-08,Saturday,675.0
+8th & Broadway,2025-11-09,Sunday,498.0
+8th & Broadway,2025-11-10,Monday,802.0
+8th & Broadway,2025-11-11,Tuesday,818.0
+8th & Broadway,2025-11-12,Wednesday,791.0
+8th & Broadway,2025-11-13,Thursday,819.0
+8th & Broadway,2025-11-14,Friday,115.0
+8th & Broadway,2025-11-15,Saturday,652.0
+8th & Broadway,2025-11-16,Sunday,554.0
+8th & Broadway,2025-11-17,Monday,756.0
+8th & Broadway,2025-11-18,Tuesday,815.0
+8th & Broadway,2025-11-19,Wednesday,790.0
+8th & Broadway,2025-11-20,Thursday,833.0
+8th & Broadway,2025-11-21,Friday,663.0
+8th & Broadway,2025-11-22,Saturday,598.0
+8th & Broadway,2025-11-23,Sunday,555.0
+8th & Broadway,2025-11-24,Monday,735.0
+8th & Broadway,2025-11-25,Tuesday,624.0
+8th & Broadway,2025-11-26,Wednesday,533.0
+8th & Broadway,2025-11-27,Thursday,353.0
+8th & Broadway,2025-11-28,Friday,366.0
+8th & Broadway,2025-11-29,Saturday,446.0
+8th & Broadway,2025-11-30,Sunday,372.0
+8th & Broadway,2025-12-01,Monday,793.0
+8th & Broadway,2025-12-02,Tuesday,670.0
+8th & Broadway,2025-12-03,Wednesday,817.0
+8th & Broadway,2025-12-04,Thursday,692.0
+8th & Broadway,2025-12-05,Friday,608.0
+8th & Broadway,2025-12-06,Saturday,634.0
+8th & Broadway,2025-12-07,Sunday,533.0
+8th & Broadway,2025-12-08,Monday,735.0
+8th & Broadway,2025-12-09,Tuesday,755.0
+8th & Broadway,2025-12-10,Wednesday,797.0
+8th & Broadway,2025-12-11,Thursday,752.0
+8th & Broadway,2025-12-12,Friday,523.0
+8th & Broadway,2025-12-13,Saturday,560.0
+8th & Broadway,2025-12-14,Sunday,433.0
+8th & Broadway,2025-12-15,Monday,508.0
+8th & Broadway,2025-12-16,Tuesday,541.0
+8th & Broadway,2025-12-17,Wednesday,540.0
+8th & Broadway,2025-12-18,Thursday,458.0
+8th & Broadway,2025-12-19,Friday,339.0
+8th & Broadway,2025-12-20,Saturday,368.0
+8th & Broadway,2025-12-21,Sunday,300.0
+8th & Broadway,2025-12-22,Monday,288.0
+8th & Broadway,2025-12-23,Tuesday,212.0
+8th & Broadway,2025-12-24,Wednesday,193.0
+8th & Broadway,2025-12-25,Thursday,212.0
+8th & Broadway,2025-12-26,Friday,204.0
+8th & Broadway,2025-12-27,Saturday,186.0
+8th & Broadway,2025-12-28,Sunday,238.0
+8th & Broadway,2025-12-29,Monday,221.0
+8th & Broadway,2025-12-30,Tuesday,235.0
+8th & Broadway,2025-12-31,Wednesday,253.0
+8th & Broadway,2026-01-01,Thursday,211.0
+8th & Broadway,2026-01-02,Friday,231.0
+8th & Broadway,2026-01-03,Saturday,299.0
+8th & Broadway,2026-01-04,Sunday,280.0
+8th & Broadway,2026-01-05,Monday,268.0
+8th & Broadway,2026-01-06,Tuesday,313.0
+8th & Broadway,2026-01-07,Wednesday,317.0
+8th & Broadway,2026-01-08,Thursday,354.0
+8th & Broadway,2026-01-09,Friday,345.0
+8th & Broadway,2026-01-10,Saturday,302.0
+8th & Broadway,2026-01-11,Sunday,290.0
+8th & Broadway,2026-01-12,Monday,348.0
+8th & Broadway,2026-01-13,Tuesday,335.0
+8th & Broadway,2026-01-14,Wednesday,352.0
+8th & Broadway,2026-01-15,Thursday,382.0
+8th & Broadway,2026-01-16,Friday,371.0
+8th & Broadway,2026-01-17,Saturday,304.0
+8th & Broadway,2026-01-18,Sunday,271.0
+8th & Broadway,2026-01-19,Monday,333.0
+8th & Broadway,2026-01-20,Tuesday,619.0
+8th & Broadway,2026-01-21,Wednesday,643.0
+8th & Broadway,2026-01-22,Thursday,676.0
+8th & Broadway,2026-01-23,Friday,454.0
+8th & Broadway,2026-01-24,Saturday,336.0
+8th & Broadway,2026-01-25,Sunday,59.0
+8th & Broadway,2026-01-27,Tuesday,634.0
+8th & Broadway,2026-01-28,Wednesday,636.0
+8th & Broadway,2026-01-29,Thursday,648.0
+8th & Broadway,2026-01-30,Friday,487.0
+8th & Broadway,2026-01-31,Saturday,401.0
+8th & Broadway,2026-02-01,Sunday,339.0
+8th & Broadway,2026-02-02,Monday,614.0
+8th & Broadway,2026-02-03,Tuesday,697.0
+8th & Broadway,2026-02-04,Wednesday,695.0
+8th & Broadway,2026-02-05,Thursday,661.0
+8th & Broadway,2026-02-06,Friday,527.0
+8th & Broadway,2026-02-07,Saturday,295.0
+8th & Broadway,2026-02-08,Sunday,246.0
+8th & Broadway,2026-02-09,Monday,610.0
+8th & Broadway,2026-02-10,Tuesday,707.0

@@ -1,0 +1,13 @@
+metric,value,unit,pct_of_price,notes
+average_cup_price,5.50,USD,,Estimated from Luckin USA menu pricing
+cogs_per_cup,1.50,USD,27%,Cost of goods sold (ingredients + packaging)
+labor_cost_per_cup,1.20,USD,22%,Staff wages allocated per cup
+other_operating_costs,0.50,USD,9%,Utilities + supplies + misc
+contribution_margin_per_cup,2.30,USD,42%,Revenue minus variable costs
+breakeven_cups_at_20K_rent,290,cups/day,,8696 cups/month at $20K rent
+breakeven_cups_at_15K_rent,217,cups/day,,6522 cups/month at $15K rent
+breakeven_cups_at_12K_rent,174,cups/day,,5217 cups/month at $12K rent
+breakeven_cups_at_10K_rent,145,cups/day,,4348 cups/month at $10K rent
+top_performer_profit,45540,USD/month,,8th & Broadway: 660 cups x $2.30 x 30 - $20K
+mid_performer_profit,14291,USD/month,,37th & Broadway: 497 cups x $2.30 x 30 - $20K
+low_performer_loss,-10409,USD/month,,15th & 3rd: 139 cups x $2.30 x 30 - $20K

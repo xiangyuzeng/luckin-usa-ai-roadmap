@@ -1,0 +1,9 @@
+store_name,shop_no,address,zip,neighborhood,latitude,longitude,avg_daily_cups,trend,opened,subway_count,subway_lines,area_type,weekday_pct,scene_type,status
+8th & Broadway,US00001,"755 Broadway, New York, NY 10003",10003,Greenwich Village/NoHo,40.730548,-73.992624,660,Growing,2025-06-30,7,"6,R,W,B,D,F,M",university_tourist,0.55,5,Active
+37th & Broadway,US00004,"1375 Broadway, New York, NY 10018",10018,Garment District/Herald Square,40.752559,-73.987833,497,Stable,2025-11-20,11,"B,D,F,M,N,Q,R,W,1,2,3",commercial_transit_hub,0.72,5,Active
+102 Fulton,US00006,"102 Fulton St, New York, NY 10038",10038,Financial District,40.709656,-74.00679,417,Declining,2025-08-28,8,"2,3,4,5,A,C,J,Z",financial_office,0.68,5,Active
+28th & 6th,US00002,"800 6th Ave, New York, NY 10001",10001,Chelsea/NoMad,40.745666,-73.990592,374,Declining,2025-06-30,3,"1,R,W",mixed_commercial,0.60,5,Active
+221 Grand,US00025,"221 Grand St, New York, NY 10013",10013,Chinatown/Little Italy,40.718571,-73.995919,373,Stable/Mixed,2025-12-15,7,"N,Q,R,W,J,Z,6",tourist_ethnic_enclave,0.48,5,Active
+54th & 8th,US00005,"901 8th Ave, New York, NY 10019",10019,Midtown West/Hells Kitchen,40.76465,-73.984773,310,Declining,2025-08-24,4,"C,E,B,D",theater_tourist,0.52,5,Active
+100 Maiden Ln,US00003,"100 Maiden Ln, New York, NY 10038",10038,Financial District,40.706675,-74.007198,273,Declining,2025-09-09,8,"2,3,4,5,A,C,J,Z",financial_office,0.72,5,Active
+15th & 3rd,US00024,"147 3rd Ave, New York, NY 10003",10003,Gramercy/East Village,40.734028,-73.986224,139,Stable,2025-12-14,8,"L,4,5,6,N,Q,R,W",residential_mixed,0.55,5,Active
