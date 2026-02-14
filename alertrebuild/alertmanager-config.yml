@@ -1,0 +1,164 @@
+# ============================================================================
+# Luckin Coffee NA — Alertmanager Configuration
+# ============================================================================
+# Three-tier notification routing:
+#   Tier 1 (Info)     → WeCom text only
+#   Tier 2 (Warning)  → WeCom + Twilio (team lead)
+#   Tier 3 (Critical) → WeCom + Twilio (all DevOps US + China)
+#
+# Environment variables required:
+#   WECOM_WEBHOOK_INFO, WECOM_WEBHOOK_WARNING, WECOM_WEBHOOK_CRITICAL
+#   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER
+#   TWILIO_TEAM_LEAD_US, TWILIO_DEVOPS_US_1, TWILIO_DEVOPS_US_2
+#   TWILIO_DEVOPS_CN_1, TWILIO_DEVOPS_CN_2
+#   IZEUS_WEBHOOK_URL
+# ============================================================================
+
+global:
+  resolve_timeout: 5m
+  http_config:
+    follow_redirects: true
+  smtp_require_tls: true
+
+# ─── TEMPLATES ──────────────────────────────────────────────────────────────
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# ─── ROUTING ────────────────────────────────────────────────────────────────
+route:
+  receiver: tier1-info
+  group_by: ['alertname', 'category', 'service']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+  routes:
+    # ── iZeus Webhook: ALL alerts forwarded for APM correlation ──
+    - receiver: izeus-webhook
+      continue: true
+      match_re:
+        severity: ".*"
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 4h
+
+    # ── Tier 3: Critical → WeCom critical channel + Twilio ALL DevOps ──
+    - receiver: tier3-critical
+      match:
+        severity: critical
+      group_wait: 15s
+      group_interval: 3m
+      repeat_interval: 15m
+      continue: false
+
+    # ── Tier 2: Warning → WeCom warning channel + Twilio team lead ──
+    - receiver: tier2-warning
+      match:
+        severity: warning
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 1h
+      continue: false
+      mute_time_intervals:
+        - us-offhours-non-biz
+
+    # ── Tier 1: Info → WeCom info channel only ──
+    - receiver: tier1-info
+      match:
+        severity: info
+      group_wait: 60s
+      group_interval: 10m
+      repeat_interval: 4h
+      continue: false
+      mute_time_intervals:
+        - us-offhours-non-biz
+
+# ─── RECEIVERS ──────────────────────────────────────────────────────────────
+receivers:
+  # ── iZeus Webhook (APM correlation for ALL alerts) ──
+  - name: izeus-webhook
+    webhook_configs:
+      - url: '${IZEUS_WEBHOOK_URL}'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+        max_alerts: 50
+
+  # ── Tier 1: Info — WeCom text only ──
+  - name: tier1-info
+    webhook_configs:
+      - url: '${WECOM_WEBHOOK_INFO}'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+        max_alerts: 20
+
+  # ── Tier 2: Warning — WeCom + Twilio team lead ──
+  - name: tier2-warning
+    webhook_configs:
+      # WeCom warning channel
+      - url: '${WECOM_WEBHOOK_WARNING}'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+        max_alerts: 20
+      # Twilio via webhook proxy — team lead US number only
+      - url: 'http://localhost:9097/twilio/call'
+        send_resolved: false
+        http_config:
+          basic_auth:
+            username: '${TWILIO_ACCOUNT_SID}'
+            password: '${TWILIO_AUTH_TOKEN}'
+        max_alerts: 5
+
+  # ── Tier 3: Critical — WeCom + Twilio ALL DevOps ──
+  - name: tier3-critical
+    webhook_configs:
+      # WeCom critical channel
+      - url: '${WECOM_WEBHOOK_CRITICAL}'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+        max_alerts: 50
+      # Twilio via webhook proxy — ALL DevOps US + China numbers
+      - url: 'http://localhost:9097/twilio/call-all'
+        send_resolved: false
+        http_config:
+          basic_auth:
+            username: '${TWILIO_ACCOUNT_SID}'
+            password: '${TWILIO_AUTH_TOKEN}'
+        max_alerts: 10
+
+# ─── INHIBITION RULES ──────────────────────────────────────────────────────
+inhibit_rules:
+  # Rule 1: Critical suppresses warning + info on same alertname + service
+  - source_matchers:
+      - severity = "critical"
+    target_matchers:
+      - severity =~ "warning|info"
+    equal: ['alertname', 'service']
+
+  # Rule 2: Node-down suppresses all pod alerts on same node
+  - source_matchers:
+      - alertname = "NodeHeartbeatLost_Critical"
+    target_matchers:
+      - category = "infra-k8s"
+    equal: ['node']
+
+  # Rule 3: Instance-down suppresses all service alerts on same instance
+  - source_matchers:
+      - alertname =~ "VMInstanceDown_Critical|RedisInstanceDown_Critical"
+    target_matchers:
+      - severity =~ "warning|info"
+    equal: ['instance']
+
+# ─── TIME-BASED MUTING ─────────────────────────────────────────────────────
+# Suppress info-tier non-BIZ alerts during US off-hours (2:00-7:00 AM ET)
+# BIZ alerts are NEVER muted regardless of time
+time_intervals:
+  - name: us-offhours-non-biz
+    time_intervals:
+      - times:
+          - start_time: '07:00'    # 2:00 AM ET = 07:00 UTC
+            end_time: '12:00'      # 7:00 AM ET = 12:00 UTC
+        weekdays: ['monday:friday']

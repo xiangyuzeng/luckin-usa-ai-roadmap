@@ -1,0 +1,2057 @@
+###############################################################################
+# Luckin Coffee North America - Production Alert Rules (Complete)
+# VMAlert / Prometheus-compatible YAML
+# Recording Rules: 14 | Alert Rules: 72
+# Generated: 2026-02-14
+###############################################################################
+
+groups:
+
+  ##############################################################################
+  # RECORDING RULES - RDS (4 rules)
+  ##############################################################################
+  - name: lck-na.recording.rds
+    interval: 30s
+    rules:
+      - record: lckna:rds:cpu_avg3m
+        expr: |
+          avg_over_time(aws_rds_cpuutilization_average{env="production"}[3m])
+
+      - record: lckna:rds:slow_queries_rate3m
+        expr: |
+          rate(aws_rds_slow_queries_total{env="production"}[3m]) * 60
+
+      - record: lckna:rds:threads_avg2m
+        expr: |
+          avg_over_time(aws_rds_database_connections_average{env="production"}[2m])
+
+      - record: lckna:rds:disk_gb
+        expr: |
+          aws_rds_free_storage_space_average{env="production"} / 1024 / 1024 / 1024
+
+  ##############################################################################
+  # RECORDING RULES - Redis (3 rules)
+  ##############################################################################
+  - name: lck-na.recording.redis
+    interval: 30s
+    rules:
+      - record: lckna:redis:cpu_avg3m
+        expr: |
+          avg_over_time(redis_cpu_usage{env="production"}[3m])
+
+      - record: lckna:redis:memory_ratio_avg3m
+        expr: |
+          avg_over_time(redis_memory_usage_ratio{env="production"}[3m])
+
+      - record: lckna:redis:connection_ratio
+        expr: |
+          redis_connected_clients{env="production"}
+          /
+          redis_max_clients{env="production"} * 100
+
+  ##############################################################################
+  # RECORDING RULES - K8s (3 rules)
+  ##############################################################################
+  - name: lck-na.recording.k8s
+    interval: 30s
+    rules:
+      - record: lckna:k8s:pod_cpu_avg3m
+        expr: |
+          avg_over_time(
+            (rate(container_cpu_usage_seconds_total{env="production", container!="POD", container!=""}[1m]))[3m:]
+          ) * 100
+
+      - record: lckna:k8s:pod_disk_io_rate
+        expr: |
+          rate(container_fs_reads_bytes_total{env="production", container!="POD", container!=""}[3m])
+          +
+          rate(container_fs_writes_bytes_total{env="production", container!="POD", container!=""}[3m])
+
+      - record: lckna:k8s:pod_network_rate
+        expr: |
+          rate(container_network_receive_bytes_total{env="production"}[3m])
+          +
+          rate(container_network_transmit_bytes_total{env="production"}[3m])
+
+  ##############################################################################
+  # RECORDING RULES - VM (4 rules)
+  ##############################################################################
+  - name: lck-na.recording.vm
+    interval: 30s
+    rules:
+      - record: lckna:vm:cpu_avg5m
+        expr: |
+          100 - avg by (instance) (
+            rate(node_cpu_seconds_total{mode="idle", env="production"}[5m])
+          ) * 100
+
+      - record: lckna:vm:memory_avg10m
+        expr: |
+          avg_over_time(
+            (1 - node_memory_MemAvailable_bytes{env="production"} / node_memory_MemTotal_bytes{env="production"})[10m:]
+          ) * 100
+
+      - record: lckna:vm:disk_util
+        expr: |
+          100 - (node_filesystem_avail_bytes{env="production", mountpoint="/", fstype!="tmpfs"}
+          / node_filesystem_size_bytes{env="production", mountpoint="/", fstype!="tmpfs"}) * 100
+
+      - record: lckna:vm:net_errors_rate5m
+        expr: |
+          rate(node_network_receive_errs_total{env="production"}[5m])
+          +
+          rate(node_network_transmit_errs_total{env="production"}[5m])
+
+  ##############################################################################
+  # ALERT RULES - BIZ (10 alerts)
+  ##############################################################################
+  - name: lck-na.alerts.biz
+    interval: 30s
+    rules:
+      # BIZ-01: Orders low - info
+      - alert: BizOrderVolumeInfo
+        expr: |
+          sum(increase(business_completed_orders_total{env="production"}[10m])) < 5
+          and
+          sum(increase(business_completed_orders_total{env="production"}[10m])) >= 3
+        for: 10m
+        labels:
+          severity: "info"
+          team: "biz-ops"
+          category: "biz"
+          service: "order-service"
+          alert_type: "business"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-BIZ] OrderVolumeLow_Info - {{ $labels.instance }}"
+          description: |
+            Completed orders in last 10 min is {{ $value | printf "%.1f" }}, below normal threshold (5).
+            10 分钟内完成订单量 {{ $value | printf "%.1f" }}，低于正常阈值 (5)。
+          runbook_url: "https://runbooks.luckinus.com/biz/BizOrderVolumeInfo"
+          dashboard_url: "https://grafana.luckinus.com/d/biz-orders"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Order volume declining; potential revenue impact if sustained."
+          first_responder: "biz-ops"
+          notification_channel: "wecom-only"
+
+      # BIZ-02: Orders low - warning
+      - alert: BizOrderVolumeWarning
+        expr: |
+          sum(increase(business_completed_orders_total{env="production"}[10m])) < 3
+          and
+          sum(increase(business_completed_orders_total{env="production"}[10m])) >= 1
+        for: 10m
+        labels:
+          severity: "warning"
+          team: "biz-ops"
+          category: "biz"
+          service: "order-service"
+          alert_type: "business"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-BIZ] OrderVolumeLow_Warning - {{ $labels.instance }}"
+          description: |
+            Completed orders in last 10 min is {{ $value | printf "%.1f" }}, below warning threshold (3).
+            10 分钟内完成订单量 {{ $value | printf "%.1f" }}，低于警告阈值 (3)。
+          runbook_url: "https://runbooks.luckinus.com/biz/BizOrderVolumeWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/biz-orders"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Significant order volume drop; possible system outage or customer-facing issue."
+          first_responder: "biz-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # BIZ-03: Orders low - critical
+      - alert: BizOrderVolumeCritical
+        expr: |
+          sum(increase(business_completed_orders_total{env="production"}[10m])) < 1
+        for: 10m
+        labels:
+          severity: "critical"
+          team: "biz-ops"
+          category: "biz"
+          service: "order-service"
+          alert_type: "business"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-BIZ] OrderVolumeZero_Critical - {{ $labels.instance }}"
+          description: |
+            Completed orders in last 10 min is {{ $value | printf "%.1f" }}, near zero.
+            10 分钟内完成订单量 {{ $value | printf "%.1f" }}，接近零。
+          runbook_url: "https://runbooks.luckinus.com/biz/BizOrderVolumeCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/biz-orders"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Near-total order halt; immediate revenue loss and customer impact."
+          first_responder: "biz-ops"
+          notification_channel: "wecom+twilio-all"
+
+      # BIZ-04: Cancellations spike - warning
+      - alert: BizCancellationSpikeWarning
+        expr: |
+          sum(increase(business_cancelled_orders_total{env="production"}[5m])) > 1
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "biz-ops"
+          category: "biz"
+          service: "order-service"
+          alert_type: "business"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-BIZ] CancellationSpike_Warning - {{ $labels.instance }}"
+          description: |
+            Cancellations in last 5 min: {{ $value | printf "%.1f" }} (threshold: >1/5min).
+            5 分钟内取消订单数: {{ $value | printf "%.1f" }} (阈值: >1/5min)。
+          runbook_url: "https://runbooks.luckinus.com/biz/BizCancellationSpikeWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/biz-orders"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Elevated cancellation rate may indicate payment or fulfillment issues."
+          first_responder: "biz-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # BIZ-05: Payment amount low - warning
+      - alert: BizPaymentAmountWarning
+        expr: |
+          sum(increase(business_payment_amount_total{env="production"}[10m])) < 500
+          and
+          sum(increase(business_payment_amount_total{env="production"}[10m])) > 0
+        for: 10m
+        labels:
+          severity: "warning"
+          team: "biz-ops"
+          category: "biz"
+          service: "payment-service"
+          alert_type: "business"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-BIZ] PaymentAmountLow_Warning - {{ $labels.instance }}"
+          description: |
+            Payment amount in last 10 min: ${{ $value | printf "%.1f" }} (threshold: <$500).
+            10 分钟内支付金额: ${{ $value | printf "%.1f" }} (阈值: <$500)。
+          runbook_url: "https://runbooks.luckinus.com/biz/BizPaymentAmountWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/biz-payments"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Payment volume below normal; potential payment gateway or checkout issue."
+          first_responder: "biz-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # BIZ-06: Payment amount zero - critical
+      - alert: BizPaymentAmountCritical
+        expr: |
+          sum(increase(business_payment_amount_total{env="production"}[10m])) == 0
+        for: 10m
+        labels:
+          severity: "critical"
+          team: "biz-ops"
+          category: "biz"
+          service: "payment-service"
+          alert_type: "business"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-BIZ] PaymentAmountZero_Critical - {{ $labels.instance }}"
+          description: |
+            Payment amount in last 10 min is ${{ $value | printf "%.1f" }}, zero transactions.
+            10 分钟内支付金额 ${{ $value | printf "%.1f" }}，零交易。
+          runbook_url: "https://runbooks.luckinus.com/biz/BizPaymentAmountCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/biz-payments"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Complete payment failure; all revenue halted. Immediate escalation required."
+          first_responder: "biz-ops"
+          notification_channel: "wecom+twilio-all"
+
+      # BIZ-07: Registration zero 10m - warning
+      - alert: BizRegistrationZeroWarning
+        expr: |
+          sum(increase(business_registration_total{env="production"}[10m])) == 0
+        for: 10m
+        labels:
+          severity: "warning"
+          team: "biz-ops"
+          category: "biz"
+          service: "user-service"
+          alert_type: "business"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-BIZ] RegistrationZero_Warning - {{ $labels.instance }}"
+          description: |
+            Zero new registrations in last 10 min. Value: {{ $value | printf "%.1f" }}.
+            10 分钟内零新注册。值: {{ $value | printf "%.1f" }}。
+          runbook_url: "https://runbooks.luckinus.com/biz/BizRegistrationZeroWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/biz-registration"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "No new user registrations; possible sign-up flow or SMS verification issue."
+          first_responder: "biz-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # BIZ-08: Registration zero 30m - critical
+      - alert: BizRegistrationZeroCritical
+        expr: |
+          sum(increase(business_registration_total{env="production"}[30m])) == 0
+        for: 30m
+        labels:
+          severity: "critical"
+          team: "biz-ops"
+          category: "biz"
+          service: "user-service"
+          alert_type: "business"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-BIZ] RegistrationZero30m_Critical - {{ $labels.instance }}"
+          description: |
+            Zero new registrations for 30 min. Value: {{ $value | printf "%.1f" }}.
+            30 分钟内零新注册。值: {{ $value | printf "%.1f" }}。
+          runbook_url: "https://runbooks.luckinus.com/biz/BizRegistrationZeroCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/biz-registration"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Prolonged registration outage; user acquisition completely blocked."
+          first_responder: "biz-ops"
+          notification_channel: "wecom+twilio-all"
+
+      # BIZ-09: Traffic anomaly - warning
+      - alert: BizTrafficAnomalyWarning
+        expr: |
+          sum(rate(business_completed_orders_total{env="production"}[5m]))
+          /
+          sum(rate(business_completed_orders_total{env="production"}[1h] offset 1d)) > 3
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "biz-ops"
+          category: "biz"
+          service: "order-service"
+          alert_type: "business"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-BIZ] TrafficAnomaly_Warning - {{ $labels.instance }}"
+          description: |
+            Current traffic is {{ $value | printf "%.1f" }}x the same-period yesterday (threshold: >3x).
+            当前流量是昨日同期的 {{ $value | printf "%.1f" }} 倍 (阈值: >3x)。
+          runbook_url: "https://runbooks.luckinus.com/biz/BizTrafficAnomalyWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/biz-traffic"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Abnormal traffic spike may indicate bot activity or upstream anomaly."
+          first_responder: "biz-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # BIZ-10: Latency p99 - warning
+      - alert: BizLatencyP99Warning
+        expr: |
+          histogram_quantile(0.99, sum(rate(business_request_duration_seconds_bucket{env="production"}[5m])) by (le)) > 3
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "biz-ops"
+          category: "biz"
+          service: "order-service"
+          alert_type: "business"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-BIZ] LatencyP99High_Warning - {{ $labels.instance }}"
+          description: |
+            Business request p99 latency is {{ $value | printf "%.1f" }}s (threshold: >3s).
+            业务请求 p99 延迟 {{ $value | printf "%.1f" }}s (阈值: >3s)。
+          runbook_url: "https://runbooks.luckinus.com/biz/BizLatencyP99Warning"
+          dashboard_url: "https://grafana.luckinus.com/d/biz-latency"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "High latency degrading user experience; possible backend bottleneck."
+          first_responder: "biz-ops"
+          notification_channel: "wecom+twilio-lead"
+
+  ##############################################################################
+  # ALERT RULES - DB-RDS (12 alerts)
+  ##############################################################################
+  - name: lck-na.alerts.db-rds
+    interval: 30s
+    rules:
+      # RDS-01: CPU info 50%
+      - alert: RdsCpuUsageInfo
+        expr: |
+          lckna:rds:cpu_avg3m > 50 and lckna:rds:cpu_avg3m <= 70
+        for: 10m
+        labels:
+          severity: "info"
+          team: "dba"
+          category: "db-rds"
+          service: "rds-mysql"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-RDS] CpuUsage_Info - {{ $labels.instance }}"
+          description: |
+            RDS CPU utilization is {{ $value | printf "%.1f" }}% (threshold: >50%).
+            RDS CPU 利用率 {{ $value | printf "%.1f" }}% (阈值: >50%)。
+            Instance: {{ $labels.dbinstance_identifier }}
+          runbook_url: "https://runbooks.luckinus.com/db-rds/RdsCpuUsageInfo"
+          dashboard_url: "https://grafana.luckinus.com/d/rds-overview"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "RDS CPU elevated; monitor for further increase."
+          first_responder: "dba"
+          notification_channel: "wecom-only"
+
+      # RDS-02: CPU warning 70%
+      - alert: RdsCpuUsageWarning
+        expr: |
+          lckna:rds:cpu_avg3m > 70 and lckna:rds:cpu_avg3m <= 90
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-rds"
+          service: "rds-mysql"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-RDS] CpuUsage_Warning - {{ $labels.instance }}"
+          description: |
+            RDS CPU utilization is {{ $value | printf "%.1f" }}% (threshold: >70%).
+            RDS CPU 利用率 {{ $value | printf "%.1f" }}% (阈值: >70%)。
+            Instance: {{ $labels.dbinstance_identifier }}
+          runbook_url: "https://runbooks.luckinus.com/db-rds/RdsCpuUsageWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/rds-overview"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "RDS CPU high; query performance may degrade. Check slow queries."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+      # RDS-03: CPU critical 90%
+      - alert: RdsCpuUsageCritical
+        expr: |
+          lckna:rds:cpu_avg3m > 90
+        for: 3m
+        labels:
+          severity: "critical"
+          team: "dba"
+          category: "db-rds"
+          service: "rds-mysql"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-RDS] CpuUsage_Critical - {{ $labels.instance }}"
+          description: |
+            RDS CPU utilization is {{ $value | printf "%.1f" }}% (threshold: >90%).
+            RDS CPU 利用率 {{ $value | printf "%.1f" }}% (阈值: >90%)。
+            Instance: {{ $labels.dbinstance_identifier }}
+          runbook_url: "https://runbooks.luckinus.com/db-rds/RdsCpuUsageCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/rds-overview"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "RDS CPU critically high; queries timing out, service degradation imminent."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-all"
+
+      # RDS-04: Slow queries info >10/min
+      - alert: RdsSlowQueriesInfo
+        expr: |
+          lckna:rds:slow_queries_rate3m > 10 and lckna:rds:slow_queries_rate3m <= 50
+        for: 5m
+        labels:
+          severity: "info"
+          team: "dba"
+          category: "db-rds"
+          service: "rds-mysql"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-RDS] SlowQueries_Info - {{ $labels.instance }}"
+          description: |
+            Slow queries rate: {{ $value | printf "%.1f" }}/min (threshold: >10/min).
+            慢查询速率: {{ $value | printf "%.1f" }}/min (阈值: >10/min)。
+            Instance: {{ $labels.dbinstance_identifier }}
+          runbook_url: "https://runbooks.luckinus.com/db-rds/RdsSlowQueriesInfo"
+          dashboard_url: "https://grafana.luckinus.com/d/rds-slow-queries"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Slow queries increasing; review query plan and indexes."
+          first_responder: "dba"
+          notification_channel: "wecom-only"
+
+      # RDS-05: Slow queries warning >50/min
+      - alert: RdsSlowQueriesWarning
+        expr: |
+          lckna:rds:slow_queries_rate3m > 50 and lckna:rds:slow_queries_rate3m <= 200
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-rds"
+          service: "rds-mysql"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-RDS] SlowQueries_Warning - {{ $labels.instance }}"
+          description: |
+            Slow queries rate: {{ $value | printf "%.1f" }}/min (threshold: >50/min).
+            慢查询速率: {{ $value | printf "%.1f" }}/min (阈值: >50/min)。
+            Instance: {{ $labels.dbinstance_identifier }}
+          runbook_url: "https://runbooks.luckinus.com/db-rds/RdsSlowQueriesWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/rds-slow-queries"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Elevated slow query rate impacting application latency."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+      # RDS-06: Slow queries critical >200/min
+      - alert: RdsSlowQueriesCritical
+        expr: |
+          lckna:rds:slow_queries_rate3m > 200
+        for: 3m
+        labels:
+          severity: "critical"
+          team: "dba"
+          category: "db-rds"
+          service: "rds-mysql"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-RDS] SlowQueries_Critical - {{ $labels.instance }}"
+          description: |
+            Slow queries rate: {{ $value | printf "%.1f" }}/min (threshold: >200/min).
+            慢查询速率: {{ $value | printf "%.1f" }}/min (阈值: >200/min)。
+            Instance: {{ $labels.dbinstance_identifier }}
+          runbook_url: "https://runbooks.luckinus.com/db-rds/RdsSlowQueriesCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/rds-slow-queries"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Massive slow query spike; database likely saturated, cascading failures possible."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-all"
+
+      # RDS-07: Active threads info >12
+      - alert: RdsActiveThreadsInfo
+        expr: |
+          lckna:rds:threads_avg2m > 12 and lckna:rds:threads_avg2m <= 24
+        for: 5m
+        labels:
+          severity: "info"
+          team: "dba"
+          category: "db-rds"
+          service: "rds-mysql"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-RDS] ActiveThreads_Info - {{ $labels.instance }}"
+          description: |
+            Active threads: {{ $value | printf "%.1f" }} (threshold: >12).
+            活跃线程数: {{ $value | printf "%.1f" }} (阈值: >12)。
+            Instance: {{ $labels.dbinstance_identifier }}
+          runbook_url: "https://runbooks.luckinus.com/db-rds/RdsActiveThreadsInfo"
+          dashboard_url: "https://grafana.luckinus.com/d/rds-connections"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Active thread count rising; monitor connection pool usage."
+          first_responder: "dba"
+          notification_channel: "wecom-only"
+
+      # RDS-08: Active threads warning >24
+      - alert: RdsActiveThreadsWarning
+        expr: |
+          lckna:rds:threads_avg2m > 24 and lckna:rds:threads_avg2m <= 48
+        for: 3m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-rds"
+          service: "rds-mysql"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-RDS] ActiveThreads_Warning - {{ $labels.instance }}"
+          description: |
+            Active threads: {{ $value | printf "%.1f" }} (threshold: >24).
+            活跃线程数: {{ $value | printf "%.1f" }} (阈值: >24)。
+            Instance: {{ $labels.dbinstance_identifier }}
+          runbook_url: "https://runbooks.luckinus.com/db-rds/RdsActiveThreadsWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/rds-connections"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "High active threads may cause connection pool exhaustion."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+      # RDS-09: Active threads critical >48
+      - alert: RdsActiveThreadsCritical
+        expr: |
+          lckna:rds:threads_avg2m > 48
+        for: 2m
+        labels:
+          severity: "critical"
+          team: "dba"
+          category: "db-rds"
+          service: "rds-mysql"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-RDS] ActiveThreads_Critical - {{ $labels.instance }}"
+          description: |
+            Active threads: {{ $value | printf "%.1f" }} (threshold: >48).
+            活跃线程数: {{ $value | printf "%.1f" }} (阈值: >48)。
+            Instance: {{ $labels.dbinstance_identifier }}
+          runbook_url: "https://runbooks.luckinus.com/db-rds/RdsActiveThreadsCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/rds-connections"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Thread count critical; database connection saturation, service outage likely."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-all"
+
+      # RDS-10: Disk free <15% - warning
+      - alert: RdsDiskFreeWarning
+        expr: |
+          (lckna:rds:disk_gb / (aws_rds_allocated_storage_average{env="production"} / 1024 / 1024 / 1024)) * 100 < 15
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-rds"
+          service: "rds-mysql"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-RDS] DiskFree_Warning - {{ $labels.instance }}"
+          description: |
+            RDS free disk space: {{ $value | printf "%.1f" }}% (threshold: <15%).
+            RDS 可用磁盘空间: {{ $value | printf "%.1f" }}% (阈值: <15%)。
+            Instance: {{ $labels.dbinstance_identifier }}
+          runbook_url: "https://runbooks.luckinus.com/db-rds/RdsDiskFreeWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/rds-storage"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Disk space running low; database may become read-only if exhausted."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+      # RDS-11: VIP unreachable - critical
+      - alert: RdsVipUnreachableCritical
+        expr: |
+          probe_success{job="rds-vip-probe", env="production"} == 0
+        for: 1m
+        labels:
+          severity: "critical"
+          team: "dba"
+          category: "db-rds"
+          service: "rds-mysql"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-RDS] VipUnreachable_Critical - {{ $labels.instance }}"
+          description: |
+            RDS VIP endpoint is unreachable. Probe result: {{ $value | printf "%.1f" }}.
+            RDS VIP 端点不可达。探针结果: {{ $value | printf "%.1f" }}。
+            Target: {{ $labels.target }}
+          runbook_url: "https://runbooks.luckinus.com/db-rds/RdsVipUnreachableCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/rds-connectivity"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Database VIP unreachable; all dependent services cannot connect to DB."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-all"
+
+      # RDS-12: Failover detected - critical
+      - alert: RdsFailoverCritical
+        expr: |
+          changes(aws_rds_failover_count_total{env="production"}[5m]) > 0
+        for: 0m
+        labels:
+          severity: "critical"
+          team: "dba"
+          category: "db-rds"
+          service: "rds-mysql"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-RDS] FailoverDetected_Critical - {{ $labels.instance }}"
+          description: |
+            RDS failover detected. Changes: {{ $value | printf "%.1f" }}.
+            RDS 故障转移已检测。变更次数: {{ $value | printf "%.1f" }}。
+            Instance: {{ $labels.dbinstance_identifier }}
+          runbook_url: "https://runbooks.luckinus.com/db-rds/RdsFailoverCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/rds-overview"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "RDS failover occurred; brief connection drops expected, verify application reconnection."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-all"
+
+  ##############################################################################
+  # ALERT RULES - DB-REDIS (10 alerts)
+  ##############################################################################
+  - name: lck-na.alerts.db-redis
+    interval: 30s
+    rules:
+      # REDIS-01: Engine CPU info 50%
+      - alert: RedisCpuUsageInfo
+        expr: |
+          lckna:redis:cpu_avg3m > 50 and lckna:redis:cpu_avg3m <= 65
+        for: 5m
+        labels:
+          severity: "info"
+          team: "dba"
+          category: "db-redis"
+          service: "elasticache-redis"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-REDIS] CpuUsage_Info - {{ $labels.instance }}"
+          description: |
+            Redis Engine CPU: {{ $value | printf "%.1f" }}% (threshold: >50%).
+            Redis 引擎 CPU: {{ $value | printf "%.1f" }}% (阈值: >50%)。
+            Cluster: {{ $labels.cluster }}
+          runbook_url: "https://runbooks.luckinus.com/db-redis/RedisCpuUsageInfo"
+          dashboard_url: "https://grafana.luckinus.com/d/redis-overview"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Redis CPU elevated; may indicate high command rate."
+          first_responder: "dba"
+          notification_channel: "wecom-only"
+
+      # REDIS-02: Engine CPU warning 65%
+      - alert: RedisCpuUsageWarning
+        expr: |
+          lckna:redis:cpu_avg3m > 65 and lckna:redis:cpu_avg3m <= 90
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-redis"
+          service: "elasticache-redis"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-REDIS] CpuUsage_Warning - {{ $labels.instance }}"
+          description: |
+            Redis Engine CPU: {{ $value | printf "%.1f" }}% (threshold: >65%).
+            Redis 引擎 CPU: {{ $value | printf "%.1f" }}% (阈值: >65%)。
+            Cluster: {{ $labels.cluster }}
+          runbook_url: "https://runbooks.luckinus.com/db-redis/RedisCpuUsageWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/redis-overview"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Redis CPU high; command latency may increase. Review hot keys."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+      # REDIS-03: Engine CPU critical 90%
+      - alert: RedisCpuUsageCritical
+        expr: |
+          lckna:redis:cpu_avg3m > 90
+        for: 3m
+        labels:
+          severity: "critical"
+          team: "dba"
+          category: "db-redis"
+          service: "elasticache-redis"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-REDIS] CpuUsage_Critical - {{ $labels.instance }}"
+          description: |
+            Redis Engine CPU: {{ $value | printf "%.1f" }}% (threshold: >90%).
+            Redis 引擎 CPU: {{ $value | printf "%.1f" }}% (阈值: >90%)。
+            Cluster: {{ $labels.cluster }}
+          runbook_url: "https://runbooks.luckinus.com/db-redis/RedisCpuUsageCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/redis-overview"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Redis CPU critical; cache operations failing, downstream services impacted."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-all"
+
+      # REDIS-04: Memory warning 80%
+      - alert: RedisMemoryUsageWarning
+        expr: |
+          lckna:redis:memory_ratio_avg3m > 80 and lckna:redis:memory_ratio_avg3m <= 95
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-redis"
+          service: "elasticache-redis"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-REDIS] MemoryUsage_Warning - {{ $labels.instance }}"
+          description: |
+            Redis memory usage: {{ $value | printf "%.1f" }}% (threshold: >80%).
+            Redis 内存使用: {{ $value | printf "%.1f" }}% (阈值: >80%)。
+            Cluster: {{ $labels.cluster }}
+          runbook_url: "https://runbooks.luckinus.com/db-redis/RedisMemoryUsageWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/redis-memory"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Redis memory high; evictions may start. Review TTL and key patterns."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+      # REDIS-05: Memory critical 95%
+      - alert: RedisMemoryUsageCritical
+        expr: |
+          lckna:redis:memory_ratio_avg3m > 95
+        for: 1m
+        labels:
+          severity: "critical"
+          team: "dba"
+          category: "db-redis"
+          service: "elasticache-redis"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-REDIS] MemoryUsage_Critical - {{ $labels.instance }}"
+          description: |
+            Redis memory usage: {{ $value | printf "%.1f" }}% (threshold: >95%).
+            Redis 内存使用: {{ $value | printf "%.1f" }}% (阈值: >95%)。
+            Cluster: {{ $labels.cluster }}
+          runbook_url: "https://runbooks.luckinus.com/db-redis/RedisMemoryUsageCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/redis-memory"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Redis memory near max; OOM risk, writes may fail."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-all"
+
+      # REDIS-06: Latency p99 >5ms - warning
+      - alert: RedisLatencyP99Warning
+        expr: |
+          redis_commands_latency{quantile="0.99", env="production"} > 5
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-redis"
+          service: "elasticache-redis"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-REDIS] LatencyP99_Warning - {{ $labels.instance }}"
+          description: |
+            Redis p99 latency: {{ $value | printf "%.1f" }}ms (threshold: >5ms).
+            Redis p99 延迟: {{ $value | printf "%.1f" }}ms (阈值: >5ms)。
+            Cluster: {{ $labels.cluster }}
+          runbook_url: "https://runbooks.luckinus.com/db-redis/RedisLatencyP99Warning"
+          dashboard_url: "https://grafana.luckinus.com/d/redis-latency"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Redis latency elevated; application cache response times affected."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+      # REDIS-07: Evictions >1K/min - warning
+      - alert: RedisEvictionsWarning
+        expr: |
+          rate(redis_evicted_keys_total{env="production"}[3m]) * 60 > 1000
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-redis"
+          service: "elasticache-redis"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-REDIS] Evictions_Warning - {{ $labels.instance }}"
+          description: |
+            Redis eviction rate: {{ $value | printf "%.1f" }}/min (threshold: >1000/min).
+            Redis 淘汰速率: {{ $value | printf "%.1f" }}/min (阈值: >1000/min)。
+            Cluster: {{ $labels.cluster }}
+          runbook_url: "https://runbooks.luckinus.com/db-redis/RedisEvictionsWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/redis-memory"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "High eviction rate causing cache misses; increased DB load."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+      # REDIS-08: Connection ratio >60% - warning
+      - alert: RedisConnectionRatioWarning
+        expr: |
+          lckna:redis:connection_ratio > 60
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-redis"
+          service: "elasticache-redis"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-REDIS] ConnectionRatio_Warning - {{ $labels.instance }}"
+          description: |
+            Redis connection ratio: {{ $value | printf "%.1f" }}% (threshold: >60%).
+            Redis 连接比: {{ $value | printf "%.1f" }}% (阈值: >60%)。
+            Cluster: {{ $labels.cluster }}
+          runbook_url: "https://runbooks.luckinus.com/db-redis/RedisConnectionRatioWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/redis-connections"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Connection pool nearing capacity; new connections may be rejected."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+      # REDIS-09: Network bandwidth >32Mbps - warning
+      - alert: RedisNetworkBandwidthWarning
+        expr: |
+          (rate(redis_net_input_bytes_total{env="production"}[3m]) + rate(redis_net_output_bytes_total{env="production"}[3m])) * 8 / 1024 / 1024 > 32
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-redis"
+          service: "elasticache-redis"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-REDIS] NetworkBandwidth_Warning - {{ $labels.instance }}"
+          description: |
+            Redis network throughput: {{ $value | printf "%.1f" }}Mbps (threshold: >32Mbps).
+            Redis 网络吞吐: {{ $value | printf "%.1f" }}Mbps (阈值: >32Mbps)。
+            Cluster: {{ $labels.cluster }}
+          runbook_url: "https://runbooks.luckinus.com/db-redis/RedisNetworkBandwidthWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/redis-network"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Redis network bandwidth saturating; large key or pipeline issue."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+      # REDIS-10: Instance down - critical
+      - alert: RedisInstanceDownCritical
+        expr: |
+          redis_up{env="production"} == 0
+        for: 1m
+        labels:
+          severity: "critical"
+          team: "dba"
+          category: "db-redis"
+          service: "elasticache-redis"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-REDIS] InstanceDown_Critical - {{ $labels.instance }}"
+          description: |
+            Redis instance is down. Value: {{ $value | printf "%.1f" }}.
+            Redis 实例已宕机。值: {{ $value | printf "%.1f" }}。
+            Cluster: {{ $labels.cluster }}
+          runbook_url: "https://runbooks.luckinus.com/db-redis/RedisInstanceDownCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/redis-overview"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Redis instance unreachable; all cache-dependent services impacted."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-all"
+
+  ##############################################################################
+  # ALERT RULES - DB-ES (6 alerts)
+  ##############################################################################
+  - name: lck-na.alerts.db-es
+    interval: 30s
+    rules:
+      # ES-01: Cluster yellow - warning
+      - alert: EsClusterYellowWarning
+        expr: |
+          elasticsearch_cluster_health_status{color="yellow", env="production"} == 1
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-es"
+          service: "elasticsearch"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-ES] ClusterYellow_Warning - {{ $labels.instance }}"
+          description: |
+            Elasticsearch cluster status is YELLOW. Value: {{ $value | printf "%.1f" }}.
+            Elasticsearch 集群状态为 YELLOW。值: {{ $value | printf "%.1f" }}。
+            Cluster: {{ $labels.cluster }}
+          runbook_url: "https://runbooks.luckinus.com/db-es/EsClusterYellowWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/es-cluster"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "ES cluster degraded; replica shards unassigned, reduced redundancy."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+      # ES-02: Cluster red - critical
+      - alert: EsClusterRedCritical
+        expr: |
+          elasticsearch_cluster_health_status{color="red", env="production"} == 1
+        for: 0m
+        labels:
+          severity: "critical"
+          team: "dba"
+          category: "db-es"
+          service: "elasticsearch"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-ES] ClusterRed_Critical - {{ $labels.instance }}"
+          description: |
+            Elasticsearch cluster status is RED. Value: {{ $value | printf "%.1f" }}.
+            Elasticsearch 集群状态为 RED。值: {{ $value | printf "%.1f" }}。
+            Cluster: {{ $labels.cluster }}
+          runbook_url: "https://runbooks.luckinus.com/db-es/EsClusterRedCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/es-cluster"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "ES cluster RED; primary shards missing, data loss risk, search/index failing."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-all"
+
+      # ES-03: CPU per node warning 75%
+      - alert: EsNodeCpuWarning
+        expr: |
+          elasticsearch_os_cpu_percent{env="production"} > 75
+          and
+          elasticsearch_os_cpu_percent{env="production"} <= 85
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-es"
+          service: "elasticsearch"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-ES] NodeCpu_Warning - {{ $labels.instance }}"
+          description: |
+            ES node CPU: {{ $value | printf "%.1f" }}% (threshold: >75%).
+            ES 节点 CPU: {{ $value | printf "%.1f" }}% (阈值: >75%)。
+            Node: {{ $labels.node }}
+          runbook_url: "https://runbooks.luckinus.com/db-es/EsNodeCpuWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/es-nodes"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "ES node CPU high; query and indexing performance degrading."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+      # ES-04: CPU per node critical 85%
+      - alert: EsNodeCpuCritical
+        expr: |
+          elasticsearch_os_cpu_percent{env="production"} > 85
+        for: 3m
+        labels:
+          severity: "critical"
+          team: "dba"
+          category: "db-es"
+          service: "elasticsearch"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-ES] NodeCpu_Critical - {{ $labels.instance }}"
+          description: |
+            ES node CPU: {{ $value | printf "%.1f" }}% (threshold: >85%).
+            ES 节点 CPU: {{ $value | printf "%.1f" }}% (阈值: >85%)。
+            Node: {{ $labels.node }}
+          runbook_url: "https://runbooks.luckinus.com/db-es/EsNodeCpuCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/es-nodes"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "ES node CPU critical; node may become unresponsive, cluster instability."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-all"
+
+      # ES-05: Disk per node warning 85%
+      - alert: EsNodeDiskWarning
+        expr: |
+          (1 - elasticsearch_filesystem_data_available_bytes{env="production"}
+          / elasticsearch_filesystem_data_size_bytes{env="production"}) * 100 > 85
+          and
+          (1 - elasticsearch_filesystem_data_available_bytes{env="production"}
+          / elasticsearch_filesystem_data_size_bytes{env="production"}) * 100 <= 90
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-es"
+          service: "elasticsearch"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-ES] NodeDisk_Warning - {{ $labels.instance }}"
+          description: |
+            ES node disk usage: {{ $value | printf "%.1f" }}% (threshold: >85%).
+            ES 节点磁盘使用: {{ $value | printf "%.1f" }}% (阈值: >85%)。
+            Node: {{ $labels.node }}
+          runbook_url: "https://runbooks.luckinus.com/db-es/EsNodeDiskWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/es-storage"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "ES disk filling; watermark triggers may block index allocation."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+      # ES-06: Disk per node critical 90%
+      - alert: EsNodeDiskCritical
+        expr: |
+          (1 - elasticsearch_filesystem_data_available_bytes{env="production"}
+          / elasticsearch_filesystem_data_size_bytes{env="production"}) * 100 > 90
+        for: 3m
+        labels:
+          severity: "critical"
+          team: "dba"
+          category: "db-es"
+          service: "elasticsearch"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-ES] NodeDisk_Critical - {{ $labels.instance }}"
+          description: |
+            ES node disk usage: {{ $value | printf "%.1f" }}% (threshold: >90%).
+            ES 节点磁盘使用: {{ $value | printf "%.1f" }}% (阈值: >90%)。
+            Node: {{ $labels.node }}
+          runbook_url: "https://runbooks.luckinus.com/db-es/EsNodeDiskCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/es-storage"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "ES disk critical; flood-stage watermark may trigger read-only indices."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-all"
+
+  ##############################################################################
+  # ALERT RULES - DB-MONGO (5 alerts)
+  ##############################################################################
+  - name: lck-na.alerts.db-mongo
+    interval: 30s
+    rules:
+      # MONGO-01: CPU warning 70%
+      - alert: MongoCpuUsageWarning
+        expr: |
+          avg_over_time(mongodb_cpu_utilization{env="production"}[3m]) > 70
+          and
+          avg_over_time(mongodb_cpu_utilization{env="production"}[3m]) <= 90
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-mongo"
+          service: "documentdb-mongo"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-MONGO] CpuUsage_Warning - {{ $labels.instance }}"
+          description: |
+            MongoDB CPU utilization: {{ $value | printf "%.1f" }}% (threshold: >70%).
+            MongoDB CPU 利用率: {{ $value | printf "%.1f" }}% (阈值: >70%)。
+            Instance: {{ $labels.instance }}
+          runbook_url: "https://runbooks.luckinus.com/db-mongo/MongoCpuUsageWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/mongo-overview"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "MongoDB CPU elevated; query performance may degrade."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+      # MONGO-02: CPU critical 90%
+      - alert: MongoCpuUsageCritical
+        expr: |
+          avg_over_time(mongodb_cpu_utilization{env="production"}[3m]) > 90
+        for: 3m
+        labels:
+          severity: "critical"
+          team: "dba"
+          category: "db-mongo"
+          service: "documentdb-mongo"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-MONGO] CpuUsage_Critical - {{ $labels.instance }}"
+          description: |
+            MongoDB CPU utilization: {{ $value | printf "%.1f" }}% (threshold: >90%).
+            MongoDB CPU 利用率: {{ $value | printf "%.1f" }}% (阈值: >90%)。
+            Instance: {{ $labels.instance }}
+          runbook_url: "https://runbooks.luckinus.com/db-mongo/MongoCpuUsageCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/mongo-overview"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "MongoDB CPU critical; operations timing out, service degradation imminent."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-all"
+
+      # MONGO-03: Memory warning <500MB
+      - alert: MongoMemoryFreeWarning
+        expr: |
+          mongodb_freeable_memory_bytes{env="production"} / 1024 / 1024 < 500
+          and
+          mongodb_freeable_memory_bytes{env="production"} / 1024 / 1024 >= 200
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-mongo"
+          service: "documentdb-mongo"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-MONGO] MemoryFreeLow_Warning - {{ $labels.instance }}"
+          description: |
+            MongoDB freeable memory: {{ $value | printf "%.1f" }}MB (threshold: <500MB).
+            MongoDB 可用内存: {{ $value | printf "%.1f" }}MB (阈值: <500MB)。
+            Instance: {{ $labels.instance }}
+          runbook_url: "https://runbooks.luckinus.com/db-mongo/MongoMemoryFreeWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/mongo-memory"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "MongoDB freeable memory low; swap usage may increase, performance degrades."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+      # MONGO-04: Memory critical <200MB
+      - alert: MongoMemoryFreeCritical
+        expr: |
+          mongodb_freeable_memory_bytes{env="production"} / 1024 / 1024 < 200
+        for: 3m
+        labels:
+          severity: "critical"
+          team: "dba"
+          category: "db-mongo"
+          service: "documentdb-mongo"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-MONGO] MemoryFreeLow_Critical - {{ $labels.instance }}"
+          description: |
+            MongoDB freeable memory: {{ $value | printf "%.1f" }}MB (threshold: <200MB).
+            MongoDB 可用内存: {{ $value | printf "%.1f" }}MB (阈值: <200MB)。
+            Instance: {{ $labels.instance }}
+          runbook_url: "https://runbooks.luckinus.com/db-mongo/MongoMemoryFreeCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/mongo-memory"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "MongoDB memory critically low; OOM kill risk, potential instance crash."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-all"
+
+      # MONGO-05: Connection >80% - warning
+      - alert: MongoConnectionHighWarning
+        expr: |
+          mongodb_connections_current{env="production"}
+          / mongodb_connections_max{env="production"} * 100 > 80
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "dba"
+          category: "db-mongo"
+          service: "documentdb-mongo"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-DB-MONGO] ConnectionHigh_Warning - {{ $labels.instance }}"
+          description: |
+            MongoDB connection utilization: {{ $value | printf "%.1f" }}% (threshold: >80%).
+            MongoDB 连接利用率: {{ $value | printf "%.1f" }}% (阈值: >80%)。
+            Instance: {{ $labels.instance }}
+          runbook_url: "https://runbooks.luckinus.com/db-mongo/MongoConnectionHighWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/mongo-connections"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "MongoDB connection pool nearing capacity; new connections may be refused."
+          first_responder: "dba"
+          notification_channel: "wecom+twilio-lead"
+
+  ##############################################################################
+  # ALERT RULES - INFRA-K8S (7 alerts)
+  ##############################################################################
+  - name: lck-na.alerts.infra-k8s
+    interval: 30s
+    rules:
+      # K8S-01: Pod CPU info 50%
+      - alert: K8sPodCpuUsageInfo
+        expr: |
+          lckna:k8s:pod_cpu_avg3m > 50 and lckna:k8s:pod_cpu_avg3m <= 70
+        for: 10m
+        labels:
+          severity: "info"
+          team: "k8s-ops"
+          category: "infra-k8s"
+          service: "kubernetes"
+          alert_type: "infrastructure"
+          tier: "3"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-INFRA-K8S] PodCpuUsage_Info - {{ $labels.instance }}"
+          description: |
+            Pod CPU usage: {{ $value | printf "%.1f" }}% (threshold: >50%).
+            Pod CPU 使用: {{ $value | printf "%.1f" }}% (阈值: >50%)。
+            Pod: {{ $labels.pod }}, Namespace: {{ $labels.namespace }}
+          runbook_url: "https://runbooks.luckinus.com/infra-k8s/K8sPodCpuUsageInfo"
+          dashboard_url: "https://grafana.luckinus.com/d/k8s-pods"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Pod CPU elevated; may need horizontal scaling."
+          first_responder: "k8s-ops"
+          notification_channel: "wecom-only"
+
+      # K8S-02: Pod CPU warning 70%
+      - alert: K8sPodCpuUsageWarning
+        expr: |
+          lckna:k8s:pod_cpu_avg3m > 70 and lckna:k8s:pod_cpu_avg3m <= 85
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "k8s-ops"
+          category: "infra-k8s"
+          service: "kubernetes"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-INFRA-K8S] PodCpuUsage_Warning - {{ $labels.instance }}"
+          description: |
+            Pod CPU usage: {{ $value | printf "%.1f" }}% (threshold: >70%).
+            Pod CPU 使用: {{ $value | printf "%.1f" }}% (阈值: >70%)。
+            Pod: {{ $labels.pod }}, Namespace: {{ $labels.namespace }}
+          runbook_url: "https://runbooks.luckinus.com/infra-k8s/K8sPodCpuUsageWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/k8s-pods"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Pod CPU high; throttling likely, scale out recommended."
+          first_responder: "k8s-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # K8S-03: Pod CPU critical 85%
+      - alert: K8sPodCpuUsageCritical
+        expr: |
+          lckna:k8s:pod_cpu_avg3m > 85
+        for: 3m
+        labels:
+          severity: "critical"
+          team: "k8s-ops"
+          category: "infra-k8s"
+          service: "kubernetes"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-INFRA-K8S] PodCpuUsage_Critical - {{ $labels.instance }}"
+          description: |
+            Pod CPU usage: {{ $value | printf "%.1f" }}% (threshold: >85%).
+            Pod CPU 使用: {{ $value | printf "%.1f" }}% (阈值: >85%)。
+            Pod: {{ $labels.pod }}, Namespace: {{ $labels.namespace }}
+          runbook_url: "https://runbooks.luckinus.com/infra-k8s/K8sPodCpuUsageCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/k8s-pods"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Pod CPU critical; heavy throttling, request failures likely."
+          first_responder: "k8s-ops"
+          notification_channel: "wecom+twilio-all"
+
+      # K8S-04: Pod restart >1 per 2min - warning
+      - alert: K8sPodRestartWarning
+        expr: |
+          increase(kube_pod_container_status_restarts_total{env="production"}[2m]) > 1
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "k8s-ops"
+          category: "infra-k8s"
+          service: "kubernetes"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-INFRA-K8S] PodRestart_Warning - {{ $labels.instance }}"
+          description: |
+            Pod restart count in 2 min: {{ $value | printf "%.1f" }} (threshold: >1).
+            2 分钟内 Pod 重启次数: {{ $value | printf "%.1f" }} (阈值: >1)。
+            Pod: {{ $labels.pod }}, Namespace: {{ $labels.namespace }}
+          runbook_url: "https://runbooks.luckinus.com/infra-k8s/K8sPodRestartWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/k8s-pods"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Pod restarting frequently; possible crash loop, check logs."
+          first_responder: "k8s-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # K8S-05: Pod disk IO >50MB/s - warning
+      - alert: K8sPodDiskIoWarning
+        expr: |
+          lckna:k8s:pod_disk_io_rate / 1024 / 1024 > 50
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "k8s-ops"
+          category: "infra-k8s"
+          service: "kubernetes"
+          alert_type: "infrastructure"
+          tier: "3"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-INFRA-K8S] PodDiskIo_Warning - {{ $labels.instance }}"
+          description: |
+            Pod disk IO rate: {{ $value | printf "%.1f" }}MB/s (threshold: >50MB/s).
+            Pod 磁盘 IO 速率: {{ $value | printf "%.1f" }}MB/s (阈值: >50MB/s)。
+            Pod: {{ $labels.pod }}, Namespace: {{ $labels.namespace }}
+          runbook_url: "https://runbooks.luckinus.com/infra-k8s/K8sPodDiskIoWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/k8s-pod-io"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "High disk IO; may cause node-level IO contention."
+          first_responder: "k8s-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # K8S-06: OOM killed - critical
+      - alert: K8sOomKilledCritical
+        expr: |
+          increase(kube_pod_container_status_last_terminated_reason{reason="OOMKilled", env="production"}[5m]) > 0
+        for: 0m
+        labels:
+          severity: "critical"
+          team: "k8s-ops"
+          category: "infra-k8s"
+          service: "kubernetes"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-INFRA-K8S] OomKilled_Critical - {{ $labels.instance }}"
+          description: |
+            Pod OOM killed detected. Count: {{ $value | printf "%.1f" }}.
+            检测到 Pod OOM 终止。次数: {{ $value | printf "%.1f" }}。
+            Pod: {{ $labels.pod }}, Namespace: {{ $labels.namespace }}
+          runbook_url: "https://runbooks.luckinus.com/infra-k8s/K8sOomKilledCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/k8s-pods"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Pod OOM killed; memory limit reached, service disruption."
+          first_responder: "k8s-ops"
+          notification_channel: "wecom+twilio-all"
+
+      # K8S-07: Node heartbeat lost - critical 5m
+      - alert: K8sNodeHeartbeatLostCritical
+        expr: |
+          kube_node_status_condition{condition="Ready", status="true", env="production"} == 0
+        for: 5m
+        labels:
+          severity: "critical"
+          team: "k8s-ops"
+          category: "infra-k8s"
+          service: "kubernetes"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-INFRA-K8S] NodeHeartbeatLost_Critical - {{ $labels.instance }}"
+          description: |
+            Kubernetes node is NotReady for 5 min. Value: {{ $value | printf "%.1f" }}.
+            Kubernetes 节点 NotReady 已持续 5 分钟。值: {{ $value | printf "%.1f" }}。
+            Node: {{ $labels.node }}
+          runbook_url: "https://runbooks.luckinus.com/infra-k8s/K8sNodeHeartbeatLostCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/k8s-nodes"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Node offline; pods being rescheduled, capacity reduced."
+          first_responder: "k8s-ops"
+          notification_channel: "wecom+twilio-all"
+
+  ##############################################################################
+  # ALERT RULES - INFRA-VM (8 alerts)
+  ##############################################################################
+  - name: lck-na.alerts.infra-vm
+    interval: 30s
+    rules:
+      # VM-01: CPU warning 80%
+      - alert: VmCpuUsageWarning
+        expr: |
+          lckna:vm:cpu_avg5m > 80 and lckna:vm:cpu_avg5m <= 95
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "sys-ops"
+          category: "infra-vm"
+          service: "ec2-instance"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-INFRA-VM] CpuUsage_Warning - {{ $labels.instance }}"
+          description: |
+            VM CPU utilization: {{ $value | printf "%.1f" }}% (threshold: >80%).
+            VM CPU 利用率: {{ $value | printf "%.1f" }}% (阈值: >80%)。
+            Instance: {{ $labels.instance }}
+          runbook_url: "https://runbooks.luckinus.com/infra-vm/VmCpuUsageWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/vm-overview"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "VM CPU high; processes may be CPU-starved."
+          first_responder: "sys-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # VM-02: CPU critical 95%
+      - alert: VmCpuUsageCritical
+        expr: |
+          lckna:vm:cpu_avg5m > 95
+        for: 3m
+        labels:
+          severity: "critical"
+          team: "sys-ops"
+          category: "infra-vm"
+          service: "ec2-instance"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-INFRA-VM] CpuUsage_Critical - {{ $labels.instance }}"
+          description: |
+            VM CPU utilization: {{ $value | printf "%.1f" }}% (threshold: >95%).
+            VM CPU 利用率: {{ $value | printf "%.1f" }}% (阈值: >95%)。
+            Instance: {{ $labels.instance }}
+          runbook_url: "https://runbooks.luckinus.com/infra-vm/VmCpuUsageCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/vm-overview"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "VM CPU critically saturated; SSH may be unresponsive."
+          first_responder: "sys-ops"
+          notification_channel: "wecom+twilio-all"
+
+      # VM-03: Memory warning 85%
+      - alert: VmMemoryUsageWarning
+        expr: |
+          lckna:vm:memory_avg10m > 85 and lckna:vm:memory_avg10m <= 95
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "sys-ops"
+          category: "infra-vm"
+          service: "ec2-instance"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-INFRA-VM] MemoryUsage_Warning - {{ $labels.instance }}"
+          description: |
+            VM memory utilization: {{ $value | printf "%.1f" }}% (threshold: >85%).
+            VM 内存利用率: {{ $value | printf "%.1f" }}% (阈值: >85%)。
+            Instance: {{ $labels.instance }}
+          runbook_url: "https://runbooks.luckinus.com/infra-vm/VmMemoryUsageWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/vm-memory"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "VM memory high; swap usage increasing, performance degrading."
+          first_responder: "sys-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # VM-04: Memory critical 95%
+      - alert: VmMemoryUsageCritical
+        expr: |
+          lckna:vm:memory_avg10m > 95
+        for: 3m
+        labels:
+          severity: "critical"
+          team: "sys-ops"
+          category: "infra-vm"
+          service: "ec2-instance"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-INFRA-VM] MemoryUsage_Critical - {{ $labels.instance }}"
+          description: |
+            VM memory utilization: {{ $value | printf "%.1f" }}% (threshold: >95%).
+            VM 内存利用率: {{ $value | printf "%.1f" }}% (阈值: >95%)。
+            Instance: {{ $labels.instance }}
+          runbook_url: "https://runbooks.luckinus.com/infra-vm/VmMemoryUsageCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/vm-memory"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "VM memory critical; OOM killer may terminate processes."
+          first_responder: "sys-ops"
+          notification_channel: "wecom+twilio-all"
+
+      # VM-05: Disk warning 85%
+      - alert: VmDiskUsageWarning
+        expr: |
+          lckna:vm:disk_util > 85 and lckna:vm:disk_util <= 95
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "sys-ops"
+          category: "infra-vm"
+          service: "ec2-instance"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-INFRA-VM] DiskUsage_Warning - {{ $labels.instance }}"
+          description: |
+            VM disk utilization: {{ $value | printf "%.1f" }}% (threshold: >85%).
+            VM 磁盘利用率: {{ $value | printf "%.1f" }}% (阈值: >85%)。
+            Instance: {{ $labels.instance }}, Mount: {{ $labels.mountpoint }}
+          runbook_url: "https://runbooks.luckinus.com/infra-vm/VmDiskUsageWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/vm-disk"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Disk filling up; log rotation or cleanup needed."
+          first_responder: "sys-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # VM-06: Disk critical 95%
+      - alert: VmDiskUsageCritical
+        expr: |
+          lckna:vm:disk_util > 95
+        for: 3m
+        labels:
+          severity: "critical"
+          team: "sys-ops"
+          category: "infra-vm"
+          service: "ec2-instance"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-INFRA-VM] DiskUsage_Critical - {{ $labels.instance }}"
+          description: |
+            VM disk utilization: {{ $value | printf "%.1f" }}% (threshold: >95%).
+            VM 磁盘利用率: {{ $value | printf "%.1f" }}% (阈值: >95%)。
+            Instance: {{ $labels.instance }}, Mount: {{ $labels.mountpoint }}
+          runbook_url: "https://runbooks.luckinus.com/infra-vm/VmDiskUsageCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/vm-disk"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Disk nearly full; writes will fail, services will crash."
+          first_responder: "sys-ops"
+          notification_channel: "wecom+twilio-all"
+
+      # VM-07: Network errors - warning
+      - alert: VmNetworkErrorsWarning
+        expr: |
+          lckna:vm:net_errors_rate5m > 200
+          or
+          rate(node_network_receive_drop_total{env="production"}[5m]) > 20
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "sys-ops"
+          category: "infra-vm"
+          service: "ec2-instance"
+          alert_type: "infrastructure"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-INFRA-VM] NetworkErrors_Warning - {{ $labels.instance }}"
+          description: |
+            VM network error/drop rate: {{ $value | printf "%.1f" }}/s (threshold: >200 errors/s or >20 drops/s).
+            VM 网络错误/丢包率: {{ $value | printf "%.1f" }}/s (阈值: >200 errors/s 或 >20 drops/s)。
+            Instance: {{ $labels.instance }}
+          runbook_url: "https://runbooks.luckinus.com/infra-vm/VmNetworkErrorsWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/vm-network"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Network errors elevated; packet loss causing retransmissions."
+          first_responder: "sys-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # VM-08: Instance down - critical
+      - alert: VmInstanceDownCritical
+        expr: |
+          up{job="node-exporter", env="production"} == 0
+        for: 2m
+        labels:
+          severity: "critical"
+          team: "sys-ops"
+          category: "infra-vm"
+          service: "ec2-instance"
+          alert_type: "infrastructure"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-INFRA-VM] InstanceDown_Critical - {{ $labels.instance }}"
+          description: |
+            VM instance is unreachable. Value: {{ $value | printf "%.1f" }}.
+            VM 实例不可达。值: {{ $value | printf "%.1f" }}。
+            Instance: {{ $labels.instance }}
+          runbook_url: "https://runbooks.luckinus.com/infra-vm/VmInstanceDownCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/vm-overview"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "VM down; all services on this host are offline."
+          first_responder: "sys-ops"
+          notification_channel: "wecom+twilio-all"
+
+  ##############################################################################
+  # ALERT RULES - APM (6 alerts)
+  ##############################################################################
+  - name: lck-na.alerts.apm
+    interval: 30s
+    rules:
+      # APM-01: Service exceptions warning >5/min
+      - alert: ApmServiceExceptionsWarning
+        expr: |
+          rate(service_exception_count{env="production"}[3m]) * 60 > 5
+          and
+          rate(service_exception_count{env="production"}[3m]) * 60 <= 20
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "app-ops"
+          category: "apm"
+          service: "apm-monitored-services"
+          alert_type: "application"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-APM] ServiceExceptions_Warning - {{ $labels.instance }}"
+          description: |
+            Service exception rate: {{ $value | printf "%.1f" }}/min (threshold: >5/min).
+            服务异常速率: {{ $value | printf "%.1f" }}/min (阈值: >5/min)。
+            Service: {{ $labels.service_name }}
+          runbook_url: "https://runbooks.luckinus.com/apm/ApmServiceExceptionsWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/apm-services"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Elevated exception rate; partial failures for some requests."
+          first_responder: "app-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # APM-02: Service exceptions critical >20/min
+      - alert: ApmServiceExceptionsCritical
+        expr: |
+          rate(service_exception_count{env="production"}[3m]) * 60 > 20
+        for: 3m
+        labels:
+          severity: "critical"
+          team: "app-ops"
+          category: "apm"
+          service: "apm-monitored-services"
+          alert_type: "application"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-APM] ServiceExceptions_Critical - {{ $labels.instance }}"
+          description: |
+            Service exception rate: {{ $value | printf "%.1f" }}/min (threshold: >20/min).
+            服务异常速率: {{ $value | printf "%.1f" }}/min (阈值: >20/min)。
+            Service: {{ $labels.service_name }}
+          runbook_url: "https://runbooks.luckinus.com/apm/ApmServiceExceptionsCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/apm-services"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "High exception rate; service substantially degraded or failing."
+          first_responder: "app-ops"
+          notification_channel: "wecom+twilio-all"
+
+      # APM-03: Latency p99 >1500ms - warning
+      - alert: ApmLatencyP99Warning
+        expr: |
+          service_resp_time_percentile{quantile="0.99", env="production"} > 1500
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "app-ops"
+          category: "apm"
+          service: "apm-monitored-services"
+          alert_type: "application"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-APM] LatencyP99_Warning - {{ $labels.instance }}"
+          description: |
+            Service p99 latency: {{ $value | printf "%.1f" }}ms (threshold: >1500ms).
+            服务 p99 延迟: {{ $value | printf "%.1f" }}ms (阈值: >1500ms)。
+            Service: {{ $labels.service_name }}
+          runbook_url: "https://runbooks.luckinus.com/apm/ApmLatencyP99Warning"
+          dashboard_url: "https://grafana.luckinus.com/d/apm-latency"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Service latency high; user experience degraded."
+          first_responder: "app-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # APM-04: Endpoint failures >2/min - warning
+      - alert: ApmEndpointFailuresWarning
+        expr: |
+          rate(endpoint_failure_count{env="production"}[3m]) * 60 > 2
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "app-ops"
+          category: "apm"
+          service: "apm-monitored-services"
+          alert_type: "application"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-APM] EndpointFailures_Warning - {{ $labels.instance }}"
+          description: |
+            Endpoint failure rate: {{ $value | printf "%.1f" }}/min (threshold: >2/min).
+            端点失败速率: {{ $value | printf "%.1f" }}/min (阈值: >2/min)。
+            Service: {{ $labels.service_name }}, Endpoint: {{ $labels.endpoint }}
+          runbook_url: "https://runbooks.luckinus.com/apm/ApmEndpointFailuresWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/apm-endpoints"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Endpoint failures increasing; specific API calls failing."
+          first_responder: "app-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # APM-05: JVM Full GC >5 - warning
+      - alert: ApmJvmFullGcWarning
+        expr: |
+          increase(jvm_gc_count{gc_type="full", env="production"}[5m]) > 5
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "app-ops"
+          category: "apm"
+          service: "apm-monitored-services"
+          alert_type: "application"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-APM] JvmFullGc_Warning - {{ $labels.instance }}"
+          description: |
+            JVM Full GC count in 5 min: {{ $value | printf "%.1f" }} (threshold: >5).
+            5 分钟内 JVM Full GC 次数: {{ $value | printf "%.1f" }} (阈值: >5)。
+            Service: {{ $labels.service_name }}
+          runbook_url: "https://runbooks.luckinus.com/apm/ApmJvmFullGcWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/apm-jvm"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Frequent Full GC causing stop-the-world pauses; latency spikes."
+          first_responder: "app-ops"
+          notification_channel: "wecom+twilio-lead"
+
+      # APM-06: APM infrastructure health - warning
+      - alert: ApmInfraHealthWarning
+        expr: |
+          up{job=~"apm-.*", env="production"} == 0
+        for: 3m
+        labels:
+          severity: "warning"
+          team: "app-ops"
+          category: "apm"
+          service: "apm-collector"
+          alert_type: "application"
+          tier: "3"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-APM] InfraHealth_Warning - {{ $labels.instance }}"
+          description: |
+            APM infrastructure component down. Value: {{ $value | printf "%.1f" }}.
+            APM 基础设施组件宕机。值: {{ $value | printf "%.1f" }}。
+            Job: {{ $labels.job }}
+          runbook_url: "https://runbooks.luckinus.com/apm/ApmInfraHealthWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/apm-infra"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "APM collection impaired; monitoring blind spots."
+          first_responder: "app-ops"
+          notification_channel: "wecom+twilio-lead"
+
+  ##############################################################################
+  # ALERT RULES - PIPELINE (4 alerts)
+  ##############################################################################
+  - name: lck-na.alerts.pipeline
+    interval: 30s
+    rules:
+      # PIPELINE-01: Golden flow - critical
+      - alert: PipelineGoldenFlowCritical
+        expr: |
+          datalink_task_delay_seconds{pipeline_tier="golden", env="production"} > 300
+          or
+          increase(datalink_task_exception_total{pipeline_tier="golden", env="production"}[5m]) > 0
+        for: 3m
+        labels:
+          severity: "critical"
+          team: "data-arch"
+          category: "pipeline"
+          service: "datalink"
+          alert_type: "pipeline"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-PIPELINE] GoldenFlowFailure_Critical - {{ $labels.instance }}"
+          description: |
+            Golden pipeline delay or exception detected. Value: {{ $value | printf "%.1f" }}.
+            黄金管道延迟或异常。值: {{ $value | printf "%.1f" }}。
+            Task: {{ $labels.task_name }}
+          runbook_url: "https://runbooks.luckinus.com/pipeline/PipelineGoldenFlowCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/pipeline-golden"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Golden data pipeline broken; critical business data not flowing."
+          first_responder: "data-arch"
+          notification_channel: "wecom+twilio-all"
+
+      # PIPELINE-02: Core pipeline - warning
+      - alert: PipelineCoreWarning
+        expr: |
+          datalink_task_delay_seconds{pipeline_tier="core", env="production"} > 600
+          or
+          increase(datalink_task_exception_total{pipeline_tier="core", env="production"}[10m]) > 0
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "data-arch"
+          category: "pipeline"
+          service: "datalink"
+          alert_type: "pipeline"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-PIPELINE] CorePipelineDelay_Warning - {{ $labels.instance }}"
+          description: |
+            Core pipeline delay or exception detected. Value: {{ $value | printf "%.1f" }}.
+            核心管道延迟或异常。值: {{ $value | printf "%.1f" }}。
+            Task: {{ $labels.task_name }}
+          runbook_url: "https://runbooks.luckinus.com/pipeline/PipelineCoreWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/pipeline-core"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Core pipeline degraded; downstream analytics delayed."
+          first_responder: "data-arch"
+          notification_channel: "wecom+twilio-lead"
+
+      # PIPELINE-03: Important pipeline - info
+      - alert: PipelineImportantInfo
+        expr: |
+          datalink_task_delay_seconds{pipeline_tier="important", env="production"} > 900
+          or
+          increase(datalink_task_exception_total{pipeline_tier="important", env="production"}[15m]) > 0
+        for: 10m
+        labels:
+          severity: "info"
+          team: "data-arch"
+          category: "pipeline"
+          service: "datalink"
+          alert_type: "pipeline"
+          tier: "3"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-PIPELINE] ImportantPipelineDelay_Info - {{ $labels.instance }}"
+          description: |
+            Important pipeline delay or exception. Value: {{ $value | printf "%.1f" }}.
+            重要管道延迟或异常。值: {{ $value | printf "%.1f" }}。
+            Task: {{ $labels.task_name }}
+          runbook_url: "https://runbooks.luckinus.com/pipeline/PipelineImportantInfo"
+          dashboard_url: "https://grafana.luckinus.com/d/pipeline-important"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Important pipeline delayed; non-critical analytics affected."
+          first_responder: "data-arch"
+          notification_channel: "wecom-only"
+
+      # PIPELINE-04: Standard pipeline - info
+      - alert: PipelineStandardInfo
+        expr: |
+          datalink_task_delay_seconds{pipeline_tier="standard", env="production"} > 1800
+          or
+          increase(datalink_task_exception_total{pipeline_tier="standard", env="production"}[30m]) > 0
+        for: 15m
+        labels:
+          severity: "info"
+          team: "data-arch"
+          category: "pipeline"
+          service: "datalink"
+          alert_type: "pipeline"
+          tier: "3"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-PIPELINE] StandardPipelineDelay_Info - {{ $labels.instance }}"
+          description: |
+            Standard pipeline delay or exception. Value: {{ $value | printf "%.1f" }}.
+            标准管道延迟或异常。值: {{ $value | printf "%.1f" }}。
+            Task: {{ $labels.task_name }}
+          runbook_url: "https://runbooks.luckinus.com/pipeline/PipelineStandardInfo"
+          dashboard_url: "https://grafana.luckinus.com/d/pipeline-standard"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Standard pipeline delayed; low-priority data processing behind schedule."
+          first_responder: "data-arch"
+          notification_channel: "wecom-only"
+
+  ##############################################################################
+  # ALERT RULES - PLATFORM (4 alerts)
+  ##############################################################################
+  - name: lck-na.alerts.platform
+    interval: 30s
+    rules:
+      # PLATFORM-01: SMS delivery failure - warning
+      - alert: PlatformSmsDeliveryWarning
+        expr: |
+          sms_delivery_failure_rate{env="production"} > 5
+        for: 5m
+        labels:
+          severity: "warning"
+          team: "platform"
+          category: "platform"
+          service: "sms-gateway"
+          alert_type: "platform"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-PLATFORM] SmsDeliveryFailure_Warning - {{ $labels.instance }}"
+          description: |
+            SMS delivery failure rate: {{ $value | printf "%.1f" }}% (threshold: >5%).
+            短信投递失败率: {{ $value | printf "%.1f" }}% (阈值: >5%)。
+            Provider: {{ $labels.provider }}
+          runbook_url: "https://runbooks.luckinus.com/platform/PlatformSmsDeliveryWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/platform-sms"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "SMS delivery degraded; user verification and notifications affected."
+          first_responder: "platform"
+          notification_channel: "wecom+twilio-lead"
+
+      # PLATFORM-02: Risk control pre-warning - warning
+      - alert: PlatformRiskControlPreWarning
+        expr: |
+          risk_control_circuit_status{env="production", level="prewarning"} == 1
+        for: 3m
+        labels:
+          severity: "warning"
+          team: "risk"
+          category: "platform"
+          service: "risk-control"
+          alert_type: "platform"
+          tier: "2"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-PLATFORM] RiskControlPreWarning_Warning - {{ $labels.instance }}"
+          description: |
+            Risk control pre-warning triggered. Value: {{ $value | printf "%.1f" }}.
+            风控预警已触发。值: {{ $value | printf "%.1f" }}。
+            Rule: {{ $labels.rule_name }}
+          runbook_url: "https://runbooks.luckinus.com/platform/PlatformRiskControlPreWarning"
+          dashboard_url: "https://grafana.luckinus.com/d/platform-risk"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Risk control pre-warning; anomalous transaction pattern detected."
+          first_responder: "risk"
+          notification_channel: "wecom+twilio-lead"
+
+      # PLATFORM-03: Risk control circuit breaker - critical
+      - alert: PlatformRiskControlCircuitBreakerCritical
+        expr: |
+          risk_control_circuit_status{env="production", level="breaker"} == 1
+        for: 0m
+        labels:
+          severity: "critical"
+          team: "risk"
+          category: "platform"
+          service: "risk-control"
+          alert_type: "platform"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-PLATFORM] RiskControlCircuitBreaker_Critical - {{ $labels.instance }}"
+          description: |
+            Risk control circuit breaker OPEN. Value: {{ $value | printf "%.1f" }}.
+            风控熔断器已开启。值: {{ $value | printf "%.1f" }}。
+            Rule: {{ $labels.rule_name }}
+          runbook_url: "https://runbooks.luckinus.com/platform/PlatformRiskControlCircuitBreakerCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/platform-risk"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Risk circuit breaker open; transactions being blocked, revenue impact."
+          first_responder: "risk"
+          notification_channel: "wecom+twilio-all"
+
+      # PLATFORM-04: Gateway error rate >15% - critical
+      - alert: PlatformGatewayErrorRateCritical
+        expr: |
+          gateway_error_rate{env="production"} > 15
+        for: 3m
+        labels:
+          severity: "critical"
+          team: "platform"
+          category: "platform"
+          service: "api-gateway"
+          alert_type: "platform"
+          tier: "1"
+          env: "production"
+        annotations:
+          summary: "[LCK-NA-PLATFORM] GatewayErrorRate_Critical - {{ $labels.instance }}"
+          description: |
+            API Gateway error rate: {{ $value | printf "%.1f" }}% (threshold: >15%).
+            API 网关错误率: {{ $value | printf "%.1f" }}% (阈值: >15%)。
+            Gateway: {{ $labels.gateway }}
+          runbook_url: "https://runbooks.luckinus.com/platform/PlatformGatewayErrorRateCritical"
+          dashboard_url: "https://grafana.luckinus.com/d/platform-gateway"
+          izeus_url: "https://izeus.luckincoffee.us/trace?service={{ $labels.service }}"
+          impact: "Gateway error rate critical; significant portion of API requests failing."
+          first_responder: "platform"
+          notification_channel: "wecom+twilio-all"

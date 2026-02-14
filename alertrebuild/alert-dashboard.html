@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luckin Coffee NA - Alert Management Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --warning-gradient: linear-gradient(135deg, #F2994A 0%, #F2C94C 100%);
+
+            --bg-primary: #0f1419;
+            --bg-secondary: #192734;
+            --bg-card: #22303c;
+            --bg-hover: #2d4050;
+
+            --text-primary: #ffffff;
+            --text-secondary: #8899a6;
+            --text-muted: #657786;
+
+            --border-color: #38444d;
+            --border-light: rgba(255,255,255,0.1);
+
+            /* Severity colors (replaces P0-P3) */
+            --info-color: #3b82f6;
+            --info-bg: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            --info-light: rgba(59, 130, 246, 0.15);
+            --warning-color: #f97316;
+            --warning-bg: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+            --warning-light: rgba(249, 115, 22, 0.15);
+            --critical-color: #ef4444;
+            --critical-bg: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+            --critical-light: rgba(239, 68, 68, 0.15);
+
+            --luckin-blue: #00529B;
+            --luckin-gradient: linear-gradient(135deg, #00529B 0%, #002F5D 100%);
+
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            padding: 0.875rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .header-content {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .header-brand { display: flex; align-items: center; gap: 0.75rem; }
+        .brand-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .search-container { max-width: 600px; justify-self: center; width: 100%; }
+        .search-wrapper { position: relative; }
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            font-size: 0.95rem;
+            font-family: inherit;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        .search-input::placeholder { color: var(--text-muted); }
+        .search-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2); }
+        .search-icon {
+            position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); width: 20px; height: 20px;
+        }
+        .header-stats { display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap; }
+        .stat-badge {
+            padding: 0.375rem 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: flex; align-items: center; gap: 0.375rem;
+        }
+        .stat-badge .count { font-weight: 700; font-family: 'Fira Code', monospace; }
+        .stat-badge.critical { border-color: var(--critical-color); color: var(--critical-color); }
+        .stat-badge.warning { border-color: var(--warning-color); color: var(--warning-color); }
+        .stat-badge.info { border-color: var(--info-color); color: var(--info-color); }
+
+        /* Layout */
+        .main-layout {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+            min-height: calc(100vh - 60px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 1rem 0;
+            overflow-y: auto;
+            max-height: calc(100vh - 60px);
+            position: sticky;
+            top: 60px;
+        }
+        .nav-section { margin-bottom: 1.5rem; }
+        .nav-section-title {
+            padding: 0 1rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .nav-item.active { background: var(--bg-hover); color: var(--text-primary); border-left-color: #667eea; }
+        .nav-item .count {
+            margin-left: auto;
+            font-size: 0.7rem;
+            font-family: 'Fira Code', monospace;
+            padding: 0.125rem 0.5rem;
+            background: var(--bg-primary);
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+        }
+        .severity-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        }
+        .severity-dot.critical { background: var(--critical-color); }
+        .severity-dot.warning { background: var(--warning-color); }
+        .severity-dot.info { background: var(--info-color); }
+
+        /* Content Area */
+        .content-area { padding: 1.5rem; overflow-y: auto; }
+
+        /* View Toolbar */
+        .view-toolbar {
+            display: flex; align-items: center; gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .view-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        .view-btn:hover { border-color: #667eea; color: var(--text-primary); }
+        .view-btn.active { background: #667eea; border-color: #667eea; color: white; }
+
+        /* Card Grid */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1rem; }
+
+        .alert-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .alert-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: #667eea; }
+        .alert-card.selected { border-color: #667eea; box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3); }
+        .alert-card.critical { border-left: 3px solid var(--critical-color); }
+        .alert-card.warning { border-left: 3px solid var(--warning-color); }
+        .alert-card.info { border-left: 3px solid var(--info-color); }
+
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+        .card-id { font-family: 'Fira Code', monospace; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem; }
+        .card-title { font-size: 0.9rem; font-weight: 600; line-height: 1.4; }
+        .severity-badge {
+            padding: 0.2rem 0.6rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            flex-shrink: 0;
+        }
+        .severity-badge.critical { background: var(--critical-light); color: var(--critical-color); }
+        .severity-badge.warning { background: var(--warning-light); color: var(--warning-color); }
+        .severity-badge.info { background: var(--info-light); color: var(--info-color); }
+
+        .card-meta { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-bottom: 0.5rem; }
+        .meta-tag {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            background: var(--bg-primary);
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+        }
+        .notification-indicator {
+            position: absolute; bottom: 0.75rem; right: 0.75rem;
+            font-size: 0.7rem; color: var(--text-muted);
+            display: flex; align-items: center; gap: 0.25rem;
+        }
+        .notification-indicator .icon { font-size: 0.85rem; }
+
+        /* Hierarchy View */
+        .hierarchy-view { display: none; }
+        .hierarchy-view.active { display: block; }
+        .hierarchy-category { margin-bottom: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; }
+        .hierarchy-category-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        .hierarchy-category-header:hover { background: var(--bg-hover); }
+        .hierarchy-category-title { display: flex; align-items: center; gap: 0.75rem; font-weight: 600; }
+        .hierarchy-category-count {
+            font-size: 0.7rem; font-family: 'Fira Code', monospace;
+            padding: 0.125rem 0.5rem; background: var(--bg-primary); border-radius: var(--radius-sm); color: var(--text-muted);
+        }
+        .hierarchy-toggle { transition: transform 0.3s ease; color: var(--text-muted); font-size: 0.8rem; }
+        .hierarchy-category.expanded .hierarchy-toggle { transform: rotate(180deg); }
+        .hierarchy-category-body { display: none; padding: 0.5rem; }
+        .hierarchy-category.expanded .hierarchy-category-body { display: block; }
+        .hierarchy-alert {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.2s ease;
+        }
+        .hierarchy-alert:hover { background: var(--bg-hover); }
+
+        /* Relationship View */
+        .relationship-view { display: none; }
+        .relationship-view.active { display: block; }
+        .relationship-header { text-align: center; margin-bottom: 1.5rem; }
+        .relationship-title { font-size: 1.2rem; font-weight: 700; }
+        .relationship-subtitle { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+        .tree-wrapper { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
+        .tree-level { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
+        .tree-node {
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .tree-node.root { background: var(--luckin-gradient); color: white; font-size: 1rem; cursor: default; }
+        .tree-node.team { background: var(--bg-card); border: 1px solid var(--border-color); }
+        .tree-node.team:hover, .tree-node.team.expanded { background: var(--bg-hover); border-color: #667eea; }
+        .tree-node.category { background: var(--bg-card); border: 1px solid var(--border-color); }
+        .tree-node.category:hover, .tree-node.category.expanded { background: var(--bg-hover); border-color: #f97316; }
+        .node-count { font-size: 0.7rem; font-weight: 400; color: var(--text-muted); margin-top: 0.25rem; }
+        .category-panel, .alert-panel { width: 100%; display: none; }
+        .category-panel.expanded, .alert-panel.expanded { display: block; }
+        .category-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
+        .alert-panel-item {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin: 0.25rem 0;
+            transition: background 0.2s ease;
+        }
+        .alert-panel-item:hover { background: var(--bg-hover); }
+
+        /* Routing Pipeline View */
+        .routing-view { display: none; }
+        .routing-view.active { display: block; }
+        .routing-pipeline { max-width: 900px; margin: 0 auto; }
+        .pipeline-stage {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        .pipeline-stage::after {
+            content: '';
+            position: absolute; bottom: -1rem; left: 50%;
+            width: 2px; height: 1rem; background: var(--border-color);
+        }
+        .pipeline-stage:last-child::after { display: none; }
+        .pipeline-stage-title {
+            font-size: 0.9rem; font-weight: 700; margin-bottom: 0.75rem;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .pipeline-stage-title .stage-icon { font-size: 1.1rem; }
+        .pipeline-branch {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;
+        }
+        .pipeline-channel {
+            padding: 0.75rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .pipeline-channel.tier1 { border-color: var(--info-color); background: var(--info-light); }
+        .pipeline-channel.tier2 { border-color: var(--warning-color); background: var(--warning-light); }
+        .pipeline-channel.tier3 { border-color: var(--critical-color); background: var(--critical-light); }
+        .channel-name { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.25rem; }
+        .channel-detail { font-size: 0.7rem; color: var(--text-muted); }
+        .pipeline-legend {
+            display: flex; gap: 1.5rem; justify-content: center; margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-secondary); }
+
+        /* Detail View */
+        .detail-view { display: none; }
+        .detail-view.active { display: block; }
+        .detail-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);
+        }
+        .detail-title { font-size: 1.2rem; font-weight: 700; }
+        .detail-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+        .detail-badge {
+            padding: 0.25rem 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+        }
+        .close-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+        .close-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+        .detail-tabs { display: flex; gap: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); }
+        .detail-tab {
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+        }
+        .detail-tab:hover { color: var(--text-primary); }
+        .detail-tab.active { color: #667eea; border-bottom-color: #667eea; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .info-item { padding: 0.75rem; background: var(--bg-card); border-radius: var(--radius-sm); border: 1px solid var(--border-color); }
+        .info-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 0.25rem; }
+        .info-value { font-size: 0.9rem; font-weight: 600; }
+        .expression-section { margin-bottom: 1.5rem; }
+        .expression-label {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;
+        }
+        .expression-code {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            color: #66bb6a;
+        }
+        .impact-section { margin-bottom: 1.5rem; }
+        .impact-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .impact-services { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+        .service-tag {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+
+        /* Runbook content */
+        .runbook-content {
+            padding: 1rem;
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            line-height: 1.8;
+        }
+        .runbook-content h1, .runbook-content h2, .runbook-content h3 { margin: 1rem 0 0.5rem; color: var(--text-primary); }
+        .runbook-content h2 { font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
+        .runbook-content h3 { font-size: 0.95rem; }
+        .runbook-content p { margin: 0.5rem 0; color: var(--text-secondary); }
+        .runbook-content code {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            background: var(--bg-primary);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+        }
+        .runbook-content pre {
+            background: var(--bg-primary);
+            padding: 0.75rem;
+            border-radius: var(--radius-sm);
+            overflow-x: auto;
+            margin: 0.75rem 0;
+            border: 1px solid var(--border-color);
+        }
+        .runbook-content pre code { background: none; padding: 0; }
+        .runbook-content table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; }
+        .runbook-content th, .runbook-content td {
+            padding: 0.5rem; text-align: left;
+            border: 1px solid var(--border-color);
+            font-size: 0.85rem;
+        }
+        .runbook-content th { background: var(--bg-hover); }
+
+        /* Routing tab */
+        .routing-detail { padding: 1rem; }
+        .routing-path {
+            display: flex; flex-direction: column; gap: 0.75rem;
+        }
+        .routing-step {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+        .routing-step-icon { font-size: 1.5rem; flex-shrink: 0; }
+        .routing-step-label { font-weight: 600; font-size: 0.85rem; }
+        .routing-step-detail { font-size: 0.75rem; color: var(--text-muted); }
+        .routing-arrow { text-align: center; color: var(--text-muted); font-size: 1.2rem; }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center; padding: 3rem;
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+        }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .header-content { grid-template-columns: 1fr; gap: 0.75rem; }
+            .header-brand, .header-stats { justify-content: center; }
+            .main-layout { grid-template-columns: 1fr; }
+            .sidebar { max-height: none; position: static; display: flex; flex-wrap: wrap; gap: 0; padding: 0.5rem 1rem; border-right: none; border-bottom: 1px solid var(--border-color); }
+            .nav-section { margin-bottom: 0; }
+            .nav-section-title { display: none; }
+            .nav-item { padding: 0.375rem 0.75rem; border-left: none; border-bottom: 2px solid transparent; font-size: 0.8rem; }
+            .nav-item.active { border-bottom-color: #667eea; border-left-color: transparent; }
+            .card-grid { grid-template-columns: 1fr; }
+            .pipeline-branch { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-content">
+        <div class="header-brand">
+            <div class="brand-title">Luckin Coffee NA Alert Dashboard</div>
+        </div>
+        <div class="search-container">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search alerts by name, category, team, metric...">
+            </div>
+        </div>
+        <div class="header-stats" id="headerStats"></div>
+    </div>
+</div>
+
+<div class="main-layout">
+    <div class="sidebar" id="sidebar"></div>
+
+    <div class="content-area">
+        <div class="view-toolbar">
+            <button class="view-btn active" data-view="cards" onclick="switchView('cards')">Cards</button>
+            <button class="view-btn" data-view="hierarchy" onclick="switchView('hierarchy')">Hierarchy</button>
+            <button class="view-btn" data-view="relationship" onclick="switchView('relationship')">Relationship</button>
+            <button class="view-btn" data-view="routing" onclick="switchView('routing')">Routing Pipeline</button>
+        </div>
+
+        <div id="cardsView"><div class="card-grid" id="cardGrid"></div></div>
+        <div class="hierarchy-view" id="hierarchyView"><div id="hierarchyContainer"></div></div>
+        <div class="relationship-view" id="relationshipView"><div id="relationshipContainer"></div></div>
+        <div class="routing-view" id="routingView"><div id="routingContainer"></div></div>
+        <div class="detail-view" id="detailView">
+            <div class="detail-header">
+                <div>
+                    <div class="detail-title" id="detailTitle"></div>
+                    <div class="detail-badges" id="detailBadges"></div>
+                </div>
+                <button class="close-btn" onclick="closeDetail()">Back</button>
+            </div>
+            <div class="detail-tabs">
+                <button class="detail-tab active" data-tab="info" onclick="switchTab('info')">Info</button>
+                <button class="detail-tab" data-tab="runbook" onclick="switchTab('runbook')">Runbook</button>
+                <button class="detail-tab" data-tab="routing" onclick="switchTab('routing')">Routing</button>
+            </div>
+            <div class="tab-content active" id="infoTab"></div>
+            <div class="tab-content" id="runbookTab"><div class="runbook-content" id="runbookContent"></div></div>
+            <div class="tab-content" id="routingTab"><div class="routing-detail" id="routingDetailContent"></div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// ALERT DATA — 72 alerts across 10 categories
+// ═══════════════════════════════════════════════════════════════════════════
+const alertsData = [
+  // ─── BIZ (10 alerts) ───────────────────────────────────────────────
+  {id:"BIZ-01",name:"BizOrderVolumeInfo",severity:"info",tier:"1",category:"biz",team:"biz-ops",metric:"business_completed_orders_total",threshold:"< 5 orders / 10min",duration:"10m",expression:`sum(increase(business_completed_orders_total[10m])) < 5`,services:["order-service"],notification:"wecom-only",oldIds:["ALR-001"],runbook:`## BizOrderVolumeInfo\n\n**Severity:** Info | **Tier:** 1\n\n### Assess\nCheck if order volume drop is within normal variance (off-peak hours, seasonal).\n\n\`\`\`bash\ncurl -s "http://prometheus:9090/api/v1/query?query=sum(increase(business_completed_orders_total[10m]))"\n\`\`\`\n\n### Analyze\n- Check time of day (low volume is normal 2-7 AM ET)\n- Compare with same day last week\n- Verify payment gateway status\n\n### Act\nMonitor only — no action required for Tier 1 unless volume continues dropping.`},
+  {id:"BIZ-02",name:"BizOrderVolumeWarning",severity:"warning",tier:"2",category:"biz",team:"biz-ops",metric:"business_completed_orders_total",threshold:"< 3 orders / 10min",duration:"10m",expression:`sum(increase(business_completed_orders_total[10m])) < 3`,services:["order-service","payment-service"],notification:"wecom+twilio-lead",oldIds:["ALR-001"],runbook:`## BizOrderVolumeWarning\n\n**Severity:** Warning | **Tier:** 2\n\n### Assess\nSignificant order decline detected. Check golden path health.\n\n### Analyze\n- Check order-service pod health\n- Check payment-service connectivity\n- Check RDS connection status\n- Check Redis session cache\n\n### Act\n- If service is degraded: restart affected pods\n- If DB issue: escalate to DBA team\n- Notify team lead via Twilio`},
+  {id:"BIZ-03",name:"BizOrderVolumeCritical",severity:"critical",tier:"3",category:"biz",team:"biz-ops",metric:"business_completed_orders_total",threshold:"< 1 order / 10min",duration:"5m",expression:`sum(increase(business_completed_orders_total[10m])) < 1`,services:["order-service","payment-service","product-service","inventory-service"],notification:"wecom+twilio-all",oldIds:["ALR-001"],runbook:`## BizOrderVolumeCritical\n\n**Severity:** Critical | **Tier:** 3\n\n### Assess\nGolden path likely BROKEN. Zero or near-zero orders.\n\n### Acknowledge\nSilence alert, post to WeCom critical channel. Wake China HQ.\n\n### Analyze\n1. Check all golden path services\n2. Check RDS primary status\n3. Check Redis cluster status\n4. Check payment gateway status\n\n### Act\n- Emergency failover if DB down\n- Rolling restart of order pipeline services\n- Escalate to China HQ engineering immediately`},
+  {id:"BIZ-04",name:"BizCancellationSpikeWarning",severity:"warning",tier:"2",category:"biz",team:"biz-ops",metric:"business_cancelled_orders_total",threshold:"> 1 cancel / 5min",duration:"5m",expression:`sum(increase(business_cancelled_orders_total[5m])) > 1`,services:["order-service"],notification:"wecom+twilio-lead",oldIds:[],runbook:`## BizCancellationSpikeWarning\n\n### Assess\nElevated cancellation rate — possible payment or fulfillment issue.\n\n### Analyze\n- Check payment gateway error rate\n- Check order fulfillment service logs\n- Review recent deployment changes\n\n### Act\n- Investigate root cause of cancellations\n- If payment issue: switch to backup provider`},
+  {id:"BIZ-05",name:"BizPaymentAmountWarning",severity:"warning",tier:"2",category:"biz",team:"biz-ops",metric:"business_payment_amount_total",threshold:"< $500 / 10min",duration:"5m",expression:`sum(increase(business_payment_amount_total[10m])) < 500`,services:["payment-service"],notification:"wecom+twilio-lead",oldIds:[],runbook:`## BizPaymentAmountWarning\n\n### Assess\nPayment volume below normal threshold.\n\n### Analyze\n- Check payment gateway connectivity\n- Check Stripe/payment provider status page\n- Check for recent config changes\n\n### Act\nContact payment provider if gateway issue detected.`},
+  {id:"BIZ-06",name:"BizPaymentAmountCritical",severity:"critical",tier:"3",category:"biz",team:"biz-ops",metric:"business_payment_amount_total",threshold:"= $0 / 10min",duration:"5m",expression:`sum(increase(business_payment_amount_total[10m])) == 0`,services:["payment-service"],notification:"wecom+twilio-all",oldIds:[],runbook:`## BizPaymentAmountCritical\n\n### Assess\nPayment pipeline completely stalled. ZERO revenue flowing.\n\n### Act\n- Check payment service health immediately\n- Check Stripe webhook delivery\n- Consider manual payment processing as fallback\n- Wake China HQ for financial impact assessment`},
+  {id:"BIZ-07",name:"BizRegistrationZeroWarning",severity:"warning",tier:"2",category:"biz",team:"biz-ops",metric:"business_registration_total",threshold:"= 0 / 10min",duration:"10m",expression:`sum(increase(business_registration_total[10m])) == 0`,services:["registration-service"],notification:"wecom+twilio-lead",oldIds:[],runbook:`## BizRegistrationZeroWarning\n\n### Assess\nNo new registrations for 10+ minutes.\n\n### Analyze\n- Check registration service pod health\n- Check SMS OTP delivery rate\n- Check DB write connectivity\n\n### Act\n- Restart registration service if pods unhealthy\n- Check SMS provider status`},
+  {id:"BIZ-08",name:"BizRegistrationZeroCritical",severity:"critical",tier:"3",category:"biz",team:"biz-ops",metric:"business_registration_total",threshold:"= 0 / 30min",duration:"30m",expression:`sum(increase(business_registration_total[30m])) == 0`,services:["registration-service","sms-gateway"],notification:"wecom+twilio-all",oldIds:[],runbook:`## BizRegistrationZeroCritical\n\n### Assess\nRegistration has been zero for 30+ minutes. Confirmed broken.\n\n### Act\n- Emergency restart of registration pipeline\n- Check SMS provider failover\n- Escalate to China HQ`},
+  {id:"BIZ-09",name:"BizTrafficAnomalyWarning",severity:"warning",tier:"2",category:"biz",team:"biz-ops",metric:"business_completed_orders_total",threshold:"> 3x daily average",duration:"5m",expression:`sum(rate(business_completed_orders_total[5m])) > 3 * sum(avg_over_time(rate(business_completed_orders_total[5m])[1d:5m]))`,services:["order-service","api-gateway"],notification:"wecom+twilio-lead",oldIds:[],runbook:`## BizTrafficAnomalyWarning\n\n### Assess\nTraffic spike >3x normal — possible bot attack or promotion surge.\n\n### Analyze\n- Check request source IPs for bot patterns\n- Check if a marketing campaign launched\n- Check WAF/rate limiting metrics\n\n### Act\n- Enable rate limiting if bot attack confirmed\n- Scale services if legitimate traffic`},
+  {id:"BIZ-10",name:"BizLatencyP99Warning",severity:"warning",tier:"2",category:"biz",team:"biz-ops",metric:"service_resp_time_percentile",threshold:"p99 > 3000ms",duration:"5m",expression:`histogram_quantile(0.99, sum(rate(service_resp_time_percentile_bucket{service="order-service"}[5m])) by (le)) > 3000`,services:["order-service"],notification:"wecom+twilio-lead",oldIds:[],runbook:`## BizLatencyP99Warning\n\n### Assess\nOrder service p99 latency exceeding 3 seconds.\n\n### Analyze\n- Check iZeus traces for slow spans\n- Check RDS query latency\n- Check Redis response times\n- Check downstream service health\n\n### Act\n- Identify and optimize slow queries\n- Scale up if resource-constrained`},
+
+  // ─── DB-RDS (12 alerts) ────────────────────────────────────────────
+  {id:"RDS-01",name:"RdsCpuUsageInfo",severity:"info",tier:"1",category:"db-rds",team:"dba",metric:"aws_rds_cpuutilization_average",threshold:"> 50%",duration:"10m",expression:`lckna:rds:cpu_avg3m > 50`,services:["rds"],notification:"wecom-only",oldIds:["ALR-019"],runbook:`## RdsCpuUsageInfo\n\n### Assess\nRDS CPU above 50%. Check for slow queries.\n\n\`\`\`bash\n# Check current CPU\ncurl -s "http://prometheus:9090/api/v1/query?query=lckna:rds:cpu_avg3m"\n\`\`\`\n\n### Analyze\n- Review slow query log\n- Check for missing indexes\n- Check connection count\n\n### Act\nMonitor — optimize queries if pattern is recurring.`},
+  {id:"RDS-02",name:"RdsCpuUsageWarning",severity:"warning",tier:"2",category:"db-rds",team:"dba",metric:"aws_rds_cpuutilization_average",threshold:"> 70%",duration:"5m",expression:`lckna:rds:cpu_avg3m > 70`,services:["rds"],notification:"wecom+twilio-lead",oldIds:["ALR-019","ALR-020"],runbook:`## RdsCpuUsageWarning\n\n### Assess\nRDS CPU above 70% — investigate immediately.\n\n### Analyze\n- Kill long-running queries if blocking\n- Check for full table scans\n- Review recent schema changes\n\n### Act\n- Optimize or kill problematic queries\n- Consider read replica offloading`},
+  {id:"RDS-03",name:"RdsCpuUsageCritical",severity:"critical",tier:"3",category:"db-rds",team:"dba",metric:"aws_rds_cpuutilization_average",threshold:"> 90%",duration:"3m",expression:`lckna:rds:cpu_avg3m > 90`,services:["rds"],notification:"wecom+twilio-all",oldIds:["ALR-022"],runbook:`## RdsCpuUsageCritical\n\n### Assess\nRDS CPU above 90% — database near saturation.\n\n### Act\n- Kill all non-essential queries immediately\n- Consider emergency instance class upgrade\n- Failover to read replica if available\n- Wake China HQ DBA team`},
+  {id:"RDS-04",name:"RdsSlowQueriesInfo",severity:"info",tier:"1",category:"db-rds",team:"dba",metric:"aws_rds_slow_queries",threshold:"> 10/min",duration:"5m",expression:`lckna:rds:slow_queries_rate3m > 10`,services:["rds"],notification:"wecom-only",oldIds:["ALR-025"],runbook:`## RdsSlowQueriesInfo\n\n### Analyze\n- Review Performance Insights\n- Check recent deployments for query regressions\n\n### Act\nAdd indexes or optimize queries during next maintenance window.`},
+  {id:"RDS-05",name:"RdsSlowQueriesWarning",severity:"warning",tier:"2",category:"db-rds",team:"dba",metric:"aws_rds_slow_queries",threshold:"> 50/min",duration:"5m",expression:`lckna:rds:slow_queries_rate3m > 50`,services:["rds"],notification:"wecom+twilio-lead",oldIds:["ALR-025","ALR-026","ALR-133"],runbook:`## RdsSlowQueriesWarning\n\n### Analyze\n\`\`\`sql\n-- Check slow query log\nSELECT * FROM slow_query_log WHERE start_time > NOW() - INTERVAL 30 MINUTE ORDER BY query_time DESC LIMIT 20;\n\`\`\`\n\n### Act\n- Kill blocking queries\n- Add emergency indexes if safe`},
+  {id:"RDS-06",name:"RdsSlowQueriesCritical",severity:"critical",tier:"3",category:"db-rds",team:"dba",metric:"aws_rds_slow_queries",threshold:"> 200/min",duration:"3m",expression:`lckna:rds:slow_queries_rate3m > 200`,services:["rds"],notification:"wecom+twilio-all",oldIds:["ALR-025","ALR-026"],runbook:`## RdsSlowQueriesCritical\n\n### Act\n- Kill ALL non-essential queries\n- Emergency read replica failover\n- Escalate to China HQ DBA`},
+  {id:"RDS-07",name:"RdsActiveThreadsInfo",severity:"info",tier:"1",category:"db-rds",team:"dba",metric:"aws_rds_database_connections_average",threshold:"> 12",duration:"5m",expression:`lckna:rds:threads_avg2m > 12`,services:["rds"],notification:"wecom-only",oldIds:["ALR-027"],runbook:`## RdsActiveThreadsInfo\n\n### Analyze\nCheck connection pool configuration across services.\n\n### Act\nMonitor — review connection pool settings if recurring.`},
+  {id:"RDS-08",name:"RdsActiveThreadsWarning",severity:"warning",tier:"2",category:"db-rds",team:"dba",metric:"aws_rds_database_connections_average",threshold:"> 24",duration:"3m",expression:`lckna:rds:threads_avg2m > 24`,services:["rds"],notification:"wecom+twilio-lead",oldIds:["ALR-027","ALR-028"],runbook:`## RdsActiveThreadsWarning\n\n### Act\n- Identify services with excess connections\n- Reduce connection pool max sizes\n- Kill idle connections if necessary`},
+  {id:"RDS-09",name:"RdsActiveThreadsCritical",severity:"critical",tier:"3",category:"db-rds",team:"dba",metric:"aws_rds_database_connections_average",threshold:"> 48",duration:"2m",expression:`lckna:rds:threads_avg2m > 48`,services:["rds"],notification:"wecom+twilio-all",oldIds:["ALR-027","ALR-028"],runbook:`## RdsActiveThreadsCritical\n\n### Act\n- Emergency: kill all idle connections\n- Restart connection-heavy services\n- Scale RDS instance if possible`},
+  {id:"RDS-10",name:"RdsDiskFreeWarning",severity:"warning",tier:"2",category:"db-rds",team:"dba",metric:"aws_rds_free_storage_space_average",threshold:"< 15GB free",duration:"5m",expression:`lckna:rds:disk_gb < 15`,services:["rds"],notification:"wecom+twilio-lead",oldIds:[],runbook:`## RdsDiskFreeWarning\n\n### Analyze\n- Check binary log size\n- Check slow query log size\n- Identify large tables\n\n### Act\n- Purge old binary logs\n- Archive old data\n- Increase storage allocation if needed`},
+  {id:"RDS-11",name:"RdsVipUnreachableCritical",severity:"critical",tier:"3",category:"db-rds",team:"dba",metric:"probe_success",threshold:"VIP down",duration:"1m",expression:`probe_success{job="rds-vip-probe"} == 0`,services:["rds"],notification:"wecom+twilio-all",oldIds:[],runbook:`## RdsVipUnreachableCritical\n\n### Assess\nRDS VIP endpoint is unreachable. All services cannot connect to database.\n\n### Act\n- Check AWS RDS console for maintenance events\n- Check security group rules\n- Initiate manual failover if primary is down\n- Contact AWS support if infrastructure issue`},
+  {id:"RDS-12",name:"RdsFailoverCritical",severity:"critical",tier:"3",category:"db-rds",team:"dba",metric:"aws_rds_replica_lag_average",threshold:"Failover event",duration:"0m",expression:`changes(aws_rds_replica_lag_average[5m]) > 0 and aws_rds_replica_lag_average > 60`,services:["rds"],notification:"wecom+twilio-all",oldIds:[],runbook:`## RdsFailoverCritical\n\n### Assess\nRDS failover detected or extreme replica lag.\n\n### Act\n- Monitor failover completion\n- Restart application connection pools\n- Verify data consistency after failover\n- Document timeline for post-incident review`},
+
+  // ─── DB-REDIS (10 alerts) ──────────────────────────────────────────
+  {id:"REDIS-01",name:"RedisCpuUsageInfo",severity:"info",tier:"1",category:"db-redis",team:"dba",metric:"redis_cpu_usage",threshold:"> 50%",duration:"5m",expression:`lckna:redis:cpu_avg3m > 50`,services:["redis"],notification:"wecom-only",oldIds:["ALR-040"],runbook:`## RedisCpuUsageInfo\n\n### Analyze\n- Check for hot keys using SLOWLOG\n- Review command patterns\n\n### Act\nMonitor — investigate hot key patterns.`},
+  {id:"REDIS-02",name:"RedisCpuUsageWarning",severity:"warning",tier:"2",category:"db-redis",team:"dba",metric:"redis_cpu_usage",threshold:"> 65%",duration:"5m",expression:`lckna:redis:cpu_avg3m > 65`,services:["redis"],notification:"wecom+twilio-lead",oldIds:["ALR-040","ALR-041"],runbook:`## RedisCpuUsageWarning\n\n### Analyze\n\`\`\`bash\nredis-cli -h master.CLUSTER.vyllrs.use1.cache.amazonaws.com -p 6379 --tls SLOWLOG GET 10\n\`\`\`\n\n### Act\n- Optimize hot key access patterns\n- Consider read replicas for heavy reads`},
+  {id:"REDIS-03",name:"RedisCpuUsageCritical",severity:"critical",tier:"3",category:"db-redis",team:"dba",metric:"redis_cpu_usage",threshold:"> 90%",duration:"3m",expression:`lckna:redis:cpu_avg3m > 90`,services:["redis"],notification:"wecom+twilio-all",oldIds:["ALR-040","ALR-041"],runbook:`## RedisCpuUsageCritical\n\n### Act\n- Identify and block hot key sources\n- Scale to larger instance type\n- Enable cluster mode if not already enabled`},
+  {id:"REDIS-04",name:"RedisMemoryUsageWarning",severity:"warning",tier:"2",category:"db-redis",team:"dba",metric:"redis_memory_usage_ratio",threshold:"> 80%",duration:"5m",expression:`lckna:redis:memory_ratio_avg3m > 80`,services:["redis"],notification:"wecom+twilio-lead",oldIds:["ALR-042","ALR-043"],runbook:`## RedisMemoryUsageWarning\n\n### Analyze\n\`\`\`bash\nredis-cli -h master.CLUSTER.vyllrs.use1.cache.amazonaws.com -p 6379 --tls INFO memory\n\`\`\`\n\n### Act\n- Review TTL policies\n- Scan for keys without TTL\n- Consider memory-optimized instance type`},
+  {id:"REDIS-05",name:"RedisMemoryUsageCritical",severity:"critical",tier:"3",category:"db-redis",team:"dba",metric:"redis_memory_usage_ratio",threshold:"> 95%",duration:"1m",expression:`lckna:redis:memory_ratio_avg3m > 95`,services:["redis"],notification:"wecom+twilio-all",oldIds:["ALR-042","ALR-043"],runbook:`## RedisMemoryUsageCritical\n\n### Act\n- Emergency: run TTL enforcement script\n- Scale to larger instance immediately\n- Flush non-critical caches if needed`},
+  {id:"REDIS-06",name:"RedisLatencyP99Warning",severity:"warning",tier:"2",category:"db-redis",team:"dba",metric:"redis_commands_latency",threshold:"p99 > 5ms",duration:"5m",expression:`redis_commands_latency{quantile="0.99"} > 5`,services:["redis"],notification:"wecom+twilio-lead",oldIds:[],runbook:`## RedisLatencyP99Warning\n\n### Analyze\n- Check SLOWLOG for expensive commands\n- Check network latency between app and Redis\n- Check if KEYS or SCAN commands are running\n\n### Act\n- Optimize expensive commands\n- Add read replicas if needed`},
+  {id:"REDIS-07",name:"RedisEvictionsWarning",severity:"warning",tier:"2",category:"db-redis",team:"dba",metric:"redis_evicted_keys_total",threshold:"> 1K/min",duration:"5m",expression:`rate(redis_evicted_keys_total[5m]) * 60 > 1000`,services:["redis"],notification:"wecom+twilio-lead",oldIds:[],runbook:`## RedisEvictionsWarning\n\n### Analyze\n- Check maxmemory-policy setting\n- Review key size distribution\n\n### Act\n- Increase memory allocation\n- Review TTL policies for over-cached data`},
+  {id:"REDIS-08",name:"RedisConnectionRatioWarning",severity:"warning",tier:"2",category:"db-redis",team:"dba",metric:"redis_connected_clients",threshold:"> 60% of max",duration:"5m",expression:`lckna:redis:connection_ratio > 60`,services:["redis"],notification:"wecom+twilio-lead",oldIds:[],runbook:`## RedisConnectionRatioWarning\n\n### Analyze\n- Identify services with excess connections\n- Check connection pool settings\n\n### Act\n- Reduce connection pool sizes\n- Increase maxclients if justified`},
+  {id:"REDIS-09",name:"RedisNetworkBandwidthWarning",severity:"warning",tier:"2",category:"db-redis",team:"dba",metric:"redis_net_bytes",threshold:"> 32 Mbps",duration:"5m",expression:`(rate(redis_net_input_bytes_total[5m]) + rate(redis_net_output_bytes_total[5m])) / 1024 / 1024 * 8 > 32`,services:["redis"],notification:"wecom+twilio-lead",oldIds:[],runbook:`## RedisNetworkBandwidthWarning\n\n### Analyze\n- Check for large value transfers\n- Check MGET/MSET with many keys\n\n### Act\n- Optimize payload sizes\n- Consider compression for large values`},
+  {id:"REDIS-10",name:"RedisInstanceDownCritical",severity:"critical",tier:"3",category:"db-redis",team:"dba",metric:"up",threshold:"Instance unreachable",duration:"1m",expression:`up{job="redis-exporter"} == 0`,services:["redis"],notification:"wecom+twilio-all",oldIds:[],runbook:`## RedisInstanceDownCritical\n\n### Assess\nRedis instance is DOWN. All dependent services will fall back to DB.\n\n### Act\n- Check AWS ElastiCache console\n- Initiate automatic failover if replica available\n- Verify sentinel/cluster failover completed\n- Restart affected application pods to reconnect`},
+
+  // ─── DB-ES (6 alerts) ──────────────────────────────────────────────
+  {id:"ES-01",name:"EsClusterYellowWarning",severity:"warning",tier:"2",category:"db-es",team:"dba",metric:"elasticsearch_cluster_health_status",threshold:"Cluster YELLOW",duration:"5m",expression:`elasticsearch_cluster_health_status{color="yellow"} == 1`,services:["elasticsearch"],notification:"wecom+twilio-lead",oldIds:["ALR-033"],runbook:`## EsClusterYellowWarning\n\n### Analyze\n\`\`\`bash\ncurl -s "http://ES_ENDPOINT:9200/_cluster/health" | jq .\ncurl -s "http://ES_ENDPOINT:9200/_cat/shards?v&h=index,shard,prirep,state,unassigned.reason" | grep UNASSIGNED\n\`\`\`\n\n### Act\n- Check for recently crashed nodes\n- Reroute unassigned shards if node is healthy`},
+  {id:"ES-02",name:"EsClusterRedCritical",severity:"critical",tier:"3",category:"db-es",team:"dba",metric:"elasticsearch_cluster_health_status",threshold:"Cluster RED",duration:"0m",expression:`elasticsearch_cluster_health_status{color="red"} == 1`,services:["elasticsearch"],notification:"wecom+twilio-all",oldIds:["ALR-034"],runbook:`## EsClusterRedCritical\n\n### Assess\nES cluster RED — primary shards missing, data loss possible.\n\n### Act\n- Identify missing nodes immediately\n- Restart crashed nodes\n- Do NOT force allocate primaries without China DBA approval\n- Check JVM heap and disk on all nodes`},
+  {id:"ES-03",name:"EsNodeCpuWarning",severity:"warning",tier:"2",category:"db-es",team:"dba",metric:"elasticsearch_os_cpu_percent",threshold:"> 75%",duration:"5m",expression:`elasticsearch_os_cpu_percent > 75`,services:["elasticsearch"],notification:"wecom+twilio-lead",oldIds:["ALR-035"],runbook:`## EsNodeCpuWarning\n\n### Analyze\n\`\`\`bash\ncurl -s "http://ES_ENDPOINT:9200/_nodes/hot_threads?threads=3"\n\`\`\`\n\n### Act\n- Check for expensive queries or aggregations\n- Throttle bulk indexing if running`},
+  {id:"ES-04",name:"EsNodeCpuCritical",severity:"critical",tier:"3",category:"db-es",team:"dba",metric:"elasticsearch_os_cpu_percent",threshold:"> 85%",duration:"3m",expression:`elasticsearch_os_cpu_percent > 85`,services:["elasticsearch"],notification:"wecom+twilio-all",oldIds:["ALR-035"],runbook:`## EsNodeCpuCritical\n\n### Act\n- Stop all non-essential indexing\n- Check for runaway queries\n- Scale cluster if pattern is sustained`},
+  {id:"ES-05",name:"EsNodeDiskWarning",severity:"warning",tier:"2",category:"db-es",team:"dba",metric:"elasticsearch_filesystem_data",threshold:"> 85% used",duration:"5m",expression:`(1 - elasticsearch_filesystem_data_available_bytes / elasticsearch_filesystem_data_size_bytes) * 100 > 85`,services:["elasticsearch"],notification:"wecom+twilio-lead",oldIds:["ALR-037"],runbook:`## EsNodeDiskWarning\n\n### Analyze\n- Check index sizes: \`curl -s "http://ES_ENDPOINT:9200/_cat/indices?v&s=store.size:desc&h=index,store.size" | head -20\`\n\n### Act\n- Delete old indices\n- Adjust ILM policies\n- Add data nodes if needed`},
+  {id:"ES-06",name:"EsNodeDiskCritical",severity:"critical",tier:"3",category:"db-es",team:"dba",metric:"elasticsearch_filesystem_data",threshold:"> 90% used",duration:"3m",expression:`(1 - elasticsearch_filesystem_data_available_bytes / elasticsearch_filesystem_data_size_bytes) * 100 > 90`,services:["elasticsearch"],notification:"wecom+twilio-all",oldIds:["ALR-037"],runbook:`## EsNodeDiskCritical\n\n### Act\n- Emergency: delete old/large indices\n- ES will go read-only at flood watermark\n- Add storage or data nodes immediately`},
+
+  // ─── DB-MONGO (5 alerts) ───────────────────────────────────────────
+  {id:"MONGO-01",name:"MongoCpuUsageWarning",severity:"warning",tier:"2",category:"db-mongo",team:"dba",metric:"mongodb_cpu_utilization",threshold:"> 70%",duration:"5m",expression:`avg_over_time(mongodb_cpu_utilization[3m]) > 70`,services:["mongodb"],notification:"wecom+twilio-lead",oldIds:["ALR-029"],runbook:`## MongoCpuUsageWarning\n\n### Analyze\n- Check slow operations: \`db.currentOp({"secs_running": {"$gt": 5}})\`\n- Review index usage\n\n### Act\n- Kill long-running operations\n- Add missing indexes`},
+  {id:"MONGO-02",name:"MongoCpuUsageCritical",severity:"critical",tier:"3",category:"db-mongo",team:"dba",metric:"mongodb_cpu_utilization",threshold:"> 90%",duration:"3m",expression:`avg_over_time(mongodb_cpu_utilization[3m]) > 90`,services:["mongodb"],notification:"wecom+twilio-all",oldIds:["ALR-029","ALR-031"],runbook:`## MongoCpuUsageCritical\n\n### Act\n- Kill all non-essential operations\n- Scale instance immediately\n- Escalate to China HQ DBA`},
+  {id:"MONGO-03",name:"MongoMemoryFreeWarning",severity:"warning",tier:"2",category:"db-mongo",team:"dba",metric:"mongodb_available_memory_bytes",threshold:"< 500MB available",duration:"5m",expression:`mongodb_available_memory_bytes / 1024 / 1024 < 500`,services:["mongodb"],notification:"wecom+twilio-lead",oldIds:["ALR-030"],runbook:`## MongoMemoryFreeWarning\n\n### Analyze\n- Check WiredTiger cache usage\n- Review working set size\n\n### Act\n- Consider scaling to larger instance\n- Review index sizes`},
+  {id:"MONGO-04",name:"MongoMemoryFreeCritical",severity:"critical",tier:"3",category:"db-mongo",team:"dba",metric:"mongodb_available_memory_bytes",threshold:"< 200MB available",duration:"3m",expression:`mongodb_available_memory_bytes / 1024 / 1024 < 200`,services:["mongodb"],notification:"wecom+twilio-all",oldIds:["ALR-030"],runbook:`## MongoMemoryFreeCritical\n\n### Act\n- Emergency scale to larger instance\n- OOM kill imminent\n- Restart service if memory leak suspected`},
+  {id:"MONGO-05",name:"MongoConnectionHighWarning",severity:"warning",tier:"2",category:"db-mongo",team:"dba",metric:"mongodb_connections",threshold:"> 80% used",duration:"5m",expression:`mongodb_connections_current / mongodb_connections_available * 100 > 80`,services:["mongodb"],notification:"wecom+twilio-lead",oldIds:[],runbook:`## MongoConnectionHighWarning\n\n### Analyze\n- Identify services with excessive connections\n- Check connection pool settings\n\n### Act\n- Reduce pool sizes or add connection limits`},
+
+  // ─── INFRA-K8S (7 alerts) ──────────────────────────────────────────
+  {id:"K8S-01",name:"K8sPodCpuUsageInfo",severity:"info",tier:"1",category:"infra-k8s",team:"k8s-ops",metric:"container_cpu_usage_seconds_total",threshold:"> 50%",duration:"10m",expression:`lckna:k8s:pod_cpu_avg3m > 50`,services:["kubernetes"],notification:"wecom-only",oldIds:["ALR-089"],runbook:`## K8sPodCpuUsageInfo\n\n### Analyze\n\`\`\`bash\nkubectl top pods -n production --sort-by=cpu | head -20\n\`\`\`\n\n### Act\nMonitor — adjust HPA if pattern is consistent.`},
+  {id:"K8S-02",name:"K8sPodCpuUsageWarning",severity:"warning",tier:"2",category:"infra-k8s",team:"k8s-ops",metric:"container_cpu_usage_seconds_total",threshold:"> 70%",duration:"5m",expression:`lckna:k8s:pod_cpu_avg3m > 70`,services:["kubernetes"],notification:"wecom+twilio-lead",oldIds:["ALR-089","ALR-090"],runbook:`## K8sPodCpuUsageWarning\n\n### Analyze\n- Check HPA status and limits\n- Check for CPU-intensive processing\n\n### Act\n- Scale up replicas\n- Increase CPU limits if justified`},
+  {id:"K8S-03",name:"K8sPodCpuUsageCritical",severity:"critical",tier:"3",category:"infra-k8s",team:"k8s-ops",metric:"container_cpu_usage_seconds_total",threshold:"> 85%",duration:"3m",expression:`lckna:k8s:pod_cpu_avg3m > 85`,services:["kubernetes"],notification:"wecom+twilio-all",oldIds:["ALR-089","ALR-090","ALR-091"],runbook:`## K8sPodCpuUsageCritical\n\n### Act\n- Emergency scale out\n- Check for runaway processes\n- Rolling restart if CPU leak suspected`},
+  {id:"K8S-04",name:"K8sPodRestartWarning",severity:"warning",tier:"2",category:"infra-k8s",team:"k8s-ops",metric:"kube_pod_container_status_restarts_total",threshold:"> 1 restart / 2min",duration:"5m",expression:`increase(kube_pod_container_status_restarts_total[2m]) > 1`,services:["kubernetes"],notification:"wecom+twilio-lead",oldIds:["ALR-092"],runbook:`## K8sPodRestartWarning\n\n### Analyze\n\`\`\`bash\nkubectl describe pod POD_NAME -n production | tail -30\nkubectl logs POD_NAME -n production --previous --tail=50\n\`\`\`\n\n### Act\n- Check previous container logs for crash reason\n- Fix startup probe or config issues\n- Rollback if caused by recent deployment`},
+  {id:"K8S-05",name:"K8sPodDiskIoWarning",severity:"warning",tier:"2",category:"infra-k8s",team:"k8s-ops",metric:"container_fs_bytes",threshold:"> 50MB/s",duration:"5m",expression:`lckna:k8s:pod_disk_io_rate / 1024 / 1024 > 50`,services:["kubernetes"],notification:"wecom+twilio-lead",oldIds:["ALR-093","ALR-094"],runbook:`## K8sPodDiskIoWarning\n\n### Analyze\n- Check if pod is doing heavy logging\n- Check ephemeral storage usage\n\n### Act\n- Reduce log verbosity\n- Move data to persistent volumes`},
+  {id:"K8S-06",name:"K8sOomKilledCritical",severity:"critical",tier:"3",category:"infra-k8s",team:"k8s-ops",metric:"kube_pod_container_status_last_terminated_reason",threshold:"OOMKilled",duration:"0m",expression:`increase(kube_pod_container_status_restarts_total[5m]) > 0 and kube_pod_container_status_last_terminated_reason{reason="OOMKilled"} == 1`,services:["kubernetes"],notification:"wecom+twilio-all",oldIds:["ALR-095"],runbook:`## K8sOomKilledCritical\n\n### Assess\nPod was killed due to out-of-memory condition.\n\n### Analyze\n\`\`\`bash\nkubectl get events -n production --field-selector reason=OOMKilling --sort-by='.lastTimestamp'\n\`\`\`\n\n### Act\n- Increase memory limits immediately\n- Check for memory leaks in application\n- Review JVM heap settings for Java services`},
+  {id:"K8S-07",name:"K8sNodeHeartbeatLostCritical",severity:"critical",tier:"3",category:"infra-k8s",team:"k8s-ops",metric:"kube_node_status_condition",threshold:"Node NotReady",duration:"5m",expression:`kube_node_status_condition{condition="Ready",status="true"} == 0`,services:["kubernetes"],notification:"wecom+twilio-all",oldIds:["ALR-096"],runbook:`## K8sNodeHeartbeatLostCritical\n\n### Assess\nK8s node lost heartbeat — all pods on this node will be evicted.\n\n### Analyze\n- Check EC2 instance status in AWS console\n- Check node system health (SSH if reachable)\n\n### Act\n- Cordon and drain node if partially responsive\n- Replace node via ASG if unresponsive\n- Verify workloads rescheduled to healthy nodes`},
+
+  // ─── INFRA-VM (8 alerts) ───────────────────────────────────────────
+  {id:"VM-01",name:"VmCpuUsageWarning",severity:"warning",tier:"2",category:"infra-vm",team:"sys-ops",metric:"node_cpu_seconds_total",threshold:"> 80%",duration:"5m",expression:`lckna:vm:cpu_avg5m > 80`,services:["ec2"],notification:"wecom+twilio-lead",oldIds:["ALR-069","ALR-070"],runbook:`## VmCpuUsageWarning\n\n### Analyze\n\`\`\`bash\n# Check top CPU processes\nssh INSTANCE_IP "top -bn1 | head -15"\n\`\`\`\n\n### Act\n- Identify CPU-heavy process\n- Consider instance type upgrade`},
+  {id:"VM-02",name:"VmCpuUsageCritical",severity:"critical",tier:"3",category:"infra-vm",team:"sys-ops",metric:"node_cpu_seconds_total",threshold:"> 95%",duration:"3m",expression:`lckna:vm:cpu_avg5m > 95`,services:["ec2"],notification:"wecom+twilio-all",oldIds:["ALR-069","ALR-070"],runbook:`## VmCpuUsageCritical\n\n### Act\n- Kill runaway processes\n- Scale to larger instance type\n- Distribute workload across multiple hosts`},
+  {id:"VM-03",name:"VmMemoryUsageWarning",severity:"warning",tier:"2",category:"infra-vm",team:"sys-ops",metric:"node_memory_MemAvailable_bytes",threshold:"> 85%",duration:"5m",expression:`lckna:vm:memory_avg10m > 85`,services:["ec2"],notification:"wecom+twilio-lead",oldIds:["ALR-071","ALR-072"],runbook:`## VmMemoryUsageWarning\n\n### Analyze\n\`\`\`bash\nssh INSTANCE_IP "free -h && ps aux --sort=-%mem | head -10"\n\`\`\`\n\n### Act\n- Identify memory-heavy process\n- Check for memory leaks`},
+  {id:"VM-04",name:"VmMemoryUsageCritical",severity:"critical",tier:"3",category:"infra-vm",team:"sys-ops",metric:"node_memory_MemAvailable_bytes",threshold:"> 95%",duration:"3m",expression:`lckna:vm:memory_avg10m > 95`,services:["ec2"],notification:"wecom+twilio-all",oldIds:["ALR-071","ALR-072"],runbook:`## VmMemoryUsageCritical\n\n### Act\n- Emergency: restart memory-leaking services\n- OOM killer will activate soon\n- Scale instance or add swap as temporary fix`},
+  {id:"VM-05",name:"VmDiskUsageWarning",severity:"warning",tier:"2",category:"infra-vm",team:"sys-ops",metric:"node_filesystem_avail_bytes",threshold:"> 85%",duration:"5m",expression:`lckna:vm:disk_util > 85`,services:["ec2"],notification:"wecom+twilio-lead",oldIds:["ALR-073","ALR-074"],runbook:`## VmDiskUsageWarning\n\n### Analyze\n\`\`\`bash\nssh INSTANCE_IP "df -h && du -sh /var/log/* | sort -rh | head -10"\n\`\`\`\n\n### Act\n- Clean up old logs\n- Extend EBS volume if needed`},
+  {id:"VM-06",name:"VmDiskUsageCritical",severity:"critical",tier:"3",category:"infra-vm",team:"sys-ops",metric:"node_filesystem_avail_bytes",threshold:"> 95%",duration:"3m",expression:`lckna:vm:disk_util > 95`,services:["ec2"],notification:"wecom+twilio-all",oldIds:["ALR-073","ALR-074"],runbook:`## VmDiskUsageCritical\n\n### Act\n- Emergency cleanup of large files and old logs\n- Extend EBS volume immediately\n- System will go read-only if disk full`},
+  {id:"VM-07",name:"VmNetworkErrorsWarning",severity:"warning",tier:"2",category:"infra-vm",team:"sys-ops",metric:"node_network_errs",threshold:"> 200/s or > 20/s drops",duration:"5m",expression:`lckna:vm:net_errors_rate5m > 200 or rate(node_network_receive_drop_total{device!~"lo|veth.*"}[5m]) > 20`,services:["ec2"],notification:"wecom+twilio-lead",oldIds:["ALR-075","ALR-076","ALR-077","ALR-078"],runbook:`## VmNetworkErrorsWarning\n\n### Analyze\n- Check NIC health\n- Check for packet loss patterns\n- Verify ENI and security group settings\n\n### Act\n- Replace ENI if hardware issue\n- Check for noisy neighbors on shared instances`},
+  {id:"VM-08",name:"VmInstanceDownCritical",severity:"critical",tier:"3",category:"infra-vm",team:"sys-ops",metric:"up",threshold:"Instance unreachable",duration:"1m",expression:`up{job=~"node-exporter|node_exporter"} == 0`,services:["ec2"],notification:"wecom+twilio-all",oldIds:["ALR-079"],runbook:`## VmInstanceDownCritical\n\n### Assess\nVM instance is unreachable.\n\n### Act\n- Check AWS EC2 console for instance status\n- Check system status checks\n- Reboot or replace instance\n- Verify services have migrated to healthy hosts`},
+
+  // ─── APM (6 alerts) ────────────────────────────────────────────────
+  {id:"APM-01",name:"ApmServiceExceptionsWarning",severity:"warning",tier:"2",category:"apm",team:"app-ops",metric:"service_exception_count",threshold:"> 5/min",duration:"5m",expression:`sum by(service) (rate(service_exception_count[5m])) * 60 > 5`,services:["application-services"],notification:"wecom+twilio-lead",oldIds:["ALR-060"],runbook:`## ApmServiceExceptionsWarning\n\n### Analyze\n- Check iZeus for exception stack traces\n- Review recent deployments\n- Check downstream service health\n\n### Act\n- Rollback if caused by recent deployment\n- Fix and hotfix if root cause identified`},
+  {id:"APM-02",name:"ApmServiceExceptionsCritical",severity:"critical",tier:"3",category:"apm",team:"app-ops",metric:"service_exception_count",threshold:"> 20/min",duration:"3m",expression:`sum by(service) (rate(service_exception_count[5m])) * 60 > 20`,services:["application-services"],notification:"wecom+twilio-all",oldIds:["ALR-060"],runbook:`## ApmServiceExceptionsCritical\n\n### Assess\nException storm — significant user impact.\n\n### Act\n- Immediate rollback of recent deployments\n- Check all dependency health\n- Escalate to China HQ engineering`},
+  {id:"APM-03",name:"ApmLatencyP99Warning",severity:"warning",tier:"2",category:"apm",team:"app-ops",metric:"service_resp_time_percentile",threshold:"p99 > 1500ms",duration:"5m",expression:`histogram_quantile(0.99, sum by(le, service) (rate(service_resp_time_percentile_bucket[5m]))) > 1500`,services:["application-services"],notification:"wecom+twilio-lead",oldIds:[],runbook:`## ApmLatencyP99Warning\n\n### Analyze\n- Check iZeus traces for slow spans\n- Check DB query times\n- Check external API response times\n\n### Act\n- Optimize slow queries or API calls\n- Add caching for hot paths`},
+  {id:"APM-04",name:"ApmEndpointFailuresWarning",severity:"warning",tier:"2",category:"apm",team:"app-ops",metric:"endpoint_failure_count",threshold:"> 2/min",duration:"5m",expression:`sum by(service, endpoint) (rate(endpoint_failure_count[5m])) * 60 > 2`,services:["application-services"],notification:"wecom+twilio-lead",oldIds:[],runbook:`## ApmEndpointFailuresWarning\n\n### Analyze\n- Check specific endpoint error logs\n- Verify request payload patterns\n- Check rate limiting status\n\n### Act\n- Fix endpoint-specific bugs\n- Add circuit breaker if downstream failure`},
+  {id:"APM-05",name:"ApmJvmFullGcWarning",severity:"warning",tier:"2",category:"apm",team:"app-ops",metric:"jvm_gc_count",threshold:"> 5 Full GC / 5min",duration:"5m",expression:`increase(jvm_gc_count{gc_type="Full"}[5m]) > 5`,services:["java-services"],notification:"wecom+twilio-lead",oldIds:[],runbook:`## ApmJvmFullGcWarning\n\n### Analyze\n- Check JVM heap usage trend\n- Check for memory leaks (growing old gen)\n- Review GC log patterns\n\n### Act\n- Increase heap size if undersized\n- Tune GC parameters\n- Restart service if memory leak confirmed`},
+  {id:"APM-06",name:"ApmInfraHealthWarning",severity:"warning",tier:"2",category:"apm",team:"app-ops",metric:"up",threshold:"APM component down",duration:"5m",expression:`up{job=~"izeus.*|apm.*"} == 0`,services:["izeus","apm-collector"],notification:"wecom+twilio-lead",oldIds:[],runbook:`## ApmInfraHealthWarning\n\n### Assess\nAPM/iZeus infrastructure component down — observability degraded.\n\n### Act\n- Restart failed APM collector pods\n- Check iZeus backend services\n- Note: alerts still fire but trace data may be incomplete`},
+
+  // ─── PIPELINE (4 alerts) ───────────────────────────────────────────
+  {id:"PIPE-01",name:"PipelineGoldenFlowCritical",severity:"critical",tier:"3",category:"pipeline",team:"data-arch",metric:"datalink_task_delay_seconds",threshold:"Golden flow delayed > 5min",duration:"5m",expression:`max(datalink_task_delay_seconds{flow_tier="golden"}) > 300 or increase(datalink_task_exception_total{flow_tier="golden"}[5m]) > 0`,services:["datalink"],notification:"wecom+twilio-all",oldIds:["ALR-097","ALR-098"],runbook:`## PipelineGoldenFlowCritical\n\n### Assess\nGolden data flow pipeline is delayed or has exceptions.\n\n### Act\n- Check DataLink task status\n- Restart failed tasks\n- Escalate to data-arch team immediately`},
+  {id:"PIPE-02",name:"PipelineCoreWarning",severity:"warning",tier:"2",category:"pipeline",team:"data-arch",metric:"datalink_task_delay_seconds",threshold:"Core pipeline delayed > 10min",duration:"5m",expression:`max(datalink_task_delay_seconds{flow_tier="core"}) > 600 or increase(datalink_task_exception_total{flow_tier="core"}[10m]) > 0`,services:["datalink"],notification:"wecom+twilio-lead",oldIds:["ALR-099","ALR-100"],runbook:`## PipelineCoreWarning\n\n### Analyze\n- Check upstream data sources\n- Check DataLink worker health\n- Review task configuration\n\n### Act\n- Restart failed tasks\n- Scale workers if throughput issue`},
+  {id:"PIPE-03",name:"PipelineImportantInfo",severity:"info",tier:"1",category:"pipeline",team:"data-arch",metric:"datalink_task_delay_seconds",threshold:"Important pipeline delayed > 20min",duration:"10m",expression:`max(datalink_task_delay_seconds{flow_tier="important"}) > 1200 or increase(datalink_task_exception_total{flow_tier="important"}[15m]) > 0`,services:["datalink"],notification:"wecom-only",oldIds:["ALR-101","ALR-102"],runbook:`## PipelineImportantInfo\n\n### Act\nMonitor — schedule investigation during business hours.`},
+  {id:"PIPE-04",name:"PipelineStandardInfo",severity:"info",tier:"1",category:"pipeline",team:"data-arch",metric:"datalink_task_delay_seconds",threshold:"Standard pipeline delayed > 1hr",duration:"15m",expression:`max(datalink_task_delay_seconds{flow_tier="standard"}) > 3600 or increase(datalink_task_exception_total{flow_tier="standard"}[30m]) > 0`,services:["datalink"],notification:"wecom-only",oldIds:["ALR-103","ALR-104"],runbook:`## PipelineStandardInfo\n\n### Act\nLow priority — review during next maintenance window.`},
+
+  // ─── PLATFORM (4 alerts) ───────────────────────────────────────────
+  {id:"PLAT-01",name:"PlatformSmsDeliveryWarning",severity:"warning",tier:"2",category:"platform",team:"platform",metric:"sms_delivery_failure_rate",threshold:"> 5% failure rate",duration:"5m",expression:`sms_delivery_failure_rate > 5`,services:["sms-gateway"],notification:"wecom+twilio-lead",oldIds:["ALR-115"],runbook:`## PlatformSmsDeliveryWarning\n\n### Analyze\n- Check SMS provider status page\n- Check for rate limiting\n- Review failure error codes\n\n### Act\n- Switch to backup SMS provider if primary failing\n- Contact provider support if persistent`},
+  {id:"PLAT-02",name:"PlatformRiskControlPreWarning",severity:"warning",tier:"2",category:"platform",team:"risk",metric:"risk_control_circuit_status",threshold:"Pre-warning triggered",duration:"5m",expression:`risk_control_circuit_status == 1`,services:["risk-control"],notification:"wecom+twilio-lead",oldIds:["ALR-116"],runbook:`## PlatformRiskControlPreWarning\n\n### Analyze\n- Review anomaly scoring rules\n- Check recent transaction patterns\n- Look for bot or fraud indicators\n\n### Act\n- Tighten risk control rules if attack confirmed\n- Monitor transaction patterns closely`},
+  {id:"PLAT-03",name:"PlatformRiskControlCircuitBreakerCritical",severity:"critical",tier:"3",category:"platform",team:"risk",metric:"risk_control_circuit_status",threshold:"Circuit breaker tripped",duration:"1m",expression:`risk_control_circuit_status == 2`,services:["risk-control"],notification:"wecom+twilio-all",oldIds:["ALR-116"],runbook:`## PlatformRiskControlCircuitBreakerCritical\n\n### Assess\nRisk control circuit breaker has TRIPPED — blocking transactions.\n\n### Act\n- Verify if blocking is intentional (under attack)\n- If false positive: reset circuit breaker\n- If legitimate: coordinate response with China HQ\n- Check for collateral damage to legitimate users`},
+  {id:"PLAT-04",name:"PlatformGatewayErrorRateCritical",severity:"critical",tier:"3",category:"platform",team:"platform",metric:"gateway_error_rate",threshold:"> 15% error rate",duration:"3m",expression:`gateway_error_rate > 15`,services:["api-gateway"],notification:"wecom+twilio-all",oldIds:["ALR-135"],runbook:`## PlatformGatewayErrorRateCritical\n\n### Assess\nAPI Gateway error rate exceeding 15% — all client traffic affected.\n\n### Act\n- Check gateway configuration\n- Check backend service health\n- Check SSL certificate status\n- Restart gateway if configuration is correct but errors persist`}
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// APPLICATION STATE
+// ═══════════════════════════════════════════════════════════════════════════
+let filteredAlerts = [...alertsData];
+let selectedAlert = null;
+let currentView = 'cards';
+let expandedTeam = null;
+let expandedCategory = null;
+
+const categoryLabels = {
+  'biz': 'BIZ', 'db-rds': 'DB-RDS', 'db-redis': 'DB-Redis', 'db-es': 'DB-ES',
+  'db-mongo': 'DB-Mongo', 'infra-k8s': 'INFRA-K8S', 'infra-vm': 'INFRA-VM',
+  'apm': 'APM', 'pipeline': 'Pipeline', 'platform': 'Platform'
+};
+
+const notificationIcons = {
+  'wecom-only': '<span class="icon" title="WeCom only">&#x1F4AC;</span>',
+  'wecom+twilio-lead': '<span class="icon" title="WeCom + Phone (Lead)">&#x1F4DE;</span>',
+  'wecom+twilio-all': '<span class="icon" title="WeCom + Phone (All)">&#x1F6A8;</span>'
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════════════════════════════════════
+function init() {
+  buildSidebar();
+  updateStats();
+  renderCards();
+}
+
+function buildSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const sevCounts = { critical: 0, warning: 0, info: 0 };
+  alertsData.forEach(a => sevCounts[a.severity]++);
+
+  const catCounts = {};
+  alertsData.forEach(a => { catCounts[a.category] = (catCounts[a.category] || 0) + 1; });
+
+  const teamCounts = {};
+  alertsData.forEach(a => { teamCounts[a.team] = (teamCounts[a.team] || 0) + 1; });
+
+  const notifCounts = {};
+  alertsData.forEach(a => { notifCounts[a.notification] = (notifCounts[a.notification] || 0) + 1; });
+
+  sidebar.innerHTML = `
+    <div class="nav-section">
+      <div class="nav-section-title">View All</div>
+      <div class="nav-item active" onclick="filterByAll()">
+        <span>All Alerts</span>
+        <span class="count">${alertsData.length}</span>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">By Severity</div>
+      ${['critical','warning','info'].map(s => `
+        <div class="nav-item" onclick="filterBySeverity('${s}')">
+          <span class="severity-dot ${s}"></span>
+          <span>${s.charAt(0).toUpperCase() + s.slice(1)}</span>
+          <span class="count">${sevCounts[s]}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">By Category</div>
+      ${Object.entries(catCounts).map(([cat, count]) => `
+        <div class="nav-item" onclick="filterByCategory('${cat}')">
+          <span>${categoryLabels[cat] || cat}</span>
+          <span class="count">${count}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">By Team</div>
+      ${Object.entries(teamCounts).map(([team, count]) => `
+        <div class="nav-item" onclick="filterByTeam('${team}')">
+          <span>${team}</span>
+          <span class="count">${count}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">By Notification</div>
+      ${Object.entries(notifCounts).map(([notif, count]) => `
+        <div class="nav-item" onclick="filterByNotification('${notif}')">
+          <span>${notif}</span>
+          <span class="count">${count}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function updateStats() {
+  const stats = { critical: 0, warning: 0, info: 0 };
+  filteredAlerts.forEach(a => stats[a.severity]++);
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat-badge critical"><span class="count">${stats.critical}</span> Critical</div>
+    <div class="stat-badge warning"><span class="count">${stats.warning}</span> Warning</div>
+    <div class="stat-badge info"><span class="count">${stats.info}</span> Info</div>
+    <div class="stat-badge"><span class="count">${filteredAlerts.length}</span> Total</div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════════════════════════════════════════
+function filterByAll() { filteredAlerts = [...alertsData]; updateActiveNav('All Alerts'); renderCurrentView(); updateStats(); closeDetail(); }
+function filterBySeverity(sev) { filteredAlerts = alertsData.filter(a => a.severity === sev); updateActiveNav(sev.charAt(0).toUpperCase() + sev.slice(1)); renderCurrentView(); updateStats(); closeDetail(); }
+function filterByCategory(cat) { filteredAlerts = alertsData.filter(a => a.category === cat); updateActiveNav(categoryLabels[cat] || cat); renderCurrentView(); updateStats(); closeDetail(); }
+function filterByTeam(team) { filteredAlerts = alertsData.filter(a => a.team === team); updateActiveNav(team); renderCurrentView(); updateStats(); closeDetail(); }
+function filterByNotification(notif) { filteredAlerts = alertsData.filter(a => a.notification === notif); updateActiveNav(notif); renderCurrentView(); updateStats(); closeDetail(); }
+
+function updateActiveNav(text) {
+  document.querySelectorAll('.nav-item').forEach(item => {
+    const spans = item.querySelectorAll('span:not(.count):not(.severity-dot)');
+    const itemText = spans.length > 0 ? spans[0].textContent.trim() : '';
+    item.classList.toggle('active', itemText === text);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SEARCH
+// ═══════════════════════════════════════════════════════════════════════════
+document.getElementById('searchInput').addEventListener('input', function(e) {
+  const term = e.target.value.toLowerCase().trim();
+  filteredAlerts = term === '' ? [...alertsData] : alertsData.filter(a =>
+    a.name.toLowerCase().includes(term) ||
+    a.category.toLowerCase().includes(term) ||
+    a.team.toLowerCase().includes(term) ||
+    a.metric.toLowerCase().includes(term) ||
+    a.expression.toLowerCase().includes(term) ||
+    a.services.some(s => s.toLowerCase().includes(term)) ||
+    a.id.toLowerCase().includes(term) ||
+    a.severity.toLowerCase().includes(term) ||
+    a.notification.toLowerCase().includes(term)
+  );
+  renderCurrentView(); updateStats(); closeDetail();
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VIEW SWITCHING
+// ═══════════════════════════════════════════════════════════════════════════
+function switchView(view) {
+  currentView = view;
+  document.querySelectorAll('.view-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+  document.getElementById('cardsView').style.display = view === 'cards' ? 'block' : 'none';
+  document.getElementById('hierarchyView').classList.toggle('active', view === 'hierarchy');
+  document.getElementById('relationshipView').classList.toggle('active', view === 'relationship');
+  document.getElementById('routingView').classList.toggle('active', view === 'routing');
+  document.getElementById('detailView').classList.remove('active');
+  renderCurrentView();
+}
+
+function renderCurrentView() {
+  if (currentView === 'cards') renderCards();
+  else if (currentView === 'hierarchy') renderHierarchy();
+  else if (currentView === 'relationship') renderRelationship();
+  else if (currentView === 'routing') renderRoutingPipeline();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CARD VIEW
+// ═══════════════════════════════════════════════════════════════════════════
+function renderCards() {
+  const container = document.getElementById('cardGrid');
+  if (filteredAlerts.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#x1F50D;</div><div>No matching alerts found</div></div>';
+    return;
+  }
+  container.innerHTML = filteredAlerts.map(a => `
+    <div class="alert-card ${a.severity} ${selectedAlert?.id === a.id ? 'selected' : ''}" onclick="selectAlert('${a.id}')">
+      <div class="card-header">
+        <div>
+          <div class="card-id">${a.id}</div>
+          <div class="card-title">${a.name}</div>
+        </div>
+        <span class="severity-badge ${a.severity}">${a.severity}</span>
+      </div>
+      <div class="card-meta">
+        <span class="meta-tag">${categoryLabels[a.category] || a.category}</span>
+        <span class="meta-tag">${a.team}</span>
+        <span class="meta-tag">${a.threshold}</span>
+      </div>
+      <div class="notification-indicator">${notificationIcons[a.notification] || ''} <span>${a.notification.replace('wecom+twilio-','')}</span></div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HIERARCHY VIEW
+// ═══════════════════════════════════════════════════════════════════════════
+function renderHierarchy() {
+  const container = document.getElementById('hierarchyContainer');
+  const groups = {};
+  filteredAlerts.forEach(a => { if (!groups[a.category]) groups[a.category] = []; groups[a.category].push(a); });
+
+  container.innerHTML = Object.entries(groups).map(([cat, alerts]) => `
+    <div class="hierarchy-category">
+      <div class="hierarchy-category-header" onclick="toggleHierarchyCategory(this.parentElement)">
+        <div class="hierarchy-category-title">
+          <span>${categoryLabels[cat] || cat}</span>
+          <span class="hierarchy-category-count">${alerts.length}</span>
+        </div>
+        <span class="hierarchy-toggle">&#x25BC;</span>
+      </div>
+      <div class="hierarchy-category-body">
+        ${alerts.map(a => `
+          <div class="hierarchy-alert" onclick="selectAlert('${a.id}')">
+            <span class="severity-dot ${a.severity}"></span>
+            <span>${a.name}</span>
+            <span class="severity-badge ${a.severity}" style="margin-left:auto;font-size:0.65rem;">${a.severity}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleHierarchyCategory(el) { el.classList.toggle('expanded'); }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RELATIONSHIP VIEW
+// ═══════════════════════════════════════════════════════════════════════════
+function renderRelationship() {
+  const container = document.getElementById('relationshipContainer');
+  const teamGroups = {};
+  alertsData.forEach(a => {
+    if (!teamGroups[a.team]) teamGroups[a.team] = { categories: {} };
+    if (!teamGroups[a.team].categories[a.category]) teamGroups[a.team].categories[a.category] = [];
+    teamGroups[a.team].categories[a.category].push(a);
+  });
+
+  container.innerHTML = `
+    <div class="relationship-header">
+      <div class="relationship-title">Alert Architecture Map</div>
+      <div class="relationship-subtitle">Click a team node to expand categories, click a category to see alerts</div>
+    </div>
+    <div class="tree-wrapper">
+      <div class="tree-level">
+        <div class="tree-node root">Luckin Coffee NA Alerting<div class="node-count">${alertsData.length} alerts</div></div>
+      </div>
+      <div class="tree-level" id="teamLevel">
+        ${Object.entries(teamGroups).map(([team, data]) => {
+          const total = Object.values(data.categories).flat().length;
+          return `<div class="tree-node team" onclick="toggleTeamExpand('${team}')" data-team="${team}"><div>${team}</div><div class="node-count">${total} alerts</div></div>`;
+        }).join('')}
+      </div>
+      <div class="category-panel" id="categoryPanel"></div>
+      <div class="alert-panel" id="alertPanel"></div>
+    </div>
+  `;
+}
+
+function toggleTeamExpand(team) {
+  document.querySelectorAll('.tree-node.team').forEach(n => n.classList.remove('expanded'));
+  const alertPanel = document.getElementById('alertPanel');
+  const categoryPanel = document.getElementById('categoryPanel');
+  alertPanel.classList.remove('expanded');
+
+  if (expandedTeam === team) { expandedTeam = null; expandedCategory = null; categoryPanel.classList.remove('expanded'); categoryPanel.innerHTML = ''; return; }
+
+  expandedTeam = team; expandedCategory = null;
+  document.querySelector(`.tree-node.team[data-team="${team}"]`)?.classList.add('expanded');
+
+  const cats = {};
+  alertsData.filter(a => a.team === team).forEach(a => { if (!cats[a.category]) cats[a.category] = []; cats[a.category].push(a); });
+
+  categoryPanel.innerHTML = `<div class="category-grid">${Object.entries(cats).map(([cat, alerts]) =>
+    `<div class="tree-node category" onclick="toggleCategoryExpand('${team}','${cat}')" data-category="${cat}"><div>${categoryLabels[cat]||cat}</div><div class="node-count">${alerts.length} alerts</div></div>`
+  ).join('')}</div>`;
+  categoryPanel.classList.add('expanded');
+}
+
+function toggleCategoryExpand(team, cat) {
+  document.querySelectorAll('.tree-node.category').forEach(n => n.classList.remove('expanded'));
+  const alertPanel = document.getElementById('alertPanel');
+
+  if (expandedCategory === cat) { expandedCategory = null; alertPanel.classList.remove('expanded'); alertPanel.innerHTML = ''; return; }
+
+  expandedCategory = cat;
+  document.querySelector(`.tree-node.category[data-category="${cat}"]`)?.classList.add('expanded');
+
+  const alerts = alertsData.filter(a => a.team === team && a.category === cat);
+  alertPanel.innerHTML = alerts.map(a => `
+    <div class="alert-panel-item" onclick="selectAlert('${a.id}')">
+      <span class="severity-dot ${a.severity}"></span>
+      <span>${a.name}</span>
+      <span class="severity-badge ${a.severity}" style="margin-left:auto;">${a.severity}</span>
+    </div>
+  `).join('');
+  alertPanel.classList.add('expanded');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ROUTING PIPELINE VIEW (NEW)
+// ═══════════════════════════════════════════════════════════════════════════
+function renderRoutingPipeline() {
+  const container = document.getElementById('routingContainer');
+  const sevCounts = { critical: 0, warning: 0, info: 0 };
+  alertsData.forEach(a => sevCounts[a.severity]++);
+
+  container.innerHTML = `
+    <div class="routing-pipeline">
+      <div class="pipeline-stage">
+        <div class="pipeline-stage-title"><span class="stage-icon">&#x1F4CA;</span> Alert Source (VMAlert / Prometheus)</div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);">72 alert rules evaluated across 4 VMAlert nodes. Recording rules pre-compute 14 derived metrics for efficient evaluation.</p>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-stage-title"><span class="stage-icon">&#x1F514;</span> Alertmanager Routing</div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.75rem;">
+          All alerts are first forwarded to iZeus for APM correlation (continue: true), then routed by severity:
+        </p>
+        <div class="pipeline-branch">
+          <div class="pipeline-channel tier3">
+            <div class="channel-name" style="color:var(--critical-color);">Tier 3 — Critical</div>
+            <div class="channel-detail">${sevCounts.critical} alerts</div>
+            <div class="channel-detail">group_wait: 15s</div>
+            <div class="channel-detail">repeat: 15min</div>
+          </div>
+          <div class="pipeline-channel tier2">
+            <div class="channel-name" style="color:var(--warning-color);">Tier 2 — Warning</div>
+            <div class="channel-detail">${sevCounts.warning} alerts</div>
+            <div class="channel-detail">group_wait: 30s</div>
+            <div class="channel-detail">repeat: 1hr</div>
+          </div>
+          <div class="pipeline-channel tier1">
+            <div class="channel-name" style="color:var(--info-color);">Tier 1 — Info</div>
+            <div class="channel-detail">${sevCounts.info} alerts</div>
+            <div class="channel-detail">group_wait: 60s</div>
+            <div class="channel-detail">repeat: 4hr</div>
+          </div>
+        </div>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-stage-title"><span class="stage-icon">&#x1F6A7;</span> Inhibition Rules</div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);">
+          1. Critical suppresses Warning + Info on same alertname + service<br>
+          2. NodeHeartbeatLost suppresses all K8s pod alerts on same node<br>
+          3. Instance down suppresses all service alerts on same instance
+        </p>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-stage-title"><span class="stage-icon">&#x1F4E2;</span> Notification Channels</div>
+        <div class="pipeline-branch">
+          <div class="pipeline-channel tier3">
+            <div class="channel-name">&#x1F6A8; WeCom + Phone ALL</div>
+            <div class="channel-detail">WeCom critical channel</div>
+            <div class="channel-detail">Twilio: ALL DevOps US + China</div>
+            <div class="channel-detail" style="color:var(--critical-color);">24/7 — never muted</div>
+          </div>
+          <div class="pipeline-channel tier2">
+            <div class="channel-name">&#x1F4DE; WeCom + Phone Lead</div>
+            <div class="channel-detail">WeCom warning channel</div>
+            <div class="channel-detail">Twilio: US Team Lead only</div>
+            <div class="channel-detail" style="color:var(--warning-color);">Muted 2-7 AM ET (non-BIZ)</div>
+          </div>
+          <div class="pipeline-channel tier1">
+            <div class="channel-name">&#x1F4AC; WeCom Only</div>
+            <div class="channel-detail">WeCom info channel</div>
+            <div class="channel-detail">No phone calls</div>
+            <div class="channel-detail" style="color:var(--info-color);">Muted 2-7 AM ET (non-BIZ)</div>
+          </div>
+        </div>
+      </div>
+      <div class="pipeline-stage" style="border-color:#667eea;">
+        <div class="pipeline-stage-title"><span class="stage-icon">&#x1F310;</span> iZeus APM Correlation</div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);">
+          ALL alerts are forwarded to iZeus webhook for trace correlation. This enables automatic root cause analysis by linking infrastructure alerts to application traces and business metrics.
+        </p>
+      </div>
+    </div>
+    <div class="pipeline-legend">
+      <div class="legend-item"><span class="severity-dot critical"></span> Critical: Wake everyone</div>
+      <div class="legend-item"><span class="severity-dot warning"></span> Warning: Phone team lead</div>
+      <div class="legend-item"><span class="severity-dot info"></span> Info: WeCom text only</div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DETAIL VIEW
+// ═══════════════════════════════════════════════════════════════════════════
+function selectAlert(id) {
+  selectedAlert = alertsData.find(a => a.id === id);
+  if (!selectedAlert) return;
+
+  // Hide all views, show detail
+  document.getElementById('cardsView').style.display = 'none';
+  document.getElementById('hierarchyView').classList.remove('active');
+  document.getElementById('relationshipView').classList.remove('active');
+  document.getElementById('routingView').classList.remove('active');
+  document.getElementById('detailView').classList.add('active');
+
+  const a = selectedAlert;
+  document.getElementById('detailTitle').textContent = a.name;
+  document.getElementById('detailBadges').innerHTML = `
+    <span class="detail-badge severity-badge ${a.severity}">${a.severity.toUpperCase()}</span>
+    <span class="detail-badge">Tier ${a.tier}</span>
+    <span class="detail-badge">${categoryLabels[a.category] || a.category}</span>
+    <span class="detail-badge">${a.team}</span>
+    <span class="detail-badge">${a.notification}</span>
+  `;
+
+  // Info tab
+  document.getElementById('infoTab').innerHTML = `
+    <div class="info-grid">
+      <div class="info-item"><div class="info-label">Alert ID</div><div class="info-value">${a.id}</div></div>
+      <div class="info-item"><div class="info-label">Severity</div><div class="info-value" style="color:var(--${a.severity}-color)">${a.severity.toUpperCase()}</div></div>
+      <div class="info-item"><div class="info-label">Tier</div><div class="info-value">Tier ${a.tier}</div></div>
+      <div class="info-item"><div class="info-label">Category</div><div class="info-value">${categoryLabels[a.category] || a.category}</div></div>
+      <div class="info-item"><div class="info-label">Team</div><div class="info-value">${a.team}</div></div>
+      <div class="info-item"><div class="info-label">Metric</div><div class="info-value" style="font-family:'Fira Code',monospace;font-size:0.8rem;">${a.metric}</div></div>
+      <div class="info-item"><div class="info-label">Threshold</div><div class="info-value">${a.threshold}</div></div>
+      <div class="info-item"><div class="info-label">Duration</div><div class="info-value">${a.duration}</div></div>
+      <div class="info-item"><div class="info-label">Notification</div><div class="info-value">${a.notification}</div></div>
+      ${a.oldIds.length > 0 ? `<div class="info-item"><div class="info-label">Replaces</div><div class="info-value" style="font-family:'Fira Code',monospace;font-size:0.8rem;">${a.oldIds.join(', ')}</div></div>` : ''}
+    </div>
+    <div class="expression-section">
+      <div class="expression-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+        PromQL Expression
+      </div>
+      <div class="expression-code">${a.expression}</div>
+    </div>
+    <div class="impact-section">
+      <div class="impact-title">Affected Services</div>
+      <div class="impact-services">${a.services.map(s => `<span class="service-tag">${s}</span>`).join('')}</div>
+    </div>
+  `;
+
+  // Runbook tab
+  document.getElementById('runbookContent').innerHTML = marked.parse(a.runbook || 'No runbook content available.');
+
+  // Routing tab
+  const routingSteps = getRoutingPath(a);
+  document.getElementById('routingDetailContent').innerHTML = `
+    <div class="routing-path">
+      ${routingSteps.map((step, i) => `
+        ${i > 0 ? '<div class="routing-arrow">&#x25BC;</div>' : ''}
+        <div class="routing-step">
+          <div class="routing-step-icon">${step.icon}</div>
+          <div>
+            <div class="routing-step-label">${step.label}</div>
+            <div class="routing-step-detail">${step.detail}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  switchTab('info');
+}
+
+function getRoutingPath(alert) {
+  const steps = [
+    { icon: '&#x1F4CA;', label: 'VMAlert Evaluation', detail: `Expression: ${alert.expression.substring(0, 60)}...` },
+    { icon: '&#x1F514;', label: 'Alertmanager Receives', detail: `Grouped by: alertname, category, service` },
+    { icon: '&#x1F310;', label: 'iZeus APM Correlation', detail: 'Forwarded to iZeus webhook for trace correlation (continue: true)' }
+  ];
+
+  if (alert.severity === 'critical') {
+    steps.push({ icon: '&#x1F6A8;', label: 'Tier 3: Critical Route', detail: 'group_wait: 15s, repeat: 15min' });
+    steps.push({ icon: '&#x1F4E2;', label: 'WeCom Critical Channel', detail: 'Text notification to all DevOps' });
+    steps.push({ icon: '&#x1F4DE;', label: 'Twilio: ALL DevOps', detail: 'Phone call to all US + China DevOps numbers' });
+  } else if (alert.severity === 'warning') {
+    steps.push({ icon: '&#x26A0;&#xFE0F;', label: 'Tier 2: Warning Route', detail: 'group_wait: 30s, repeat: 1hr. Muted 2-7 AM ET for non-BIZ.' });
+    steps.push({ icon: '&#x1F4E2;', label: 'WeCom Warning Channel', detail: 'Text notification to DevOps team' });
+    steps.push({ icon: '&#x1F4DE;', label: 'Twilio: Team Lead', detail: 'Phone call to US team lead only' });
+  } else {
+    steps.push({ icon: '&#x2139;&#xFE0F;', label: 'Tier 1: Info Route', detail: 'group_wait: 60s, repeat: 4hr. Muted 2-7 AM ET for non-BIZ.' });
+    steps.push({ icon: '&#x1F4AC;', label: 'WeCom Info Channel', detail: 'Text notification only. No phone calls.' });
+  }
+
+  return steps;
+}
+
+function closeDetail() {
+  document.getElementById('detailView').classList.remove('active');
+  selectedAlert = null;
+  if (currentView === 'cards') document.getElementById('cardsView').style.display = 'block';
+  else if (currentView === 'hierarchy') document.getElementById('hierarchyView').classList.add('active');
+  else if (currentView === 'relationship') document.getElementById('relationshipView').classList.add('active');
+  else if (currentView === 'routing') document.getElementById('routingView').classList.add('active');
+}
+
+function switchTab(tabName) {
+  document.querySelectorAll('.detail-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === tabName + 'Tab'));
+}
+
+// Initialize on load
+init();
+</script>
+</body>
+</html>
