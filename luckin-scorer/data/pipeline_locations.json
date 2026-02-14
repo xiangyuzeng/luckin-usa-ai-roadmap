@@ -1,0 +1,12 @@
+[
+  { "rank": 1, "name": "211 Schermerhorn", "lat": 40.688944, "lon": -73.985381, "area_type": "commercial_transit_hub", "projected_daily_cups": 607, "score_total": 75, "recommendation": "Strongly Recommended" },
+  { "rank": 2, "name": "154 Bleecker", "lat": 40.728185, "lon": -73.999602, "area_type": "university_tourist", "projected_daily_cups": 586, "score_total": 73, "recommendation": "Strongly Recommended" },
+  { "rank": 3, "name": "128 W 32nd St", "lat": 40.748921, "lon": -73.990053, "area_type": "commercial_transit_hub", "projected_daily_cups": 481, "score_total": 63, "recommendation": "Recommended" },
+  { "rank": 4, "name": "Jackson Ave - LIC", "lat": 40.748002, "lon": -73.941039, "area_type": "emerging_commercial", "projected_daily_cups": 429, "score_total": 58, "recommendation": "Recommended" },
+  { "rank": 5, "name": "35th & 5th", "lat": 40.749116, "lon": -73.984616, "area_type": "commercial_tourist", "projected_daily_cups": 408, "score_total": 56, "recommendation": "Recommended with Caution" },
+  { "rank": 6, "name": "108th & Broadway", "lat": 40.802905, "lon": -73.967925, "area_type": "university_residential", "projected_daily_cups": 408, "score_total": 56, "recommendation": "Recommended with Caution" },
+  { "rank": 7, "name": "16th & 6th", "lat": 40.738418, "lon": -73.996378, "area_type": "mixed_commercial_residential", "projected_daily_cups": 387, "score_total": 54, "recommendation": "Moderate" },
+  { "rank": 8, "name": "180 Varick", "lat": 40.727598, "lon": -74.005142, "area_type": "tech_office", "projected_daily_cups": 355, "score_total": 51, "recommendation": "Moderate" },
+  { "rank": 9, "name": "41st & Lexington", "lat": 40.750579, "lon": -73.976431, "area_type": "office_transit", "projected_daily_cups": 313, "score_total": 47, "recommendation": "Marginal" },
+  { "rank": 10, "name": "23rd & 8th", "lat": 40.744798, "lon": -73.998477, "area_type": "residential_commercial", "projected_daily_cups": 303, "score_total": 46, "recommendation": "Marginal" }
+]

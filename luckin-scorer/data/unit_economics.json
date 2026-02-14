@@ -1,0 +1,8 @@
+{
+  "cup_price": 5.50,
+  "cogs_per_cup": 1.50,
+  "margin_per_cup": 2.30,
+  "labor_monthly": 15000,
+  "supplies_monthly": 3000,
+  "weeks_per_month": 4.33
+}

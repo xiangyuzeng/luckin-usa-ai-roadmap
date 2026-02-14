@@ -1,0 +1,98 @@
+[
+  {
+    "name": "8th & Broadway",
+    "shop_no": "US00001",
+    "address": "755 Broadway, New York, NY 10003",
+    "lat": 40.730548,
+    "lon": -73.992624,
+    "avg_daily_cups": 660,
+    "area_type": "university_tourist",
+    "subway_count": 7,
+    "weekday_pct": 0.55,
+    "neighborhood": "Greenwich Village/NoHo"
+  },
+  {
+    "name": "37th & Broadway",
+    "shop_no": "US00004",
+    "address": "1375 Broadway, New York, NY 10018",
+    "lat": 40.752559,
+    "lon": -73.987833,
+    "avg_daily_cups": 497,
+    "area_type": "commercial_transit_hub",
+    "subway_count": 11,
+    "weekday_pct": 0.72,
+    "neighborhood": "Garment District/Herald Square"
+  },
+  {
+    "name": "102 Fulton",
+    "shop_no": "US00006",
+    "address": "102 Fulton St, New York, NY 10038",
+    "lat": 40.709656,
+    "lon": -74.00679,
+    "avg_daily_cups": 417,
+    "area_type": "financial_office",
+    "subway_count": 8,
+    "weekday_pct": 0.68,
+    "neighborhood": "Financial District"
+  },
+  {
+    "name": "28th & 6th",
+    "shop_no": "US00002",
+    "address": "800 6th Ave, New York, NY 10001",
+    "lat": 40.745666,
+    "lon": -73.990592,
+    "avg_daily_cups": 374,
+    "area_type": "mixed_commercial",
+    "subway_count": 3,
+    "weekday_pct": 0.60,
+    "neighborhood": "Chelsea/NoMad"
+  },
+  {
+    "name": "221 Grand",
+    "shop_no": "US00025",
+    "address": "221 Grand St, New York, NY 10013",
+    "lat": 40.718571,
+    "lon": -73.995919,
+    "avg_daily_cups": 373,
+    "area_type": "tourist_ethnic_enclave",
+    "subway_count": 7,
+    "weekday_pct": 0.48,
+    "neighborhood": "Chinatown/Little Italy"
+  },
+  {
+    "name": "54th & 8th",
+    "shop_no": "US00005",
+    "address": "901 8th Ave, New York, NY 10019",
+    "lat": 40.76465,
+    "lon": -73.984773,
+    "avg_daily_cups": 310,
+    "area_type": "theater_tourist",
+    "subway_count": 4,
+    "weekday_pct": 0.52,
+    "neighborhood": "Midtown West/Hells Kitchen"
+  },
+  {
+    "name": "100 Maiden Ln",
+    "shop_no": "US00003",
+    "address": "100 Maiden Ln, New York, NY 10038",
+    "lat": 40.706675,
+    "lon": -74.007198,
+    "avg_daily_cups": 273,
+    "area_type": "financial_office",
+    "subway_count": 8,
+    "weekday_pct": 0.72,
+    "neighborhood": "Financial District"
+  },
+  {
+    "name": "15th & 3rd",
+    "shop_no": "US00024",
+    "address": "147 3rd Ave, New York, NY 10003",
+    "lat": 40.734028,
+    "lon": -73.986224,
+    "avg_daily_cups": 139,
+    "area_type": "residential_mixed",
+    "subway_count": 8,
+    "weekday_pct": 0.55,
+    "neighborhood": "Gramercy/East Village"
+  }
+]

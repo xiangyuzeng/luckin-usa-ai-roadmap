@@ -1,0 +1,67 @@
+{
+  "area_type": {
+    "max_points": 35,
+    "weight_pct": 0.35,
+    "description": "Location neighborhood classification",
+    "tiers": {
+      "university_tourist": 35,
+      "commercial_transit_hub": 30,
+      "tourist_ethnic_enclave": 26,
+      "financial_office": 20,
+      "mixed_commercial": 15,
+      "residential_mixed": 10,
+      "residential": 5
+    }
+  },
+  "subway_access": {
+    "max_points": 20,
+    "weight_pct": 0.20,
+    "description": "Number of subway lines within walking distance",
+    "tiers": [
+      { "min": 8, "max": 99, "score": 20 },
+      { "min": 6, "max": 7, "score": 17 },
+      { "min": 4, "max": 5, "score": 14 },
+      { "min": 2, "max": 3, "score": 10 },
+      { "min": 1, "max": 1, "score": 6 },
+      { "min": 0, "max": 0, "score": 0 }
+    ]
+  },
+  "weekend_resilience": {
+    "max_points": 15,
+    "weight_pct": 0.15,
+    "description": "Balance of weekday vs weekend traffic",
+    "tiers": [
+      { "max_weekday_pct": 0.55, "score": 15 },
+      { "max_weekday_pct": 0.60, "score": 12 },
+      { "max_weekday_pct": 0.65, "score": 9 },
+      { "max_weekday_pct": 0.70, "score": 6 },
+      { "max_weekday_pct": 0.75, "score": 3 },
+      { "max_weekday_pct": 1.00, "score": 0 }
+    ]
+  },
+  "cannibalization": {
+    "max_points": -15,
+    "weight_pct": 0.15,
+    "description": "Proximity penalty for distance to nearest existing Luckin store",
+    "tiers": [
+      { "max_distance_mi": 0.15, "score": -15 },
+      { "max_distance_mi": 0.25, "score": -12 },
+      { "max_distance_mi": 0.35, "score": -8 },
+      { "max_distance_mi": 0.50, "score": -4 },
+      { "max_distance_mi": 999, "score": 0 }
+    ]
+  },
+  "rent_value": {
+    "max_points": 15,
+    "weight_pct": 0.15,
+    "description": "Monthly rent efficiency relative to budget",
+    "tiers": [
+      { "max_rent": 12000, "score": 15 },
+      { "max_rent": 14000, "score": 13 },
+      { "max_rent": 16000, "score": 10 },
+      { "max_rent": 18000, "score": 7 },
+      { "max_rent": 20000, "score": 4 },
+      { "max_rent": 999999, "score": 0 }
+    ]
+  }
+}
