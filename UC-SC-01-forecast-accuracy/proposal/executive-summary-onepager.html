@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0">
+    <title>UC-SC-01 Executive Summary | Demand Forecast Accuracy Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================================
+           CSS VARIABLES & RESET
+           ============================================================ */
+        :root {
+            --bg-primary: #0f1419;
+            --bg-secondary: #192734;
+            --bg-card: #22303c;
+            --text-primary: #ffffff;
+            --text-secondary: #8899a6;
+            --border-color: #38444d;
+            --luckin-blue: #00529B;
+            --luckin-blue-light: #0070d4;
+            --critical-color: #ef4444;
+            --warning-color: #f97316;
+            --success-color: #52c41a;
+            --info-color: #3b82f6;
+            --purple-accent: #7c3aed;
+        }
+
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ============================================================
+           ANIMATIONS
+           ============================================================ */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes gradientShift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%      { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        @keyframes countUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shimmer {
+            0%   { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { border-color: var(--luckin-blue); box-shadow: 0 0 8px rgba(0, 82, 155, 0.3); }
+            50%      { border-color: var(--purple-accent); box-shadow: 0 0 8px rgba(124, 58, 237, 0.3); }
+        }
+
+        .col-animate {
+            opacity: 0;
+            animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .col-1 { animation-delay: 0.2s; }
+        .col-2 { animation-delay: 0.4s; }
+        .col-3 { animation-delay: 0.6s; }
+
+        .animate-number {
+            display: inline-block;
+            animation: countUp 0.5s ease-out forwards;
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* ============================================================
+           PAGE SHELL
+           ============================================================ */
+        .page {
+            width: 1920px;
+            height: 1080px;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            background:
+                radial-gradient(ellipse 900px 500px at 15% 50%, rgba(239, 68, 68, 0.03) 0%, transparent 70%),
+                radial-gradient(ellipse 900px 500px at 50% 50%, rgba(0, 82, 155, 0.04) 0%, transparent 70%),
+                radial-gradient(ellipse 900px 500px at 85% 50%, rgba(82, 196, 26, 0.03) 0%, transparent 70%),
+                var(--bg-primary);
+        }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .header {
+            padding: 22px 48px 0 48px;
+            flex-shrink: 0;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .logo-mark {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-mark .cup {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: var(--luckin-blue);
+            border-radius: 8px;
+            font-size: 18px;
+            color: white;
+        }
+
+        .badge-uc {
+            font-family: 'Fira Code', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(0, 82, 155, 0.2);
+            color: var(--luckin-blue-light);
+            border: 1px solid rgba(0, 82, 155, 0.35);
+            border-radius: 6px;
+            padding: 4px 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .header-title {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+        }
+
+        .header-title h1 .cn {
+            font-weight: 400;
+            color: var(--text-secondary);
+            font-size: 18px;
+            margin-left: 10px;
+        }
+
+        .header-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .header-right {
+            text-align: right;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .accent-line {
+            height: 3px;
+            margin-top: 16px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--luckin-blue), var(--purple-accent), var(--luckin-blue));
+            background-size: 200% 100%;
+            animation: gradientShift 4s ease-in-out infinite;
+        }
+
+        /* ============================================================
+           COLUMNS GRID
+           ============================================================ */
+        .columns {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 24px;
+            padding: 20px 48px 0 48px;
+            min-height: 0;
+        }
+
+        .column {
+            background: var(--bg-secondary);
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            padding: 22px 24px 18px 24px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Column accent tops */
+        .column::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 14px 14px 0 0;
+        }
+        .column.problem::before  { background: linear-gradient(90deg, var(--critical-color), #f97316); }
+        .column.solution::before { background: linear-gradient(90deg, var(--luckin-blue), var(--info-color)); }
+        .column.impact::before   { background: linear-gradient(90deg, var(--success-color), #10b981); }
+
+        /* ============================================================
+           COLUMN HEADERS
+           ============================================================ */
+        .col-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .col-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .problem .col-icon  { background: rgba(239, 68, 68, 0.12); }
+        .solution .col-icon { background: rgba(0, 82, 155, 0.15); }
+        .impact .col-icon   { background: rgba(82, 196, 26, 0.12); }
+
+        .col-header-text h2 {
+            font-size: 17px;
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -0.3px;
+        }
+
+        .col-header-text .subtitle-cn {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* ============================================================
+           BIG NUMBERS
+           ============================================================ */
+        .big-number-block {
+            text-align: center;
+            padding: 12px 0 8px 0;
+        }
+
+        .big-number {
+            font-family: 'Fira Code', monospace;
+            font-size: 44px;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -2px;
+        }
+
+        .big-number.red    { color: var(--critical-color); }
+        .big-number.blue   { color: var(--luckin-blue-light); }
+        .big-number.green  { color: var(--success-color); }
+
+        .big-number-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* ============================================================
+           STAT ROWS
+           ============================================================ */
+        .stat-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin: 8px 0;
+        }
+
+        .stat-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 8px 12px;
+            border: 1px solid rgba(56, 68, 77, 0.5);
+        }
+
+        .stat-row .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .stat-row .values {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .stat-row .current {
+            color: var(--critical-color);
+        }
+
+        .stat-row .arrow {
+            color: var(--text-secondary);
+            font-size: 10px;
+        }
+
+        .stat-row .target {
+            color: var(--success-color);
+            font-size: 11px;
+        }
+
+        /* ============================================================
+           CALLOUT BOXES
+           ============================================================ */
+        .callout {
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin: 6px 0;
+            border: 1px solid;
+        }
+
+        .callout.red {
+            background: rgba(239, 68, 68, 0.07);
+            border-color: rgba(239, 68, 68, 0.25);
+        }
+
+        .callout.blue {
+            background: rgba(0, 82, 155, 0.08);
+            border-color: rgba(0, 82, 155, 0.25);
+        }
+
+        .callout.green {
+            background: rgba(82, 196, 26, 0.07);
+            border-color: rgba(82, 196, 26, 0.25);
+        }
+
+        .callout .callout-number {
+            font-family: 'Fira Code', monospace;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .callout.red .callout-number   { color: var(--critical-color); }
+        .callout.blue .callout-number  { color: var(--luckin-blue-light); }
+        .callout.green .callout-number { color: var(--success-color); }
+
+        .callout .callout-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* ============================================================
+           STATUS BADGES
+           ============================================================ */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .status-badge.red {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--critical-color);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .status-badge.blue {
+            background: rgba(0, 82, 155, 0.15);
+            color: var(--luckin-blue-light);
+            border: 1px solid rgba(0, 82, 155, 0.3);
+        }
+
+        .status-badge.green {
+            background: rgba(82, 196, 26, 0.15);
+            color: var(--success-color);
+            border: 1px solid rgba(82, 196, 26, 0.3);
+        }
+
+        .pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .pulse-dot.red   { background: var(--critical-color); }
+        .pulse-dot.blue  { background: var(--luckin-blue-light); }
+        .pulse-dot.green { background: var(--success-color); }
+
+        /* ============================================================
+           HIGHLIGHT TEXT
+           ============================================================ */
+        .highlight-text {
+            font-size: 11px;
+            color: var(--warning-color);
+            font-weight: 500;
+            padding: 6px 0 2px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .highlight-text .icon {
+            font-size: 13px;
+        }
+
+        /* ============================================================
+           COMPONENT LIST (SOLUTION COLUMN)
+           ============================================================ */
+        .component-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin: 4px 0;
+        }
+
+        .component-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            background: var(--bg-card);
+            border: 1px solid rgba(56, 68, 77, 0.4);
+        }
+
+        .component-item .check {
+            color: var(--success-color);
+            font-size: 13px;
+            font-weight: 700;
+            flex-shrink: 0;
+            width: 16px;
+            text-align: center;
+        }
+
+        .component-item .text {
+            color: var(--text-primary);
+            font-size: 11.5px;
+        }
+
+        .component-item .meta {
+            margin-left: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 10px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        /* ============================================================
+           MINI ARCHITECTURE DIAGRAM
+           ============================================================ */
+        .arch-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 8px;
+            margin: 6px 0;
+            background: var(--bg-card);
+            border-radius: 8px;
+            border: 1px solid rgba(56, 68, 77, 0.5);
+        }
+
+        .arch-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .arch-node .node-box {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 6px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .arch-node .node-label {
+            font-size: 9px;
+            color: var(--text-secondary);
+        }
+
+        .node-db     { background: rgba(249, 115, 22, 0.15); color: var(--warning-color); border: 1px solid rgba(249, 115, 22, 0.3); }
+        .node-python { background: rgba(59, 130, 246, 0.15); color: var(--info-color); border: 1px solid rgba(59, 130, 246, 0.3); }
+        .node-sql    { background: rgba(124, 58, 237, 0.15); color: var(--purple-accent); border: 1px solid rgba(124, 58, 237, 0.3); }
+        .node-grafana { background: rgba(82, 196, 26, 0.15); color: var(--success-color); border: 1px solid rgba(82, 196, 26, 0.3); }
+
+        .arch-arrow {
+            color: var(--text-secondary);
+            font-size: 16px;
+            line-height: 1;
+            margin-top: -10px;
+        }
+
+        /* ============================================================
+           TIMELINE (IMPACT COLUMN)
+           ============================================================ */
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            margin: 6px 0;
+            position: relative;
+            padding-left: 18px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 6px;
+            bottom: 6px;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--luckin-blue), var(--success-color));
+            border-radius: 2px;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 0;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -16px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--luckin-blue);
+            border: 2px solid var(--bg-secondary);
+        }
+
+        .timeline-item:last-child::before {
+            background: var(--success-color);
+        }
+
+        .timeline-item .week {
+            font-family: 'Fira Code', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--info-color);
+            width: 38px;
+            flex-shrink: 0;
+        }
+
+        .timeline-item .task {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================================
+           TARGETS TABLE
+           ============================================================ */
+        .targets {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin: 6px 0;
+        }
+
+        .target-row {
+            display: flex;
+            align-items: center;
+            background: var(--bg-card);
+            border-radius: 7px;
+            padding: 7px 12px;
+            border: 1px solid rgba(56, 68, 77, 0.4);
+        }
+
+        .target-row .metric-name {
+            font-size: 11px;
+            color: var(--text-secondary);
+            width: 80px;
+            flex-shrink: 0;
+        }
+
+        .target-row .from-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--critical-color);
+            width: 60px;
+            text-align: right;
+        }
+
+        .target-row .arrow-target {
+            margin: 0 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .target-row .to-val {
+            font-family: 'Fira Code', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--success-color);
+        }
+
+        /* ============================================================
+           NEEDS BOX
+           ============================================================ */
+        .needs-box {
+            background: var(--bg-card);
+            border: 1px solid rgba(82, 196, 26, 0.2);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-top: auto;
+        }
+
+        .needs-box .needs-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--success-color);
+            margin-bottom: 6px;
+        }
+
+        .needs-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 3px 0;
+        }
+
+        .needs-row .role {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .needs-row .hours {
+            font-family: 'Fira Code', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .needs-row .desc {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-left: 6px;
+        }
+
+        /* ============================================================
+           ZERO COST CALLOUT
+           ============================================================ */
+        .zero-cost {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(0, 82, 155, 0.08);
+            border: 1px dashed rgba(0, 82, 155, 0.3);
+            border-radius: 6px;
+            margin: 6px 0;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--luckin-blue-light);
+        }
+
+        /* ============================================================
+           BOTTOM BADGE WRAPPER
+           ============================================================ */
+        .col-bottom {
+            margin-top: auto;
+            padding-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ============================================================
+           FOOTER
+           ============================================================ */
+        .footer {
+            flex-shrink: 0;
+            padding: 12px 48px 16px 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border-color);
+            margin-top: 12px;
+        }
+
+        .footer-left, .footer-right {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-family: 'Fira Code', monospace;
+            letter-spacing: 0.3px;
+        }
+
+        .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .footer-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 8px;
+            background: var(--bg-card);
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            font-size: 10px;
+        }
+
+        .footer-tag .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--success-color);
+        }
+
+        /* ============================================================
+           DIVIDER UTILITY
+           ============================================================ */
+        .divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 6px 0;
+            opacity: 0.5;
+        }
+
+        /* ============================================================
+           SECTION SPACER
+           ============================================================ */
+        .spacer-auto {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+
+        <!-- ========================================================
+             HEADER
+             ======================================================== -->
+        <header class="header">
+            <div class="header-top">
+                <div class="header-left">
+                    <div class="logo-mark">
+                        <span class="cup">LC</span>
+                        Luckin Coffee
+                    </div>
+                    <span class="badge-uc">UC-SC-01</span>
+                    <div class="header-title">
+                        <h1>
+                            Demand Forecast Accuracy Monitor
+                            <span class="cn">/ 需求预测准确度监控</span>
+                        </h1>
+                        <div class="header-subtitle">Management Proposal &mdash; February 2026</div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    Supply Chain Analytics Division<br>
+                    <span style="color: var(--luckin-blue-light);">AI Replenishment System Oversight</span>
+                </div>
+            </div>
+            <div class="accent-line"></div>
+        </header>
+
+        <!-- ========================================================
+             THREE COLUMNS
+             ======================================================== -->
+        <main class="columns">
+
+            <!-- ====================================================
+                 COLUMN 1: THE PROBLEM
+                 ==================================================== -->
+            <section class="column problem col-animate col-1">
+                <div class="col-header">
+                    <div class="col-icon">&#9888;</div>
+                    <div class="col-header-text">
+                        <h2>The Blind Spot</h2>
+                        <div class="subtitle-cn">盲区 &mdash; 问题现状</div>
+                    </div>
+                </div>
+
+                <div class="big-number-block">
+                    <div class="big-number red" data-target="2600000" data-prefix="" data-suffix="+" data-format="abbr">0</div>
+                    <div class="big-number-label">daily predictions with <strong style="color:var(--critical-color);">zero</strong> monitoring</div>
+                </div>
+
+                <div class="stat-rows">
+                    <div class="stat-row">
+                        <span class="label">MAPE (Forecast Error)</span>
+                        <div class="values">
+                            <span class="current animate-number" data-target="37.8" data-suffix="%">0</span>
+                            <span class="arrow">&#9654;</span>
+                            <span class="target">25% target</span>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <span class="label">Systematic Bias</span>
+                        <div class="values">
+                            <span class="current animate-number" data-target="9.1" data-prefix="+" data-suffix="%">0</span>
+                            <span class="arrow">&#9654;</span>
+                            <span class="target">&plusmn;5% target</span>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <span class="label">Accuracy Rate</span>
+                        <div class="values">
+                            <span class="current animate-number" data-target="42.3" data-suffix="%">0</span>
+                            <span class="arrow">&#9654;</span>
+                            <span class="target">&gt;70% target</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="callout red">
+                    <div class="callout-number" data-target="55" data-prefix="$" data-suffix="K">$0</div>
+                    <div class="callout-label">Estimated annual waste from over-prediction ($44K &ndash; $66K range)</div>
+                </div>
+
+                <div class="highlight-text">
+                    <span class="icon">&#10071;</span>
+                    No feedback loop to ML model &mdash; predictions never validated
+                </div>
+
+                <div class="col-bottom">
+                    <span class="status-badge red">
+                        <span class="pulse-dot red"></span>
+                        Status: Needs Attention
+                    </span>
+                </div>
+            </section>
+
+            <!-- ====================================================
+                 COLUMN 2: THE SOLUTION
+                 ==================================================== -->
+            <section class="column solution col-animate col-2">
+                <div class="col-header">
+                    <div class="col-icon">&#9881;</div>
+                    <div class="col-header-text">
+                        <h2>What We Built</h2>
+                        <div class="subtitle-cn">解决方案 &mdash; 系统架构</div>
+                    </div>
+                </div>
+
+                <!-- Mini Architecture Diagram -->
+                <div class="arch-diagram">
+                    <div class="arch-node">
+                        <div class="node-box node-db">3 MySQL</div>
+                        <div class="node-label">Databases</div>
+                    </div>
+                    <div class="arch-arrow">&#10142;</div>
+                    <div class="arch-node">
+                        <div class="node-box node-python">Python</div>
+                        <div class="node-label">Orchestrator</div>
+                    </div>
+                    <div class="arch-arrow">&#10142;</div>
+                    <div class="arch-node">
+                        <div class="node-box node-sql">6 SQL</div>
+                        <div class="node-label">Analytics</div>
+                    </div>
+                    <div class="arch-arrow">&#10142;</div>
+                    <div class="arch-node">
+                        <div class="node-box node-grafana">Grafana</div>
+                        <div class="node-label">Dashboard</div>
+                    </div>
+                </div>
+
+                <!-- Component List -->
+                <div class="component-list">
+                    <div class="component-item">
+                        <span class="check">&#10003;</span>
+                        <span class="text">Cross-server ETL pipeline</span>
+                        <span class="meta">3 MySQL DBs</span>
+                    </div>
+                    <div class="component-item">
+                        <span class="check">&#10003;</span>
+                        <span class="text">SQL analytics modules</span>
+                        <span class="meta">2,998 lines</span>
+                    </div>
+                    <div class="component-item">
+                        <span class="check">&#10003;</span>
+                        <span class="text">Python orchestrator</span>
+                        <span class="meta">1,166 lines</span>
+                    </div>
+                    <div class="component-item">
+                        <span class="check">&#10003;</span>
+                        <span class="text">Grafana monitoring dashboard</span>
+                        <span class="meta">29 panels</span>
+                    </div>
+                    <div class="component-item">
+                        <span class="check">&#10003;</span>
+                        <span class="text">Drift detection &amp; alerts</span>
+                        <span class="meta">5 tiers</span>
+                    </div>
+                    <div class="component-item">
+                        <span class="check">&#10003;</span>
+                        <span class="text">React executive dashboard</span>
+                        <span class="meta">Single-page</span>
+                    </div>
+                </div>
+
+                <div class="zero-cost">
+                    <span>&#9889;</span>
+                    Zero additional infrastructure cost
+                </div>
+
+                <div class="col-bottom">
+                    <span class="status-badge blue">
+                        <span class="pulse-dot blue"></span>
+                        Ready to Deploy
+                    </span>
+                </div>
+            </section>
+
+            <!-- ====================================================
+                 COLUMN 3: THE IMPACT
+                 ==================================================== -->
+            <section class="column impact col-animate col-3">
+                <div class="col-header">
+                    <div class="col-icon">&#128200;</div>
+                    <div class="col-header-text">
+                        <h2>Expected ROI</h2>
+                        <div class="subtitle-cn">投资回报 &mdash; 预期收益</div>
+                    </div>
+                </div>
+
+                <div class="big-number-block">
+                    <div class="big-number green" data-target="55" data-prefix="$" data-suffix="K">$0</div>
+                    <div class="big-number-label">Estimated annual savings</div>
+                </div>
+
+                <!-- Timeline -->
+                <div style="font-size:11px; font-weight:700; color:var(--info-color); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:2px;">
+                    4 Weeks to Production
+                </div>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <span class="week">Wk 1</span>
+                        <span class="task">DBA setup &amp; table creation</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="week">Wk 2</span>
+                        <span class="task">Pipeline deployment &amp; validation</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="week">Wk 3</span>
+                        <span class="task">Dashboard &amp; alert configuration</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="week">Wk 4</span>
+                        <span class="task">Tuning, testing &amp; handoff</span>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Target Metrics -->
+                <div style="font-size:10px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:4px;">
+                    Target Metrics After Optimization
+                </div>
+                <div class="targets">
+                    <div class="target-row">
+                        <span class="metric-name">MAPE</span>
+                        <span class="from-val">37.8%</span>
+                        <span class="arrow-target">&#10142;</span>
+                        <span class="to-val">25%</span>
+                    </div>
+                    <div class="target-row">
+                        <span class="metric-name">Accuracy</span>
+                        <span class="from-val">42.3%</span>
+                        <span class="arrow-target">&#10142;</span>
+                        <span class="to-val">70%</span>
+                    </div>
+                    <div class="target-row">
+                        <span class="metric-name">Bias</span>
+                        <span class="from-val">+9.1%</span>
+                        <span class="arrow-target">&#10142;</span>
+                        <span class="to-val">&plusmn;5%</span>
+                    </div>
+                </div>
+
+                <!-- What We Need -->
+                <div class="needs-box">
+                    <div class="needs-title">What We Need &#8212; 所需资源</div>
+                    <div class="needs-row">
+                        <span class="role">DBA</span>
+                        <span class="hours">2 hrs</span>
+                        <span class="desc">Create 4 tables</span>
+                    </div>
+                    <div class="needs-row">
+                        <span class="role">Data Eng</span>
+                        <span class="hours">4 hrs</span>
+                        <span class="desc">Deploy pipeline</span>
+                    </div>
+                    <div class="needs-row">
+                        <span class="role">BI Team</span>
+                        <span class="hours">4 hrs</span>
+                        <span class="desc">Import dashboard</span>
+                    </div>
+                    <div class="divider" style="margin:6px 0 4px 0;"></div>
+                    <div class="needs-row">
+                        <span class="role" style="font-weight:600; color:var(--text-primary);">Total</span>
+                        <span class="hours" style="color:var(--success-color);">10 hrs</span>
+                        <span class="desc" style="color:var(--success-color);">to production</span>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- ========================================================
+             FOOTER
+             ======================================================== -->
+        <footer class="footer">
+            <div class="footer-left">
+                UC-SC-01 &nbsp;|&nbsp; Luckin Coffee USA &nbsp;|&nbsp; Supply Chain Analytics &nbsp;|&nbsp; February 2026
+            </div>
+            <div class="footer-right">
+                <span class="footer-tag"><span class="dot"></span> 10 Active Stores</span>
+                <span class="footer-tag">~88 SKUs</span>
+                <span class="footer-tag">Daily T+1 Pipeline</span>
+                <span class="footer-tag">06:00 EST Refresh</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- ============================================================
+         NUMBER COUNTER ANIMATION SCRIPT
+         ============================================================ -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            /* ----------------------------------------------------------
+               Animate big numbers and inline stat numbers
+               ---------------------------------------------------------- */
+            function animateValue(el, start, end, duration, prefix, suffix, format) {
+                const startTime = performance.now();
+
+                function update(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    // Ease-out cubic
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    const current = start + (end - start) * eased;
+
+                    let display;
+                    if (format === 'abbr') {
+                        if (current >= 1000000) {
+                            display = (current / 1000000).toFixed(1) + 'M';
+                        } else if (current >= 1000) {
+                            display = (current / 1000).toFixed(0) + 'K';
+                        } else {
+                            display = Math.round(current).toString();
+                        }
+                    } else if (end % 1 !== 0) {
+                        display = current.toFixed(1);
+                    } else {
+                        display = Math.round(current).toString();
+                    }
+
+                    el.textContent = (prefix || '') + display + (suffix || '');
+
+                    if (progress < 1) {
+                        requestAnimationFrame(update);
+                    }
+                }
+
+                requestAnimationFrame(update);
+            }
+
+            // Big numbers (44px)
+            document.querySelectorAll('.big-number[data-target]').forEach(function (el, i) {
+                const target = parseFloat(el.getAttribute('data-target'));
+                const prefix = el.getAttribute('data-prefix') || '';
+                const suffix = el.getAttribute('data-suffix') || '';
+                const format = el.getAttribute('data-format') || '';
+                const delay = parseFloat(el.closest('.col-animate').classList.contains('col-1') ? 300 :
+                              el.closest('.col-animate').classList.contains('col-2') ? 500 : 700);
+
+                setTimeout(function () {
+                    animateValue(el, 0, target, 1400, prefix, suffix, format);
+                }, delay);
+            });
+
+            // Callout numbers
+            document.querySelectorAll('.callout-number[data-target]').forEach(function (el) {
+                const target = parseFloat(el.getAttribute('data-target'));
+                const prefix = el.getAttribute('data-prefix') || '';
+                const suffix = el.getAttribute('data-suffix') || '';
+
+                setTimeout(function () {
+                    animateValue(el, 0, target, 1200, prefix, suffix, '');
+                }, 600);
+            });
+
+            // Inline stat numbers
+            document.querySelectorAll('.animate-number[data-target]').forEach(function (el, i) {
+                const target = parseFloat(el.getAttribute('data-target'));
+                const prefix = el.getAttribute('data-prefix') || '';
+                const suffix = el.getAttribute('data-suffix') || '';
+
+                setTimeout(function () {
+                    animateValue(el, 0, target, 1000, prefix, suffix, '');
+                }, 400 + (i * 120));
+            });
+
+        });
+    </script>
+
+</body>
+</html>

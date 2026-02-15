@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demand Forecast Accuracy Monitor - Grafana Dashboard Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   GRAFANA DARK THEME - CORE STYLES
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-canvas: #181b1f;
+  --bg-primary: #1f2937;
+  --bg-secondary: #111318;
+  --bg-hover: #2a2f3a;
+  --border-primary: #2d3748;
+  --border-secondary: #374151;
+  --text-primary: #e5e7eb;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-link: #6ea8fe;
+  --accent-blue: #3b82f6;
+  --accent-green: #10b981;
+  --accent-orange: #f59e0b;
+  --accent-red: #ef4444;
+  --accent-yellow: #eab308;
+  --accent-purple: #8b5cf6;
+  --accent-cyan: #06b6d4;
+  --threshold-good: #10b981;
+  --threshold-warn: #f59e0b;
+  --threshold-bad: #ef4444;
+  --grafana-orange: #ff9830;
+  --panel-radius: 4px;
+  --row-height: 32px;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   GRAFANA HEADER BAR
+   ============================================================ */
+.grafana-header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  padding: 0 16px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.grafana-logo {
+  width: 28px;
+  height: 28px;
+  fill: var(--grafana-orange);
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.breadcrumb-folder {
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.breadcrumb-folder:hover { color: var(--text-primary); }
+
+.breadcrumb-sep {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.breadcrumb-current {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.demo-badge {
+  background: var(--accent-orange);
+  color: #000;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  animation: pulse-badge 2s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.time-range-picker {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  padding: 4px 12px;
+  border-radius: 3px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.time-range-picker:hover { border-color: var(--accent-blue); }
+
+.time-icon { font-size: 14px; color: var(--text-secondary); }
+
+.refresh-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.refresh-btn:hover { color: var(--text-primary); border-color: var(--accent-blue); }
+
+/* ============================================================
+   DASHBOARD CONTAINER & GRID
+   ============================================================ */
+.dashboard-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 8px;
+}
+
+.dashboard-row {
+  margin-bottom: 8px;
+}
+
+.row-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 4px;
+}
+
+.row-header:hover { background: rgba(255,255,255,0.03); border-radius: 3px; }
+
+.row-chevron {
+  color: var(--text-secondary);
+  font-size: 12px;
+  transition: transform 0.2s;
+  width: 16px;
+  text-align: center;
+}
+
+.row-chevron.collapsed { transform: rotate(-90deg); }
+
+.row-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.row-content {
+  display: grid;
+  gap: 8px;
+  transition: max-height 0.3s ease;
+  overflow: hidden;
+}
+
+.row-content.collapsed { max-height: 0 !important; }
+
+.grid-5 { grid-template-columns: repeat(5, 1fr); }
+.grid-2 { grid-template-columns: 1fr 1fr; }
+.grid-60-40 { grid-template-columns: 3fr 2fr; }
+
+/* ============================================================
+   PANEL STYLES
+   ============================================================ */
+.panel {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--panel-radius);
+  overflow: hidden;
+  position: relative;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-primary);
+  min-height: 36px;
+}
+
+.panel-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel-info {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--text-muted);
+  color: var(--text-muted);
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+  font-style: italic;
+  font-family: serif;
+}
+
+.panel-info:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
+}
+
+.panel-body {
+  padding: 12px;
+}
+
+/* ============================================================
+   STAT PANEL STYLES
+   ============================================================ */
+.stat-panel {
+  text-align: center;
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-panel::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.stat-panel.stat-red::before { background: var(--accent-red); }
+.stat-panel.stat-orange::before { background: var(--accent-orange); }
+.stat-panel.stat-yellow::before { background: var(--accent-yellow); }
+.stat-panel.stat-green::before { background: var(--accent-green); }
+
+.stat-panel.stat-red { background: linear-gradient(180deg, rgba(239,68,68,0.08) 0%, var(--bg-primary) 100%); }
+.stat-panel.stat-orange { background: linear-gradient(180deg, rgba(245,158,11,0.08) 0%, var(--bg-primary) 100%); }
+.stat-panel.stat-yellow { background: linear-gradient(180deg, rgba(234,179,8,0.08) 0%, var(--bg-primary) 100%); }
+.stat-panel.stat-green { background: linear-gradient(180deg, rgba(16,185,129,0.08) 0%, var(--bg-primary) 100%); }
+
+.stat-value {
+  font-size: 36px;
+  font-weight: 600;
+  font-family: 'Inter', monospace;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.stat-red .stat-value { color: var(--accent-red); }
+.stat-orange .stat-value { color: var(--accent-orange); }
+.stat-yellow .stat-value { color: var(--accent-yellow); }
+.stat-green .stat-value { color: var(--accent-green); }
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 400;
+  margin-bottom: 2px;
+}
+
+.stat-threshold {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ============================================================
+   SVG CHART STYLES
+   ============================================================ */
+.chart-container {
+  width: 100%;
+  position: relative;
+}
+
+.chart-container svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.chart-tooltip {
+  position: absolute;
+  background: #1a1d21;
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-primary);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 50;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.chart-tooltip.visible { opacity: 1; }
+
+.axis-label {
+  font-size: 10px;
+  fill: var(--text-muted);
+  font-family: 'Inter', sans-serif;
+}
+
+.axis-line { stroke: var(--border-primary); stroke-width: 1; }
+
+.grid-line { stroke: var(--border-primary); stroke-width: 0.5; stroke-dasharray: 2,4; }
+
+/* ============================================================
+   TABLE STYLES
+   ============================================================ */
+.grafana-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.grafana-table th {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-primary);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.grafana-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(45,55,72,0.5);
+  color: var(--text-primary);
+  font-family: 'Inter', monospace;
+  white-space: nowrap;
+}
+
+.grafana-table tr:hover td {
+  background: var(--bg-hover);
+}
+
+.severity-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.severity-critical { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+.severity-warning { background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.severity-info { background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+
+.type-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(139,92,246,0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(139,92,246,0.2);
+}
+
+/* ============================================================
+   HEATMAP TABLE
+   ============================================================ */
+.heatmap-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.heatmap-table th {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 6px 4px;
+  border: 1px solid var(--border-primary);
+  text-align: center;
+  font-size: 10px;
+}
+
+.heatmap-table td {
+  padding: 5px 4px;
+  border: 1px solid var(--border-primary);
+  text-align: center;
+  font-family: 'Inter', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: default;
+  position: relative;
+}
+
+.heatmap-table td.store-label {
+  text-align: left;
+  padding-left: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.hm-green { background: rgba(16,185,129,0.25); color: #6ee7b7; }
+.hm-yellow { background: rgba(234,179,8,0.25); color: #fde047; }
+.hm-orange { background: rgba(245,158,11,0.3); color: #fbbf24; }
+.hm-red { background: rgba(239,68,68,0.3); color: #fca5a5; }
+
+/* ============================================================
+   BAR CHART LABELS
+   ============================================================ */
+.bar-label {
+  font-size: 11px;
+  fill: var(--text-secondary);
+  font-family: 'Inter', sans-serif;
+}
+
+.bar-value {
+  font-size: 10px;
+  fill: var(--text-primary);
+  font-family: 'Inter', monospace;
+  font-weight: 500;
+}
+
+/* ============================================================
+   SCATTER DOT HOVER
+   ============================================================ */
+.scatter-dot {
+  cursor: pointer;
+  transition: r 0.15s;
+}
+.scatter-dot:hover {
+  r: 6;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.dashboard-footer {
+  text-align: center;
+  padding: 20px 16px;
+  border-top: 1px solid var(--border-primary);
+  margin-top: 16px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.footer-line-1 { color: var(--text-secondary); font-weight: 500; }
+.footer-timestamp { font-family: monospace; color: var(--text-muted); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1200px) {
+  .grid-5 { grid-template-columns: repeat(3, 1fr); }
+  .grid-60-40 { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 768px) {
+  .grid-5 { grid-template-columns: repeat(2, 1fr); }
+  .grid-2, .grid-60-40 { grid-template-columns: 1fr; }
+  .stat-value { font-size: 28px; }
+  .grafana-header { flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 8px; }
+}
+
+/* ============================================================
+   SCROLLBAR STYLING
+   ============================================================ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-canvas); }
+::-webkit-scrollbar-thumb { background: var(--border-secondary); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ============================================================
+   TABLE OVERFLOW WRAPPER
+   ============================================================ */
+.table-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 420px;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     GRAFANA HEADER BAR
+     ============================================================ -->
+<header class="grafana-header">
+  <div class="header-left">
+    <svg class="grafana-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M22.5 12c0-.4 0-.8-.1-1.2-.1-.6-.6-1-1.2-1h-.5c-.4-1.2-1-2.3-1.8-3.2l.3-.3c.4-.4.5-1.1.2-1.6-.3-.4-.6-.8-1-1.1-.4-.3-.8-.6-1.2-.9-.5-.3-1.1-.2-1.6.2l-.3.3c-.9-.6-2-1.1-3.1-1.4V1.3c0-.6-.4-1.1-1-1.2C10.8 0 10.4 0 10 0s-.8 0-1.2.1c-.6.1-1 .6-1 1.2v.5c-1.1.3-2.2.8-3.1 1.4l-.3-.3c-.4-.4-1.1-.5-1.6-.2-.4.3-.8.6-1.2.9-.3.3-.7.7-1 1.1-.3.5-.2 1.1.2 1.6l.3.3C.3 7.5-.3 8.6-.7 9.8h-.5c-.6 0-1.1.4-1.2 1-.1.4-.1.8-.1 1.2s0 .8.1 1.2c.1.6.6 1 1.2 1h.5c.4 1.2 1 2.3 1.8 3.2l-.3.3c-.4.4-.5 1.1-.2 1.6.3.4.6.8 1 1.1.4.3.8.6 1.2.9.5.3 1.1.2 1.6-.2l.3-.3c.9.6 2 1.1 3.1 1.4v.5c0 .6.4 1.1 1 1.2.4.1.8.1 1.2.1s.8 0 1.2-.1c.6-.1 1-.6 1-1.2v-.5c1.1-.3 2.2-.8 3.1-1.4l.3.3c.4.4 1.1.5 1.6.2.4-.3.8-.6 1.2-.9.3-.3.7-.7 1-1.1.3-.5.2-1.1-.2-1.6l-.3-.3c.8-.9 1.4-2 1.8-3.2h.5c.6 0 1.1-.4 1.2-1 .1-.4.1-.8.1-1.2zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z" fill="currentColor"/>
+    </svg>
+    <nav class="breadcrumb">
+      <span class="breadcrumb-folder">AI Analytics</span>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-current">Demand Forecast Accuracy Monitor</span>
+    </nav>
+  </div>
+  <div class="header-right">
+    <span class="demo-badge">DEMO DATA</span>
+    <div class="time-range-picker">
+      <span class="time-icon">&#128339;</span>
+      <span>Last 14 days</span>
+      <span style="color:var(--text-muted);font-size:11px;">&#9660;</span>
+    </div>
+    <button class="refresh-btn" title="Refresh">&#8635;</button>
+  </div>
+</header>
+
+<!-- ============================================================
+     DASHBOARD BODY
+     ============================================================ -->
+<div class="dashboard-container" id="dashboard">
+
+  <!-- ============================================================
+       ROW 1: KPI STATS
+       ============================================================ -->
+  <div class="dashboard-row" id="row-kpi">
+    <div class="row-header" onclick="toggleRow('kpi')">
+      <span class="row-chevron" id="chevron-kpi">&#9660;</span>
+      <span class="row-title">Key Performance Indicators</span>
+    </div>
+    <div class="row-content grid-5" id="content-kpi">
+      <!-- MAPE -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">MAPE <span class="panel-info" title="Mean Absolute Percentage Error across all SKU-store pairs">i</span></span>
+        </div>
+        <div class="stat-panel stat-red">
+          <div class="stat-label">Mean Absolute % Error</div>
+          <div class="stat-value">37.8%</div>
+          <div class="stat-threshold">Threshold: &lt; 25% target</div>
+        </div>
+      </div>
+      <!-- WMAPE -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">WMAPE <span class="panel-info" title="Weighted Mean Absolute Percentage Error, volume-weighted">i</span></span>
+        </div>
+        <div class="stat-panel stat-orange">
+          <div class="stat-label">Weighted MAPE</div>
+          <div class="stat-value">30.7%</div>
+          <div class="stat-threshold">Threshold: &lt; 20% target</div>
+        </div>
+      </div>
+      <!-- Bias -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Bias (MFE) <span class="panel-info" title="Mean Forecast Error. Positive = systematic over-prediction">i</span></span>
+        </div>
+        <div class="stat-panel stat-yellow">
+          <div class="stat-label">Mean Forecast Error</div>
+          <div class="stat-value">+9.1%</div>
+          <div class="stat-threshold">Positive = over-prediction</div>
+        </div>
+      </div>
+      <!-- Accuracy Rate -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Accuracy Rate <span class="panel-info" title="Percentage of predictions within +/- 25% of actual">i</span></span>
+        </div>
+        <div class="stat-panel stat-red">
+          <div class="stat-label">Within &plusmn;25% of Actual</div>
+          <div class="stat-value">42.3%</div>
+          <div class="stat-threshold">Target: &gt; 70%</div>
+        </div>
+      </div>
+      <!-- Coverage -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Coverage <span class="panel-info" title="Percentage of SKU-store pairs with both predicted and actual data">i</span></span>
+        </div>
+        <div class="stat-panel stat-green">
+          <div class="stat-label">Data Match Rate</div>
+          <div class="stat-value">94.2%</div>
+          <div class="stat-threshold">Target: &gt; 90%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ROW 2: TREND CHARTS
+       ============================================================ -->
+  <div class="dashboard-row" id="row-trends">
+    <div class="row-header" onclick="toggleRow('trends')">
+      <span class="row-chevron" id="chevron-trends">&#9660;</span>
+      <span class="row-title">Trends (14 Days)</span>
+    </div>
+    <div class="row-content grid-2" id="content-trends">
+      <!-- Daily MAPE Trend -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Daily MAPE Trend <span class="panel-info" title="14-day MAPE trend with 7-day moving average">i</span></span>
+        </div>
+        <div class="panel-body">
+          <div class="chart-container" id="mape-trend-container">
+            <div class="chart-tooltip" id="mape-trend-tooltip"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Daily Bias Trend -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Daily Bias Trend <span class="panel-info" title="Daily Mean Forecast Error trend. Positive = over-predicting demand">i</span></span>
+        </div>
+        <div class="panel-body">
+          <div class="chart-container" id="bias-trend-container">
+            <div class="chart-tooltip" id="bias-trend-tooltip"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ROW 3: STORE PERFORMANCE
+       ============================================================ -->
+  <div class="dashboard-row" id="row-stores">
+    <div class="row-header" onclick="toggleRow('stores')">
+      <span class="row-chevron" id="chevron-stores">&#9660;</span>
+      <span class="row-title">Store Performance</span>
+    </div>
+    <div class="row-content grid-60-40" id="content-stores">
+      <!-- MAPE by Store -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">MAPE by Store <span class="panel-info" title="7-day rolling MAPE per store, sorted worst-first">i</span></span>
+        </div>
+        <div class="panel-body">
+          <div class="chart-container" id="store-bar-container">
+            <div class="chart-tooltip" id="store-bar-tooltip"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Heatmap -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Store &times; Day-of-Week Heatmap <span class="panel-info" title="MAPE by store and day of week. Weekends typically have higher error.">i</span></span>
+        </div>
+        <div class="panel-body" style="padding:8px;">
+          <div id="heatmap-container"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ROW 4: CATEGORY ANALYSIS
+       ============================================================ -->
+  <div class="dashboard-row" id="row-categories">
+    <div class="row-header" onclick="toggleRow('categories')">
+      <span class="row-chevron" id="chevron-categories">&#9660;</span>
+      <span class="row-title">Category Analysis</span>
+    </div>
+    <div class="row-content grid-2" id="content-categories">
+      <!-- MAPE by Category -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">MAPE by Category <span class="panel-info" title="Average MAPE by product category over last 14 days">i</span></span>
+        </div>
+        <div class="panel-body">
+          <div class="chart-container" id="category-bar-container">
+            <div class="chart-tooltip" id="category-bar-tooltip"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Volume vs Error Scatter -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Volume vs Error Scatter <span class="panel-info" title="Daily volume vs MAPE per product. Higher volume items tend to have lower error.">i</span></span>
+        </div>
+        <div class="panel-body">
+          <div class="chart-container" id="scatter-container">
+            <div class="chart-tooltip" id="scatter-tooltip"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ROW 5: ALERTS & SIGNALS
+       ============================================================ -->
+  <div class="dashboard-row" id="row-alerts">
+    <div class="row-header" onclick="toggleRow('alerts')">
+      <span class="row-chevron" id="chevron-alerts">&#9660;</span>
+      <span class="row-title">Alerts &amp; Signals</span>
+    </div>
+    <div class="row-content grid-2" id="content-alerts">
+      <!-- Active Alerts Table -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Active Alerts <span class="panel-info" title="Currently active alerts from the forecast monitoring system">i</span></span>
+          <span style="font-size:11px;color:var(--accent-red);font-weight:500;">6 active</span>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <div class="table-scroll" id="alerts-table-container"></div>
+        </div>
+      </div>
+      <!-- Tracking Signal -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Tracking Signal <span class="panel-info" title="Cumulative forecast error / MAD. Values outside +/- 4.0 indicate systematic bias.">i</span></span>
+        </div>
+        <div class="panel-body">
+          <div class="chart-container" id="tracking-signal-container">
+            <div class="chart-tooltip" id="tracking-signal-tooltip"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ROW 6: FINANCIAL IMPACT
+       ============================================================ -->
+  <div class="dashboard-row" id="row-financial">
+    <div class="row-header" onclick="toggleRow('financial')">
+      <span class="row-chevron" id="chevron-financial">&#9660;</span>
+      <span class="row-title">Financial Impact</span>
+    </div>
+    <div class="row-content grid-2" id="content-financial">
+      <!-- Over-prediction Waste -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Over-prediction Waste by Category <span class="panel-info" title="Estimated daily waste cost due to over-prediction, by product category">i</span></span>
+          <span style="font-size:11px;color:var(--accent-red);font-weight:500;">$243/day total</span>
+        </div>
+        <div class="panel-body">
+          <div class="chart-container" id="waste-bar-container">
+            <div class="chart-tooltip" id="waste-bar-tooltip"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Under-prediction Exposure -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Under-prediction Exposure by Store <span class="panel-info" title="Estimated daily stockout risk cost by store from under-prediction">i</span></span>
+        </div>
+        <div class="panel-body">
+          <div class="chart-container" id="stockout-bar-container">
+            <div class="chart-tooltip" id="stockout-bar-tooltip"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ROW 7: DRILL-DOWN TABLES
+       ============================================================ -->
+  <div class="dashboard-row" id="row-drilldown">
+    <div class="row-header" onclick="toggleRow('drilldown')">
+      <span class="row-chevron" id="chevron-drilldown">&#9660;</span>
+      <span class="row-title">Drill-Down Detail</span>
+    </div>
+    <div class="row-content grid-2" id="content-drilldown">
+      <!-- Top 20 Worst Products -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Top 20 Worst Products <span class="panel-info" title="Products with highest MAPE over the last 14 days">i</span></span>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <div class="table-scroll" id="worst-products-container"></div>
+        </div>
+      </div>
+      <!-- Daily Accuracy Detail -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Daily Accuracy Detail <span class="panel-info" title="Day-by-day accuracy metrics for the last 7 days">i</span></span>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <div class="table-scroll" id="daily-accuracy-container"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end dashboard-container -->
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer class="dashboard-footer">
+  <div class="footer-line-1">Demo Data &mdash; Generated for Management Review | UC-SC-01 Forecast Accuracy Monitor | Luckin Coffee USA</div>
+  <div class="footer-timestamp">Last updated: 2026-02-14 06:00 EST</div>
+</footer>
+
+<!-- ============================================================
+     JAVASCRIPT: DATA & RENDERING
+     ============================================================ -->
+<script>
+/* ================================================================
+   EMBEDDED DATA — ALL DEMO DATA DEFINED HERE
+   ================================================================ */
+
+// --- Date labels (14 days) ---
+const DATES_14 = [
+  'Feb 1','Feb 2','Feb 3','Feb 4','Feb 5','Feb 6','Feb 7',
+  'Feb 8','Feb 9','Feb 10','Feb 11','Feb 12','Feb 13','Feb 14'
+];
+
+const DATES_7 = ['Feb 8','Feb 9','Feb 10','Feb 11','Feb 12','Feb 13','Feb 14'];
+
+// --- Daily MAPE (14 days) ---
+const DAILY_MAPE = [36.2, 38.1, 35.4, 39.7, 37.3, 40.2, 42.1, 36.8, 34.5, 38.9, 37.1, 33.9, 39.4, 38.5];
+
+// --- 7-day moving average of MAPE ---
+const MAPE_MA7 = [null, null, null, null, null, null,
+  (36.2+38.1+35.4+39.7+37.3+40.2+42.1)/7,
+  (38.1+35.4+39.7+37.3+40.2+42.1+36.8)/7,
+  (35.4+39.7+37.3+40.2+42.1+36.8+34.5)/7,
+  (39.7+37.3+40.2+42.1+36.8+34.5+38.9)/7,
+  (37.3+40.2+42.1+36.8+34.5+38.9+37.1)/7,
+  (40.2+42.1+36.8+34.5+38.9+37.1+33.9)/7,
+  (42.1+36.8+34.5+38.9+37.1+33.9+39.4)/7,
+  (36.8+34.5+38.9+37.1+33.9+39.4+38.5)/7
+];
+
+// --- Daily Bias (14 days) ---
+const DAILY_BIAS = [7.2, 9.4, 6.8, 11.3, 8.5, 12.1, 13.4, 8.9, 5.3, 10.7, 9.2, 6.1, 11.8, 10.3];
+
+// --- Store MAPE data (sorted worst to best) ---
+const STORE_MAPE = [
+  { store: 'Store 20032', mape: 43.1 },
+  { store: 'Store 1141',  mape: 41.8 },
+  { store: 'Store 20031', mape: 40.5 },
+  { store: 'Store 20008', mape: 39.2 },
+  { store: 'Store 20027', mape: 38.4 },
+  { store: 'Store 1140',  mape: 37.6 },
+  { store: 'Store 20010', mape: 36.9 },
+  { store: 'Store 1128',  mape: 35.8 },
+  { store: 'Store 20011', mape: 34.7 },
+  { store: 'Store 1127',  mape: 33.6 }
+];
+
+// --- Heatmap data: store x day-of-week MAPE ---
+const HEATMAP_STORES = ['20032','1141','20031','20008','20027','1140','20010','1128','20011','1127'];
+const HEATMAP_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const HEATMAP_DATA = [
+  [39.2, 38.5, 37.8, 40.1, 41.3, 48.2, 50.1],
+  [37.8, 36.9, 38.2, 39.5, 40.8, 46.7, 48.3],
+  [36.1, 35.8, 37.1, 38.4, 39.2, 45.1, 47.8],
+  [34.5, 33.9, 35.2, 37.1, 38.5, 44.3, 46.2],
+  [33.8, 33.2, 34.6, 36.5, 37.8, 43.1, 44.9],
+  [32.5, 32.1, 33.8, 35.9, 36.7, 42.5, 43.8],
+  [31.8, 31.2, 33.1, 35.2, 36.1, 41.8, 42.5],
+  [30.5, 30.1, 32.4, 34.1, 35.2, 40.2, 41.7],
+  [29.8, 29.4, 31.5, 33.4, 34.5, 39.5, 40.8],
+  [28.5, 28.1, 30.2, 32.1, 33.8, 38.4, 39.2]
+];
+
+// --- Category MAPE ---
+const CATEGORY_MAPE = [
+  { name: 'Coffee Beans',         mape: 28.9 },
+  { name: 'Beverages/Syrups',     mape: 32.4 },
+  { name: 'Packaging/Supplies',   mape: 35.6 },
+  { name: 'Toppings/Ingredients', mape: 38.3 },
+  { name: 'Dairy/Milk',           mape: 41.2 },
+  { name: 'Food Items',           mape: 45.8 }
+];
+
+// --- Scatter data: volume vs MAPE ---
+const SCATTER_DATA = [
+  {vol:420,mape:22},{vol:380,mape:25},{vol:350,mape:28},{vol:310,mape:26},
+  {vol:290,mape:31},{vol:270,mape:33},{vol:250,mape:29},{vol:230,mape:35},
+  {vol:210,mape:38},{vol:195,mape:34},{vol:180,mape:37},{vol:165,mape:40},
+  {vol:155,mape:36},{vol:145,mape:42},{vol:135,mape:39},{vol:125,mape:44},
+  {vol:118,mape:41},{vol:108,mape:46},{vol:98,mape:43},{vol:90,mape:48},
+  {vol:82,mape:45},{vol:75,mape:50},{vol:68,mape:47},{vol:60,mape:53},
+  {vol:52,mape:55},{vol:45,mape:52},{vol:38,mape:58},{vol:30,mape:62},
+  {vol:25,mape:68},{vol:18,mape:72},{vol:12,mape:78},{vol:8,mape:75},
+  {vol:450,mape:20},{vol:340,mape:27},{vol:200,mape:36},{vol:150,mape:43},
+  {vol:100,mape:49},{vol:55,mape:56},{vol:490,mape:19},{vol:160,mape:41}
+];
+
+// --- Alerts ---
+const ALERTS_DATA = [
+  { severity:'CRITICAL', type:'MAPE',     store:'Store 20032', msg:'7-day rolling MAPE 43.1% exceeds 40% threshold',          date:'2026-02-14' },
+  { severity:'CRITICAL', type:'MAPE',     store:'Store 1141',  msg:'7-day rolling MAPE 41.8% exceeds 40% threshold',          date:'2026-02-13' },
+  { severity:'WARNING',  type:'MAPE',     store:'Store 20031', msg:'7-day rolling MAPE 40.5% exceeds 30% threshold',          date:'2026-02-14' },
+  { severity:'WARNING',  type:'BIAS',     store:'System',      msg:'Positive bias for 14 consecutive days (MFE +9.1%)',       date:'2026-02-14' },
+  { severity:'WARNING',  type:'COVERAGE', store:'Store 20008', msg:'Coverage 87.3% below 90% threshold',                      date:'2026-02-12' },
+  { severity:'INFO',     type:'DRIFT',    store:'Food Items',  msg:'Week-over-week MAPE increase 52%',                        date:'2026-02-13' }
+];
+
+// --- Tracking Signal (14 days) ---
+const TRACKING_SIGNAL = [2.1, 2.5, 2.3, 3.1, 2.8, 3.4, 3.8, 3.2, 2.7, 3.5, 3.3, 3.0, 4.1, 4.3];
+
+// --- Waste by Category ($ per day) ---
+const WASTE_DATA = [
+  { name: 'Coffee Beans',         waste: 45 },
+  { name: 'Beverages/Syrups',     waste: 38 },
+  { name: 'Packaging/Supplies',   waste: 28 },
+  { name: 'Toppings/Ingredients', waste: 32 },
+  { name: 'Dairy/Milk',           waste: 52 },
+  { name: 'Food Items',           waste: 48 }
+];
+
+// --- Stockout Exposure by Store ($ per day) ---
+const STOCKOUT_DATA = [
+  { store: 'Store 20032', cost: 62 },
+  { store: 'Store 1141',  cost: 55 },
+  { store: 'Store 20031', cost: 48 },
+  { store: 'Store 20008', cost: 44 },
+  { store: 'Store 20027', cost: 41 },
+  { store: 'Store 1140',  cost: 38 },
+  { store: 'Store 20010', cost: 33 },
+  { store: 'Store 1128',  cost: 28 },
+  { store: 'Store 20011', cost: 22 },
+  { store: 'Store 1127',  cost: 15 }
+];
+
+// --- Top 20 Worst Products ---
+const WORST_PRODUCTS = [
+  { rank:1,  gs:'GS-10847', name:'Seasonal Matcha Blend 100g',    store:'Store 20032', mape:84.2, bias:'+52.1', vol:8   },
+  { rank:2,  gs:'GS-10523', name:'Coconut Cold Brew Syrup 500ml', store:'Store 1141',  mape:79.5, bias:'+41.3', vol:12  },
+  { rank:3,  gs:'GS-10291', name:'Oat Milk Barista 1L',           store:'Store 20031', mape:76.8, bias:'-38.7', vol:15  },
+  { rank:4,  gs:'GS-10185', name:'Brown Sugar Boba Topping 1kg',  store:'Store 20032', mape:74.1, bias:'+35.2', vol:6   },
+  { rank:5,  gs:'GS-10934', name:'Almond Croissant Frozen 12pk',  store:'Store 20008', mape:71.3, bias:'+44.8', vol:9   },
+  { rank:6,  gs:'GS-10067', name:'Vanilla Syrup 750ml',           store:'Store 1141',  mape:69.7, bias:'+28.9', vol:18  },
+  { rank:7,  gs:'GS-10412', name:'Espresso Blend 250g',           store:'Store 20027', mape:67.2, bias:'-22.4', vol:22  },
+  { rank:8,  gs:'GS-10688', name:'Hazelnut Spread 500g',          store:'Store 1140',  mape:65.8, bias:'+31.6', vol:11  },
+  { rank:9,  gs:'GS-10753', name:'Cold Brew Concentrate 1L',      store:'Store 20010', mape:64.1, bias:'+26.3', vol:14  },
+  { rank:10, gs:'GS-10329', name:'Caramel Drizzle Sauce 750ml',   store:'Store 1128',  mape:62.5, bias:'+33.7', vol:10  },
+  { rank:11, gs:'GS-10901', name:'Whipped Cream Chargers 24pk',   store:'Store 20011', mape:61.2, bias:'-19.8', vol:25  },
+  { rank:12, gs:'GS-10145', name:'Soy Milk Unsweetened 1L',       store:'Store 1127',  mape:60.4, bias:'+24.1', vol:20  },
+  { rank:13, gs:'GS-10567', name:'Matcha Powder Premium 200g',    store:'Store 20032', mape:59.1, bias:'+42.5', vol:7   },
+  { rank:14, gs:'GS-10234', name:'Paper Cup 12oz Branded 500pk',  store:'Store 1141',  mape:58.3, bias:'-15.2', vol:45  },
+  { rank:15, gs:'GS-10876', name:'Chocolate Chip Muffin 6pk',     store:'Store 20031', mape:57.6, bias:'+29.4', vol:13  },
+  { rank:16, gs:'GS-10098', name:'Lychee Fruit Puree 1kg',        store:'Store 20008', mape:56.9, bias:'+18.7', vol:8   },
+  { rank:17, gs:'GS-10445', name:'Cup Lid Dome 12oz 1000pk',      store:'Store 20027', mape:56.2, bias:'-12.3', vol:52  },
+  { rank:18, gs:'GS-10612', name:'Taro Powder 500g',              store:'Store 1140',  mape:55.8, bias:'+36.1', vol:6   },
+  { rank:19, gs:'GS-10789', name:'Half & Half Creamer 1L',        store:'Store 20010', mape:55.3, bias:'+21.8', vol:19  },
+  { rank:20, gs:'GS-10356', name:'Strawberry Jam Filling 2kg',    store:'Store 1128',  mape:55.0, bias:'+25.4', vol:9   }
+];
+
+// --- Daily Accuracy Detail (last 7 days) ---
+const DAILY_ACCURACY = [
+  { date:'2026-02-08', predictions:882, matched:831, coverage:94.2, mape:36.8, wmape:29.5, bias:'+8.9'  },
+  { date:'2026-02-09', predictions:878, matched:826, coverage:94.1, mape:34.5, wmape:28.1, bias:'+5.3'  },
+  { date:'2026-02-10', predictions:885, matched:835, coverage:94.4, mape:38.9, wmape:31.2, bias:'+10.7' },
+  { date:'2026-02-11', predictions:880, matched:829, coverage:94.2, mape:37.1, wmape:30.4, bias:'+9.2'  },
+  { date:'2026-02-12', predictions:876, matched:822, coverage:93.8, mape:33.9, wmape:27.8, bias:'+6.1'  },
+  { date:'2026-02-13', predictions:883, matched:833, coverage:94.3, mape:39.4, wmape:32.1, bias:'+11.8' },
+  { date:'2026-02-14', predictions:881, matched:830, coverage:94.2, mape:38.5, wmape:31.5, bias:'+10.3' }
+];
+
+
+/* ================================================================
+   UTILITY FUNCTIONS
+   ================================================================ */
+
+function mapeColor(v) {
+  if (v > 40) return '#ef4444';
+  if (v > 30) return '#f59e0b';
+  if (v > 25) return '#eab308';
+  return '#10b981';
+}
+
+function heatmapClass(v) {
+  if (v > 40) return 'hm-red';
+  if (v > 35) return 'hm-orange';
+  if (v > 30) return 'hm-yellow';
+  return 'hm-green';
+}
+
+function toggleRow(id) {
+  const content = document.getElementById('content-' + id);
+  const chevron = document.getElementById('chevron-' + id);
+  content.classList.toggle('collapsed');
+  chevron.classList.toggle('collapsed');
+}
+
+function showTooltip(containerId, x, y, html) {
+  const tip = document.getElementById(containerId);
+  tip.innerHTML = html;
+  tip.style.left = x + 'px';
+  tip.style.top = y + 'px';
+  tip.classList.add('visible');
+}
+
+function hideTooltip(containerId) {
+  document.getElementById(containerId).classList.remove('visible');
+}
+
+/* ================================================================
+   CHART RENDERERS
+   ================================================================ */
+
+// --- Daily MAPE Trend (area chart with MA line and threshold) ---
+function renderMapeTrend() {
+  const W = 700, H = 250, pad = {t:20, r:30, b:40, l:50};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  const n = DAILY_MAPE.length;
+  const yMin = 0, yMax = 50;
+
+  function sx(i) { return pad.l + (i / (n - 1)) * cw; }
+  function sy(v) { return pad.t + ch - ((v - yMin) / (yMax - yMin)) * ch; }
+
+  // Build area path
+  let areaPath = `M${sx(0)},${sy(DAILY_MAPE[0])}`;
+  for (let i = 1; i < n; i++) areaPath += ` L${sx(i)},${sy(DAILY_MAPE[i])}`;
+  areaPath += ` L${sx(n-1)},${sy(yMin)} L${sx(0)},${sy(yMin)} Z`;
+
+  // Build line path
+  let linePath = `M${sx(0)},${sy(DAILY_MAPE[0])}`;
+  for (let i = 1; i < n; i++) linePath += ` L${sx(i)},${sy(DAILY_MAPE[i])}`;
+
+  // Build MA path
+  let maPath = '';
+  for (let i = 0; i < n; i++) {
+    if (MAPE_MA7[i] !== null) {
+      maPath += (maPath ? ' L' : 'M') + `${sx(i)},${sy(MAPE_MA7[i])}`;
+    }
+  }
+
+  // Grid lines
+  let gridLines = '';
+  for (let v = 0; v <= 50; v += 10) {
+    gridLines += `<line x1="${pad.l}" y1="${sy(v)}" x2="${W-pad.r}" y2="${sy(v)}" class="grid-line"/>`;
+    gridLines += `<text x="${pad.l-8}" y="${sy(v)+4}" text-anchor="end" class="axis-label">${v}%</text>`;
+  }
+
+  // X-axis labels
+  let xLabels = '';
+  for (let i = 0; i < n; i++) {
+    if (i % 2 === 0 || i === n-1)
+      xLabels += `<text x="${sx(i)}" y="${H-8}" text-anchor="middle" class="axis-label">${DATES_14[i]}</text>`;
+  }
+
+  // Hover dots
+  let dots = '';
+  for (let i = 0; i < n; i++) {
+    dots += `<circle cx="${sx(i)}" cy="${sy(DAILY_MAPE[i])}" r="4" fill="#3b82f6" stroke="#1f2937" stroke-width="2"
+      style="cursor:pointer;" data-idx="${i}"
+      onmouseenter="showTooltip('mape-trend-tooltip', ${sx(i)+10}, ${sy(DAILY_MAPE[i])-10}, '<strong>${DATES_14[i]}</strong><br/>MAPE: ${DAILY_MAPE[i]}%${MAPE_MA7[i] !== null ? '<br/>7d MA: '+MAPE_MA7[i].toFixed(1)+'%' : ''}')"
+      onmouseleave="hideTooltip('mape-trend-tooltip')"/>`;
+  }
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="mapeGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
+        <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.02"/>
+      </linearGradient>
+    </defs>
+    ${gridLines}
+    <!-- Threshold line at 25% -->
+    <line x1="${pad.l}" y1="${sy(25)}" x2="${W-pad.r}" y2="${sy(25)}" stroke="#10b981" stroke-width="1.5" stroke-dasharray="6,4"/>
+    <text x="${W-pad.r+4}" y="${sy(25)+4}" class="axis-label" fill="#10b981" font-size="9">25% target</text>
+    <!-- Area fill -->
+    <path d="${areaPath}" fill="url(#mapeGrad)"/>
+    <!-- Main line -->
+    <path d="${linePath}" fill="none" stroke="#3b82f6" stroke-width="2"/>
+    <!-- MA line -->
+    <path d="${maPath}" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3"/>
+    ${dots}
+    ${xLabels}
+    <!-- Legend -->
+    <line x1="${pad.l}" y1="${H-2}" x2="${pad.l+20}" y2="${H-2}" stroke="#3b82f6" stroke-width="2"/>
+    <text x="${pad.l+24}" y="${H+1}" class="axis-label" fill="#9ca3af" font-size="9">MAPE</text>
+    <line x1="${pad.l+65}" y1="${H-2}" x2="${pad.l+85}" y2="${H-2}" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <text x="${pad.l+89}" y="${H+1}" class="axis-label" fill="#9ca3af" font-size="9">7d MA</text>
+    <line x1="${pad.l+135}" y1="${H-2}" x2="${pad.l+155}" y2="${H-2}" stroke="#10b981" stroke-width="1.5" stroke-dasharray="6,4"/>
+    <text x="${pad.l+159}" y="${H+1}" class="axis-label" fill="#9ca3af" font-size="9">Target</text>
+  </svg>`;
+
+  document.getElementById('mape-trend-container').insertAdjacentHTML('afterbegin', svg);
+}
+
+// --- Daily Bias Trend (line chart with zero line, positive/negative fill) ---
+function renderBiasTrend() {
+  const W = 700, H = 250, pad = {t:20, r:30, b:40, l:50};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  const n = DAILY_BIAS.length;
+  const yMin = -5, yMax = 20;
+
+  function sx(i) { return pad.l + (i / (n - 1)) * cw; }
+  function sy(v) { return pad.t + ch - ((v - yMin) / (yMax - yMin)) * ch; }
+
+  // Positive area (above zero)
+  let posArea = `M${sx(0)},${sy(0)}`;
+  for (let i = 0; i < n; i++) posArea += ` L${sx(i)},${sy(Math.max(0, DAILY_BIAS[i]))}`;
+  posArea += ` L${sx(n-1)},${sy(0)} Z`;
+
+  // Line path
+  let linePath = `M${sx(0)},${sy(DAILY_BIAS[0])}`;
+  for (let i = 1; i < n; i++) linePath += ` L${sx(i)},${sy(DAILY_BIAS[i])}`;
+
+  // Grid lines
+  let gridLines = '';
+  for (let v = -5; v <= 20; v += 5) {
+    gridLines += `<line x1="${pad.l}" y1="${sy(v)}" x2="${W-pad.r}" y2="${sy(v)}" class="grid-line"/>`;
+    gridLines += `<text x="${pad.l-8}" y="${sy(v)+4}" text-anchor="end" class="axis-label">${v>0?'+':''}${v}%</text>`;
+  }
+
+  // X-axis labels
+  let xLabels = '';
+  for (let i = 0; i < n; i++) {
+    if (i % 2 === 0 || i === n-1)
+      xLabels += `<text x="${sx(i)}" y="${H-8}" text-anchor="middle" class="axis-label">${DATES_14[i]}</text>`;
+  }
+
+  // Hover dots
+  let dots = '';
+  for (let i = 0; i < n; i++) {
+    dots += `<circle cx="${sx(i)}" cy="${sy(DAILY_BIAS[i])}" r="4" fill="#f59e0b" stroke="#1f2937" stroke-width="2"
+      style="cursor:pointer;"
+      onmouseenter="showTooltip('bias-trend-tooltip', ${sx(i)+10}, ${sy(DAILY_BIAS[i])-10}, '<strong>${DATES_14[i]}</strong><br/>Bias: +${DAILY_BIAS[i]}%')"
+      onmouseleave="hideTooltip('bias-trend-tooltip')"/>`;
+  }
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="biasGradPos" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ef4444" stop-opacity="0.2"/>
+        <stop offset="100%" stop-color="#ef4444" stop-opacity="0.02"/>
+      </linearGradient>
+    </defs>
+    ${gridLines}
+    <!-- Zero line -->
+    <line x1="${pad.l}" y1="${sy(0)}" x2="${W-pad.r}" y2="${sy(0)}" stroke="#6b7280" stroke-width="1.5"/>
+    <!-- Positive fill -->
+    <path d="${posArea}" fill="url(#biasGradPos)"/>
+    <!-- Line -->
+    <path d="${linePath}" fill="none" stroke="#f59e0b" stroke-width="2"/>
+    ${dots}
+    ${xLabels}
+    <!-- Annotation -->
+    <text x="${W-pad.r}" y="${sy(0)-8}" text-anchor="end" class="axis-label" fill="#6b7280" font-size="9">zero line (no bias)</text>
+    <text x="${W/2}" y="${pad.t+14}" text-anchor="middle" class="axis-label" fill="#ef4444" font-size="9">Over-prediction zone</text>
+  </svg>`;
+
+  document.getElementById('bias-trend-container').insertAdjacentHTML('afterbegin', svg);
+}
+
+// --- MAPE by Store (horizontal bar chart) ---
+function renderStoreBar() {
+  const W = 560, barH = 26, gap = 6, pad = {t:10, r:60, b:30, l:105};
+  const n = STORE_MAPE.length;
+  const H = pad.t + n * (barH + gap) + pad.b;
+  const cw = W - pad.l - pad.r;
+  const xMax = 50;
+
+  function bx(v) { return pad.l + (v / xMax) * cw; }
+
+  let bars = '';
+  for (let i = 0; i < n; i++) {
+    const y = pad.t + i * (barH + gap);
+    const w = (STORE_MAPE[i].mape / xMax) * cw;
+    const col = mapeColor(STORE_MAPE[i].mape);
+    bars += `<text x="${pad.l-8}" y="${y+barH/2+4}" text-anchor="end" class="bar-label">${STORE_MAPE[i].store}</text>`;
+    bars += `<rect x="${pad.l}" y="${y}" width="${w}" height="${barH}" rx="2" fill="${col}" opacity="0.85"
+      style="cursor:pointer;"
+      onmouseenter="showTooltip('store-bar-tooltip', ${pad.l+w+8}, ${y}, '<strong>${STORE_MAPE[i].store}</strong><br/>MAPE: ${STORE_MAPE[i].mape}%')"
+      onmouseleave="hideTooltip('store-bar-tooltip')"/>`;
+    bars += `<text x="${pad.l+w+6}" y="${y+barH/2+4}" class="bar-value">${STORE_MAPE[i].mape}%</text>`;
+  }
+
+  // Threshold vertical lines
+  const thresh25 = bx(25);
+  const thresh40 = bx(40);
+
+  // X-axis ticks
+  let xTicks = '';
+  for (let v = 0; v <= 50; v += 10) {
+    xTicks += `<line x1="${bx(v)}" y1="${pad.t}" x2="${bx(v)}" y2="${H-pad.b}" class="grid-line"/>`;
+    xTicks += `<text x="${bx(v)}" y="${H-pad.b+16}" text-anchor="middle" class="axis-label">${v}%</text>`;
+  }
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    ${xTicks}
+    <line x1="${thresh25}" y1="${pad.t-4}" x2="${thresh25}" y2="${H-pad.b}" stroke="#10b981" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <text x="${thresh25}" y="${pad.t-6}" text-anchor="middle" class="axis-label" fill="#10b981" font-size="8">25% target</text>
+    <line x1="${thresh40}" y1="${pad.t-4}" x2="${thresh40}" y2="${H-pad.b}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <text x="${thresh40}" y="${pad.t-6}" text-anchor="middle" class="axis-label" fill="#ef4444" font-size="8">40% critical</text>
+    ${bars}
+  </svg>`;
+
+  document.getElementById('store-bar-container').insertAdjacentHTML('afterbegin', svg);
+}
+
+// --- Store x Day-of-Week Heatmap ---
+function renderHeatmap() {
+  let html = '<table class="heatmap-table"><thead><tr><th>Store</th>';
+  HEATMAP_DAYS.forEach(d => html += `<th>${d}</th>`);
+  html += '</tr></thead><tbody>';
+
+  for (let i = 0; i < HEATMAP_STORES.length; i++) {
+    html += `<tr><td class="store-label">Store ${HEATMAP_STORES[i]}</td>`;
+    for (let j = 0; j < HEATMAP_DAYS.length; j++) {
+      const v = HEATMAP_DATA[i][j];
+      html += `<td class="${heatmapClass(v)}" title="Store ${HEATMAP_STORES[i]}, ${HEATMAP_DAYS[j]}: ${v}%">${v.toFixed(1)}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  document.getElementById('heatmap-container').innerHTML = html;
+}
+
+// --- MAPE by Category (vertical bar chart) ---
+function renderCategoryBar() {
+  const W = 620, H = 280, pad = {t:20, r:20, b:70, l:50};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  const n = CATEGORY_MAPE.length;
+  const barW = cw / n * 0.65;
+  const yMax = 55;
+
+  function sy(v) { return pad.t + ch - (v / yMax) * ch; }
+
+  // Grid
+  let grid = '';
+  for (let v = 0; v <= 50; v += 10) {
+    grid += `<line x1="${pad.l}" y1="${sy(v)}" x2="${W-pad.r}" y2="${sy(v)}" class="grid-line"/>`;
+    grid += `<text x="${pad.l-8}" y="${sy(v)+4}" text-anchor="end" class="axis-label">${v}%</text>`;
+  }
+
+  // Threshold lines
+  grid += `<line x1="${pad.l}" y1="${sy(25)}" x2="${W-pad.r}" y2="${sy(25)}" stroke="#10b981" stroke-width="1" stroke-dasharray="5,3"/>`;
+  grid += `<line x1="${pad.l}" y1="${sy(40)}" x2="${W-pad.r}" y2="${sy(40)}" stroke="#ef4444" stroke-width="1" stroke-dasharray="5,3"/>`;
+
+  let bars = '';
+  for (let i = 0; i < n; i++) {
+    const cx = pad.l + (i + 0.5) * (cw / n);
+    const x = cx - barW / 2;
+    const bh = (CATEGORY_MAPE[i].mape / yMax) * ch;
+    const y = sy(CATEGORY_MAPE[i].mape);
+    const col = mapeColor(CATEGORY_MAPE[i].mape);
+    bars += `<rect x="${x}" y="${y}" width="${barW}" height="${bh}" rx="2" fill="${col}" opacity="0.85"
+      style="cursor:pointer;"
+      onmouseenter="showTooltip('category-bar-tooltip', ${cx+10}, ${y-10}, '<strong>${CATEGORY_MAPE[i].name}</strong><br/>MAPE: ${CATEGORY_MAPE[i].mape}%')"
+      onmouseleave="hideTooltip('category-bar-tooltip')"/>`;
+    bars += `<text x="${cx}" y="${y-6}" text-anchor="middle" class="bar-value" font-size="10">${CATEGORY_MAPE[i].mape}%</text>`;
+    // X label (rotated)
+    bars += `<text x="${cx}" y="${H-pad.b+14}" text-anchor="end" class="axis-label" font-size="9"
+      transform="rotate(-35 ${cx} ${H-pad.b+14})">${CATEGORY_MAPE[i].name}</text>`;
+  }
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    ${grid}
+    ${bars}
+  </svg>`;
+
+  document.getElementById('category-bar-container').insertAdjacentHTML('afterbegin', svg);
+}
+
+// --- Volume vs Error Scatter ---
+function renderScatter() {
+  const W = 620, H = 280, pad = {t:20, r:20, b:40, l:50};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  const xMax = 520, yMax = 85;
+
+  function sx(v) { return pad.l + (v / xMax) * cw; }
+  function sy(v) { return pad.t + ch - (v / yMax) * ch; }
+
+  // Grid
+  let grid = '';
+  for (let v = 0; v <= 80; v += 20) {
+    grid += `<line x1="${pad.l}" y1="${sy(v)}" x2="${W-pad.r}" y2="${sy(v)}" class="grid-line"/>`;
+    grid += `<text x="${pad.l-8}" y="${sy(v)+4}" text-anchor="end" class="axis-label">${v}%</text>`;
+  }
+  for (let v = 0; v <= 500; v += 100) {
+    grid += `<line x1="${sx(v)}" y1="${pad.t}" x2="${sx(v)}" y2="${H-pad.b}" class="grid-line"/>`;
+    grid += `<text x="${sx(v)}" y="${H-pad.b+16}" text-anchor="middle" class="axis-label">${v}</text>`;
+  }
+
+  // Trend line (inverse curve approximation)
+  let trendLine = `M${sx(10)},${sy(70)}`;
+  for (let x = 20; x <= 500; x += 10) {
+    const y = 18 + 550/x * 10;
+    trendLine += ` L${sx(x)},${sy(Math.min(y, 80))}`;
+  }
+
+  // Dots
+  let dots = '';
+  SCATTER_DATA.forEach((d, i) => {
+    dots += `<circle cx="${sx(d.vol)}" cy="${sy(d.mape)}" r="4" fill="#3b82f6" opacity="0.7" class="scatter-dot"
+      onmouseenter="showTooltip('scatter-tooltip', ${sx(d.vol)+10}, ${sy(d.mape)-10}, 'Volume: ${d.vol}/day<br/>MAPE: ${d.mape}%')"
+      onmouseleave="hideTooltip('scatter-tooltip')"/>`;
+  });
+
+  // Axis labels
+  const axisLabels = `
+    <text x="${W/2}" y="${H-4}" text-anchor="middle" class="axis-label" font-size="10" fill="#9ca3af">Daily Volume (units)</text>
+    <text x="12" y="${H/2}" text-anchor="middle" class="axis-label" font-size="10" fill="#9ca3af" transform="rotate(-90 12 ${H/2})">MAPE (%)</text>
+  `;
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    ${grid}
+    <!-- Trend line -->
+    <path d="${trendLine}" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
+    <text x="${sx(450)}" y="${sy(28)}" class="axis-label" fill="#ef4444" font-size="8">trend</text>
+    ${dots}
+    ${axisLabels}
+  </svg>`;
+
+  document.getElementById('scatter-container').insertAdjacentHTML('afterbegin', svg);
+}
+
+// --- Alerts Table ---
+function renderAlertsTable() {
+  let html = '<table class="grafana-table"><thead><tr><th>Severity</th><th>Type</th><th>Store</th><th>Message</th><th>Triggered</th></tr></thead><tbody>';
+  ALERTS_DATA.forEach(a => {
+    const sevClass = a.severity === 'CRITICAL' ? 'severity-critical' : a.severity === 'WARNING' ? 'severity-warning' : 'severity-info';
+    html += `<tr>
+      <td><span class="severity-badge ${sevClass}">${a.severity}</span></td>
+      <td><span class="type-badge">${a.type}</span></td>
+      <td style="color:var(--text-primary);">${a.store}</td>
+      <td style="color:var(--text-secondary);white-space:normal;max-width:280px;">${a.msg}</td>
+      <td style="font-size:11px;color:var(--text-muted);">${a.date}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('alerts-table-container').innerHTML = html;
+}
+
+// --- Tracking Signal Chart ---
+function renderTrackingSignal() {
+  const W = 700, H = 250, pad = {t:20, r:30, b:40, l:50};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  const n = TRACKING_SIGNAL.length;
+  const yMin = -1, yMax = 6;
+
+  function sx(i) { return pad.l + (i / (n - 1)) * cw; }
+  function sy(v) { return pad.t + ch - ((v - yMin) / (yMax - yMin)) * ch; }
+
+  // Grid
+  let grid = '';
+  for (let v = 0; v <= 6; v += 1) {
+    grid += `<line x1="${pad.l}" y1="${sy(v)}" x2="${W-pad.r}" y2="${sy(v)}" class="grid-line"/>`;
+    grid += `<text x="${pad.l-8}" y="${sy(v)+4}" text-anchor="end" class="axis-label">${v > 0 ? '+' : ''}${v}</text>`;
+  }
+
+  // Threshold bands at +/- 4.0
+  const upperBand = `<rect x="${pad.l}" y="${sy(yMax)}" width="${cw}" height="${sy(4)-sy(yMax)}" fill="rgba(239,68,68,0.08)"/>`;
+  const lowerBand = `<rect x="${pad.l}" y="${sy(-1)}" width="${cw}" height="${sy(-1)-sy(0)}" fill="rgba(59,130,246,0.05)"/>`;
+
+  // Threshold lines
+  const threshTop = `<line x1="${pad.l}" y1="${sy(4)}" x2="${W-pad.r}" y2="${sy(4)}" stroke="#ef4444" stroke-width="1" stroke-dasharray="5,3"/>`;
+  const threshTopLabel = `<text x="${W-pad.r+4}" y="${sy(4)+4}" class="axis-label" fill="#ef4444" font-size="8">+4.0</text>`;
+  const zeroLine = `<line x1="${pad.l}" y1="${sy(0)}" x2="${W-pad.r}" y2="${sy(0)}" stroke="#6b7280" stroke-width="1"/>`;
+
+  // Signal line
+  let linePath = `M${sx(0)},${sy(TRACKING_SIGNAL[0])}`;
+  for (let i = 1; i < n; i++) linePath += ` L${sx(i)},${sy(TRACKING_SIGNAL[i])}`;
+
+  // X-axis labels
+  let xLabels = '';
+  for (let i = 0; i < n; i++) {
+    if (i % 2 === 0 || i === n-1)
+      xLabels += `<text x="${sx(i)}" y="${H-8}" text-anchor="middle" class="axis-label">${DATES_14[i]}</text>`;
+  }
+
+  // Dots
+  let dots = '';
+  for (let i = 0; i < n; i++) {
+    const col = TRACKING_SIGNAL[i] >= 4.0 ? '#ef4444' : '#8b5cf6';
+    dots += `<circle cx="${sx(i)}" cy="${sy(TRACKING_SIGNAL[i])}" r="4" fill="${col}" stroke="#1f2937" stroke-width="2"
+      style="cursor:pointer;"
+      onmouseenter="showTooltip('tracking-signal-tooltip', ${sx(i)+10}, ${sy(TRACKING_SIGNAL[i])-10}, '<strong>${DATES_14[i]}</strong><br/>TS: +${TRACKING_SIGNAL[i].toFixed(1)}${TRACKING_SIGNAL[i]>=4?' &#9888; Above threshold':''}')"
+      onmouseleave="hideTooltip('tracking-signal-tooltip')"/>`;
+  }
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    ${upperBand}
+    ${lowerBand}
+    ${grid}
+    ${zeroLine}
+    ${threshTop}
+    ${threshTopLabel}
+    <text x="${pad.l+4}" y="${sy(5)+4}" class="axis-label" fill="#ef4444" font-size="8" opacity="0.6">ALERT ZONE</text>
+    <path d="${linePath}" fill="none" stroke="#8b5cf6" stroke-width="2"/>
+    ${dots}
+    ${xLabels}
+  </svg>`;
+
+  document.getElementById('tracking-signal-container').insertAdjacentHTML('afterbegin', svg);
+}
+
+// --- Over-prediction Waste by Category (vertical bar chart) ---
+function renderWasteBar() {
+  const W = 620, H = 260, pad = {t:20, r:20, b:70, l:50};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  const n = WASTE_DATA.length;
+  const barW = cw / n * 0.6;
+  const yMax = 65;
+
+  function sy(v) { return pad.t + ch - (v / yMax) * ch; }
+
+  let grid = '';
+  for (let v = 0; v <= 60; v += 10) {
+    grid += `<line x1="${pad.l}" y1="${sy(v)}" x2="${W-pad.r}" y2="${sy(v)}" class="grid-line"/>`;
+    grid += `<text x="${pad.l-8}" y="${sy(v)+4}" text-anchor="end" class="axis-label">$${v}</text>`;
+  }
+
+  const colors = ['#3b82f6','#06b6d4','#8b5cf6','#f59e0b','#ef4444','#ec4899'];
+  let bars = '';
+  for (let i = 0; i < n; i++) {
+    const cx = pad.l + (i + 0.5) * (cw / n);
+    const x = cx - barW / 2;
+    const bh = (WASTE_DATA[i].waste / yMax) * ch;
+    const y = sy(WASTE_DATA[i].waste);
+    bars += `<rect x="${x}" y="${y}" width="${barW}" height="${bh}" rx="2" fill="${colors[i]}" opacity="0.85"
+      style="cursor:pointer;"
+      onmouseenter="showTooltip('waste-bar-tooltip', ${cx+10}, ${y-10}, '<strong>${WASTE_DATA[i].name}</strong><br/>Waste: $${WASTE_DATA[i].waste}/day')"
+      onmouseleave="hideTooltip('waste-bar-tooltip')"/>`;
+    bars += `<text x="${cx}" y="${y-6}" text-anchor="middle" class="bar-value" font-size="10">$${WASTE_DATA[i].waste}</text>`;
+    bars += `<text x="${cx}" y="${H-pad.b+14}" text-anchor="end" class="axis-label" font-size="9"
+      transform="rotate(-35 ${cx} ${H-pad.b+14})">${WASTE_DATA[i].name}</text>`;
+  }
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    ${grid}
+    ${bars}
+  </svg>`;
+
+  document.getElementById('waste-bar-container').insertAdjacentHTML('afterbegin', svg);
+}
+
+// --- Under-prediction Exposure by Store (horizontal bars) ---
+function renderStockoutBar() {
+  const W = 560, barH = 24, gap = 5, pad = {t:10, r:50, b:30, l:105};
+  const n = STOCKOUT_DATA.length;
+  const H = pad.t + n * (barH + gap) + pad.b;
+  const cw = W - pad.l - pad.r;
+  const xMax = 75;
+
+  function bx(v) { return pad.l + (v / xMax) * cw; }
+
+  let grid = '';
+  for (let v = 0; v <= 70; v += 10) {
+    grid += `<line x1="${bx(v)}" y1="${pad.t}" x2="${bx(v)}" y2="${H-pad.b}" class="grid-line"/>`;
+    grid += `<text x="${bx(v)}" y="${H-pad.b+14}" text-anchor="middle" class="axis-label">$${v}</text>`;
+  }
+
+  let bars = '';
+  for (let i = 0; i < n; i++) {
+    const y = pad.t + i * (barH + gap);
+    const w = (STOCKOUT_DATA[i].cost / xMax) * cw;
+    const intensity = STOCKOUT_DATA[i].cost / 65;
+    const r = Math.round(59 + intensity * 180);
+    const g = Math.round(130 - intensity * 60);
+    const b = Math.round(246 - intensity * 150);
+    bars += `<text x="${pad.l-8}" y="${y+barH/2+4}" text-anchor="end" class="bar-label">${STOCKOUT_DATA[i].store}</text>`;
+    bars += `<rect x="${pad.l}" y="${y}" width="${w}" height="${barH}" rx="2" fill="rgb(${r},${g},${b})" opacity="0.85"
+      style="cursor:pointer;"
+      onmouseenter="showTooltip('stockout-bar-tooltip', ${pad.l+w+8}, ${y}, '<strong>${STOCKOUT_DATA[i].store}</strong><br/>Stockout risk: $${STOCKOUT_DATA[i].cost}/day')"
+      onmouseleave="hideTooltip('stockout-bar-tooltip')"/>`;
+    bars += `<text x="${pad.l+w+6}" y="${y+barH/2+4}" class="bar-value" font-size="10">$${STOCKOUT_DATA[i].cost}</text>`;
+  }
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    ${grid}
+    ${bars}
+  </svg>`;
+
+  document.getElementById('stockout-bar-container').insertAdjacentHTML('afterbegin', svg);
+}
+
+// --- Top 20 Worst Products Table ---
+function renderWorstProducts() {
+  let html = '<table class="grafana-table"><thead><tr><th>#</th><th>GS Code</th><th>Product Name</th><th>Store</th><th>MAPE</th><th>Bias</th><th>Vol/day</th></tr></thead><tbody>';
+  WORST_PRODUCTS.forEach(p => {
+    const mapeCol = mapeColor(p.mape);
+    const biasCol = p.bias.startsWith('+') ? '#ef4444' : '#3b82f6';
+    html += `<tr>
+      <td style="color:var(--text-muted);">${p.rank}</td>
+      <td style="font-size:11px;color:var(--text-secondary);">${p.gs}</td>
+      <td style="font-family:'Inter',sans-serif;color:var(--text-primary);white-space:normal;">${p.name}</td>
+      <td style="font-size:11px;">${p.store}</td>
+      <td style="color:${mapeCol};font-weight:600;">${p.mape}%</td>
+      <td style="color:${biasCol};">${p.bias}%</td>
+      <td style="color:var(--text-secondary);">${p.vol}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('worst-products-container').innerHTML = html;
+}
+
+// --- Daily Accuracy Detail Table ---
+function renderDailyAccuracy() {
+  let html = '<table class="grafana-table"><thead><tr><th>Date</th><th>Predictions</th><th>Matched</th><th>Coverage%</th><th>MAPE%</th><th>WMAPE%</th><th>Bias%</th></tr></thead><tbody>';
+  DAILY_ACCURACY.forEach(d => {
+    const mapeCol = mapeColor(d.mape);
+    const covCol = d.coverage >= 94 ? '#10b981' : '#f59e0b';
+    html += `<tr>
+      <td style="color:var(--text-secondary);">${d.date}</td>
+      <td>${d.predictions}</td>
+      <td>${d.matched}</td>
+      <td style="color:${covCol};">${d.coverage}%</td>
+      <td style="color:${mapeCol};font-weight:600;">${d.mape}%</td>
+      <td style="color:${mapeColor(d.wmape)};">${d.wmape}%</td>
+      <td style="color:#f59e0b;">${d.bias}%</td>
+    </tr>`;
+  });
+
+  // Summary row
+  html += `<tr style="background:var(--bg-secondary);font-weight:600;">
+    <td style="color:var(--text-primary);">7-day Avg</td>
+    <td>881</td>
+    <td>829</td>
+    <td style="color:#10b981;">94.2%</td>
+    <td style="color:#ef4444;">37.0%</td>
+    <td style="color:#f59e0b;">30.1%</td>
+    <td style="color:#f59e0b;">+8.9%</td>
+  </tr>`;
+
+  html += '</tbody></table>';
+  document.getElementById('daily-accuracy-container').innerHTML = html;
+}
+
+
+/* ================================================================
+   INITIALIZE ALL CHARTS ON LOAD
+   ================================================================ */
+document.addEventListener('DOMContentLoaded', function() {
+  renderMapeTrend();
+  renderBiasTrend();
+  renderStoreBar();
+  renderHeatmap();
+  renderCategoryBar();
+  renderScatter();
+  renderAlertsTable();
+  renderTrackingSignal();
+  renderWasteBar();
+  renderStockoutBar();
+  renderWorstProducts();
+  renderDailyAccuracy();
+});
+</script>
+
+</body>
+</html>

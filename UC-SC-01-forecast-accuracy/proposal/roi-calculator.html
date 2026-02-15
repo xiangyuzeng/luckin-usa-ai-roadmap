@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROI Calculator — Forecast Accuracy Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0f1419;
+    --bg-secondary: #192734;
+    --bg-card: #22303c;
+    --luckin-blue: #00529B;
+    --luckin-light: #1a7fd4;
+    --text-primary: #e7e9ea;
+    --text-secondary: #8b98a5;
+    --text-muted: #536471;
+    --green: #00c853;
+    --green-dim: #00c85333;
+    --red: #f4212e;
+    --red-dim: #f4212e33;
+    --yellow: #ffd600;
+    --yellow-dim: #ffd60033;
+    --border: #2f3336;
+    --radius: 12px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .mono { font-family: 'Fira Code', monospace; }
+
+  /* ── Header ───────────────────────────────────────────── */
+  header {
+    text-align: center;
+    padding: 40px 20px 30px;
+    position: relative;
+  }
+  header::after {
+    content: '';
+    display: block;
+    height: 3px;
+    margin: 24px auto 0;
+    max-width: 600px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--luckin-blue), var(--luckin-light), var(--luckin-blue), transparent);
+  }
+  header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  header h1 .cn { font-weight: 400; color: var(--text-secondary); font-size: 1.1rem; }
+  header .subtitle {
+    font-family: 'Fira Code', monospace;
+    color: var(--luckin-light);
+    font-size: 0.85rem;
+    margin-top: 6px;
+  }
+
+  /* ── Layout ───────────────────────────────────────────── */
+  .container {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+
+  /* ── Card ──────────────────────────────────────────────── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--luckin-blue);
+  }
+
+  /* ── Sliders ──────────────────────────────────────────── */
+  .slider-group { margin-bottom: 18px; }
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .slider-label span:first-child {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .slider-label .cn-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-left: 6px;
+  }
+  .slider-value {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--luckin-light);
+    background: var(--bg-secondary);
+    padding: 2px 10px;
+    border-radius: 6px;
+    min-width: 60px;
+    text-align: center;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--bg-secondary);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--luckin-blue);
+    border: 2px solid var(--luckin-light);
+    transition: transform 0.15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--luckin-blue);
+    border: 2px solid var(--luckin-light);
+    cursor: pointer;
+  }
+
+  /* ── Results ──────────────────────────────────────────── */
+  .big-number {
+    font-family: 'Fira Code', monospace;
+    font-size: 2.2rem;
+    font-weight: 700;
+    transition: opacity 0.2s;
+  }
+  .big-number.green { color: var(--green); }
+  .big-number.red { color: var(--red); }
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-label {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+  }
+  .metric-label .cn-sub {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+  .metric-value {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+
+  /* ── Scenario Table ───────────────────────────────────── */
+  .scenario-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+  .scenario-table th {
+    text-align: left;
+    padding: 10px 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .scenario-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+  .scenario-table td.mono {
+    font-family: 'Fira Code', monospace;
+    color: var(--text-primary);
+  }
+  .scenario-table tr:last-child td { border-bottom: none; }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 500;
+  }
+  .tag-con { background: var(--yellow-dim); color: var(--yellow); }
+  .tag-exp { background: var(--green-dim); color: var(--green); }
+  .tag-opt { background: #00529B33; color: var(--luckin-light); }
+
+  /* ── Payback ──────────────────────────────────────────── */
+  .payback-badge {
+    display: inline-block;
+    background: var(--green-dim);
+    color: var(--green);
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 8px 0;
+  }
+  .payback-note {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  /* ── SVG Chart ────────────────────────────────────────── */
+  .chart-wrap { margin-top: 16px; overflow-x: auto; }
+  .chart-wrap svg { display: block; }
+  .chart-bar { cursor: pointer; }
+  .chart-bar rect { transition: opacity 0.15s; }
+  .chart-bar:hover rect { opacity: 0.85; }
+  .chart-tooltip {
+    position: absolute;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--green);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 10;
+    white-space: nowrap;
+  }
+  .chart-tooltip.show { opacity: 1; }
+
+  /* ── Summary Card ─────────────────────────────────────── */
+  .summary-card {
+    background: linear-gradient(135deg, var(--bg-card), #1a3a2a);
+    border: 1px solid #2a5a3a;
+  }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    text-align: center;
+  }
+  .summary-item .label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+  .summary-item .value {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--green);
+  }
+  .summary-item .value.blue { color: var(--luckin-light); }
+
+  /* ── Comparison Bars ──────────────────────────────────── */
+  .compare-section {
+    margin-top: 28px;
+    padding-top: 20px;
+  }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 12px;
+  }
+  .bar-label {
+    width: 180px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .bar-track {
+    flex: 1;
+    height: 28px;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+  }
+  .bar-fill.bar-red { background: linear-gradient(90deg, var(--red), #d4180f); }
+  .bar-fill.bar-yellow { background: linear-gradient(90deg, var(--yellow), #e6c200); color: #000; }
+  .bar-fill.bar-green { background: linear-gradient(90deg, var(--green), #009624); }
+
+  /* ── Reset Button ─────────────────────────────────────── */
+  .btn-reset {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-reset:hover {
+    border-color: var(--luckin-blue);
+    color: var(--text-primary);
+    background: var(--bg-card);
+  }
+
+  /* ── Animations ───────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card { animation: fadeUp 0.4s ease-out both; }
+  .grid > :nth-child(1) .card:nth-child(1) { animation-delay: 0.05s; }
+  .grid > :nth-child(2) .card:nth-child(1) { animation-delay: 0.1s; }
+  .grid > :nth-child(2) .card:nth-child(2) { animation-delay: 0.15s; }
+  .grid > :nth-child(2) .card:nth-child(3) { animation-delay: 0.2s; }
+  .grid > :nth-child(2) .card:nth-child(4) { animation-delay: 0.25s; }
+  .grid > :nth-child(2) .card:nth-child(5) { animation-delay: 0.3s; }
+  @keyframes growBar {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════ HEADER ════════════════ -->
+<header>
+  <h1>ROI Calculator — Forecast Accuracy Monitor <span class="cn">/ 投资回报计算器</span></h1>
+  <div class="subtitle">UC-SC-01 | Luckin Coffee USA</div>
+</header>
+
+<!-- ════════════════ MAIN GRID ════════════════ -->
+<div class="container">
+<div class="grid">
+
+  <!-- ──────── LEFT: INPUTS ──────── -->
+  <div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> Input Parameters / 输入参数</div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Number of Stores <span class="cn-label">/ 门店数量</span></span>
+          <span class="slider-value" id="v-stores">10</span>
+        </div>
+        <input type="range" id="stores" min="5" max="50" value="10" step="1">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Avg SKUs per Store <span class="cn-label">/ 每店SKU数</span></span>
+          <span class="slider-value" id="v-skus">82</span>
+        </div>
+        <input type="range" id="skus" min="30" max="200" value="82" step="1">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Current MAPE % <span class="cn-label">/ 当前MAPE</span></span>
+          <span class="slider-value" id="v-currentMAPE">37.8%</span>
+        </div>
+        <input type="range" id="currentMAPE" min="15" max="70" value="37.8" step="0.1">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Target MAPE % <span class="cn-label">/ 目标MAPE</span></span>
+          <span class="slider-value" id="v-targetMAPE">25.0%</span>
+        </div>
+        <input type="range" id="targetMAPE" min="10" max="40" value="25.0" step="0.1">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Daily Orders / Store <span class="cn-label">/ 日均订单量</span></span>
+          <span class="slider-value" id="v-dailyOrders">180</span>
+        </div>
+        <input type="range" id="dailyOrders" min="50" max="500" value="180" step="10">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Avg Order Value ($) <span class="cn-label">/ 平均订单金额</span></span>
+          <span class="slider-value" id="v-avgOrderValue">$5.50</span>
+        </div>
+        <input type="range" id="avgOrderValue" min="1" max="20" value="5.50" step="0.50">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Over-prediction Bias % <span class="cn-label">/ 预测偏高比例</span></span>
+          <span class="slider-value" id="v-biasPct">9.1%</span>
+        </div>
+        <input type="range" id="biasPct" min="0" max="25" value="9.1" step="0.1">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Waste Rate on Over-predicted % <span class="cn-label">/ 过量预测浪费率</span></span>
+          <span class="slider-value" id="v-wasteRate">7.0%</span>
+        </div>
+        <input type="range" id="wasteRate" min="1" max="20" value="7.0" step="0.5">
+      </div>
+
+      <button class="btn-reset" onclick="resetDefaults()">Reset to Defaults / 恢复默认值</button>
+    </div>
+  </div>
+
+  <!-- ──────── RIGHT: RESULTS ──────── -->
+  <div>
+
+    <!-- Section 1: Current State -->
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> Current State Analysis / 当前状态分析</div>
+      <div class="metric-row">
+        <div class="metric-label">Annual Predictions<span class="cn-sub">年度预测次数</span></div>
+        <div class="metric-value mono" id="out-predictions">—</div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-label">Annual Revenue Estimate<span class="cn-sub">预估年收入</span></div>
+        <div class="metric-value mono" id="out-revenue">—</div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-label">Annual Waste from Bias<span class="cn-sub">偏差导致年浪费</span></div>
+        <div class="metric-value big-number red" id="out-waste" style="font-size:1.5rem">—</div>
+      </div>
+    </div>
+
+    <!-- Section 2: After Optimization -->
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> After Optimization / 优化后</div>
+      <div class="metric-row">
+        <div class="metric-label">Projected Bias at Target MAPE<span class="cn-sub">目标MAPE下预测偏差</span></div>
+        <div class="metric-value mono" id="out-targetBias">—</div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-label">Projected Annual Waste<span class="cn-sub">优化后年浪费</span></div>
+        <div class="metric-value mono" id="out-targetWaste">—</div>
+      </div>
+      <div style="text-align:center; padding:16px 0 4px;">
+        <div style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Annual Savings / 年节省</div>
+        <div class="big-number green" id="out-savings">—</div>
+      </div>
+    </div>
+
+    <!-- Section 3: Scenarios -->
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> Three Scenarios / 三种情景</div>
+      <table class="scenario-table">
+        <thead>
+          <tr><th>Scenario</th><th>Waste Rate</th><th>Annual Waste</th><th>Annual Savings</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-con">Conservative</span></td>
+            <td class="mono">5%</td>
+            <td class="mono" id="sc-con-waste">—</td>
+            <td class="mono" id="sc-con-save">—</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-exp">Expected</span></td>
+            <td class="mono">7%</td>
+            <td class="mono" id="sc-exp-waste">—</td>
+            <td class="mono" id="sc-exp-save">—</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-opt">Optimistic</span></td>
+            <td class="mono">9%</td>
+            <td class="mono" id="sc-opt-waste">—</td>
+            <td class="mono" id="sc-opt-save">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Section 4: Payback -->
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> Payback Timeline / 回收周期</div>
+      <div class="metric-row">
+        <div class="metric-label">Implementation Cost<span class="cn-sub">实施成本</span></div>
+        <div class="metric-value mono" style="color:var(--green);">$0</div>
+      </div>
+      <div class="payback-badge">Immediate payback</div>
+      <div class="payback-note">Infrastructure existing, code ready — only requires DBA table creation (~2 hours).</div>
+      <div class="chart-wrap" style="position:relative;">
+        <div class="chart-tooltip" id="chartTooltip"></div>
+        <svg id="savingsChart" width="100%" height="220" viewBox="0 0 680 220"></svg>
+      </div>
+    </div>
+
+    <!-- Section 5: Summary -->
+    <div class="card summary-card">
+      <div class="card-title"><span class="dot"></span> ROI Summary / 投资回报摘要</div>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="label">Year 1 Savings / 第一年节省</div>
+          <div class="value" id="sum-y1">—</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">Break-even / 回本</div>
+          <div class="value blue">Immediate</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">3-Year Projected / 三年预计</div>
+          <div class="value" id="sum-y3">—</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ──────── BOTTOM: Comparison Bars ──────── -->
+<div class="card compare-section">
+  <div class="card-title"><span class="dot"></span> MAPE Comparison / MAPE对比</div>
+  <div class="bar-row">
+    <div class="bar-label">Current MAPE<br><span style="font-size:0.68rem;color:var(--text-muted)">当前</span></div>
+    <div class="bar-track"><div class="bar-fill bar-red" id="bar-current"></div></div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">Target MAPE<br><span style="font-size:0.68rem;color:var(--text-muted)">目标</span></div>
+    <div class="bar-track"><div class="bar-fill bar-yellow" id="bar-target"></div></div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">Industry Benchmark<br><span style="font-size:0.68rem;color:var(--text-muted)">行业基准 20%</span></div>
+    <div class="bar-track"><div class="bar-fill bar-green" id="bar-bench" style="width:28.6%">20.0%</div></div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<!-- ════════════════ JAVASCRIPT ════════════════ -->
+<script>
+(function () {
+  /* ── Defaults ──────────────────────────────────────── */
+  const DEFAULTS = {
+    stores: 10, skus: 82, currentMAPE: 37.8, targetMAPE: 25.0,
+    dailyOrders: 180, avgOrderValue: 5.50, biasPct: 9.1, wasteRate: 7.0
+  };
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  /* ── Helpers ───────────────────────────────────────── */
+  const $ = id => document.getElementById(id);
+  const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+  const fmtK = n => n >= 1000000 ? (n/1000000).toFixed(1) + 'M' : n >= 1000 ? (n/1000).toFixed(0) + 'K' : Math.round(n).toString();
+  const pct = (n, d) => (typeof d === 'number' ? n.toFixed(d) : n.toFixed(1)) + '%';
+
+  function getVal(id) { return parseFloat($(id).value); }
+
+  /* ── Display value formatters per slider ───────────── */
+  const displayFmt = {
+    stores:       v => v,
+    skus:         v => v,
+    currentMAPE:  v => pct(v),
+    targetMAPE:   v => pct(v),
+    dailyOrders:  v => v,
+    avgOrderValue:v => '$' + parseFloat(v).toFixed(2),
+    biasPct:      v => pct(parseFloat(v)),
+    wasteRate:    v => pct(parseFloat(v))
+  };
+
+  /* ── Animated number update ────────────────────────── */
+  const animCache = {};
+  function animateValue(el, target, isCurrency) {
+    const key = el.id;
+    if (animCache[key]) cancelAnimationFrame(animCache[key]);
+    const start = parseFloat((el.dataset.raw || '0'));
+    const diff = target - start;
+    if (Math.abs(diff) < 0.5) { el.textContent = isCurrency ? fmt(target) : Math.round(target).toLocaleString(); el.dataset.raw = target; return; }
+    const duration = 350;
+    let t0 = null;
+    function tick(ts) {
+      if (!t0) t0 = ts;
+      const p = Math.min((ts - t0) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      const cur = start + diff * ease;
+      el.textContent = isCurrency ? fmt(cur) : Math.round(cur).toLocaleString();
+      if (p < 1) animCache[key] = requestAnimationFrame(tick);
+      else el.dataset.raw = target;
+    }
+    el.dataset.raw = target;
+    animCache[key] = requestAnimationFrame(tick);
+  }
+
+  /* ── SVG Chart Builder ─────────────────────────────── */
+  function buildChart(monthlySavings) {
+    const svg = $('savingsChart');
+    const W = 680, H = 220, pad = {t:20, r:20, b:34, l:52};
+    const plotW = W - pad.l - pad.r;
+    const plotH = H - pad.t - pad.b;
+    const barW = plotW / 12 - 6;
+    const maxVal = Math.max(...monthlySavings, 1);
+    let html = `<defs>
+      <linearGradient id="gBar" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#00c853"/>
+        <stop offset="100%" stop-color="#69f0ae"/>
+      </linearGradient>
+    </defs>`;
+    /* Y-axis */
+    const yTicks = 4;
+    for (let i = 0; i <= yTicks; i++) {
+      const val = maxVal * i / yTicks;
+      const y = pad.t + plotH - (plotH * i / yTicks);
+      html += `<line x1="${pad.l}" y1="${y}" x2="${W - pad.r}" y2="${y}" stroke="#2f3336" stroke-width="1"/>`;
+      html += `<text x="${pad.l - 8}" y="${y + 4}" text-anchor="end" fill="#536471" font-size="10" font-family="Fira Code,monospace">${fmtK(val)}</text>`;
+    }
+    /* Bars */
+    for (let i = 0; i < 12; i++) {
+      const val = monthlySavings[i];
+      const barH = (val / maxVal) * plotH;
+      const x = pad.l + (plotW / 12) * i + 3;
+      const y = pad.t + plotH - barH;
+      html += `<g class="chart-bar" data-month="${MONTHS[i]}" data-val="${fmt(val)}"
+        onmouseenter="showTip(evt)" onmouseleave="hideTip()">
+        <rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="3" fill="url(#gBar)"
+          style="transform-origin:${x + barW/2}px ${pad.t + plotH}px; animation: growBar 0.5s ${0.05*i}s ease-out both;"/>
+      </g>`;
+      html += `<text x="${x + barW/2}" y="${H - 10}" text-anchor="middle" fill="#536471" font-size="10" font-family="Inter,sans-serif">${MONTHS[i]}</text>`;
+    }
+    svg.innerHTML = html;
+  }
+
+  /* ── Tooltip ───────────────────────────────────────── */
+  window.showTip = function(evt) {
+    const g = evt.currentTarget;
+    const tip = $('chartTooltip');
+    tip.textContent = g.dataset.month + ': ' + g.dataset.val;
+    const rect = g.querySelector('rect');
+    const svgRect = $('savingsChart').getBoundingClientRect();
+    const barRect = rect.getBoundingClientRect();
+    tip.style.left = (barRect.left - svgRect.left + barRect.width/2 - 40) + 'px';
+    tip.style.top = (barRect.top - svgRect.top - 30) + 'px';
+    tip.classList.add('show');
+  };
+  window.hideTip = function() { $('chartTooltip').classList.remove('show'); };
+
+  /* ── Core Calculation ──────────────────────────────── */
+  function calculate() {
+    const stores       = getVal('stores');
+    const skus         = getVal('skus');
+    const currentMAPE  = getVal('currentMAPE') / 100;
+    const targetMAPE   = getVal('targetMAPE')  / 100;
+    const dailyOrders  = getVal('dailyOrders');
+    const avgOrderValue= getVal('avgOrderValue');
+    const biasPct      = getVal('biasPct') / 100;
+    const wasteRate    = getVal('wasteRate') / 100;
+
+    const annualPredictions = stores * skus * 365;
+    const dailyRevenue     = stores * dailyOrders * avgOrderValue;
+    const annualRevenue    = dailyRevenue * 365;
+
+    /* Current waste */
+    const currentAnnualWaste = annualRevenue * biasPct * wasteRate;
+
+    /* Target state */
+    const improvementRatio = targetMAPE / currentMAPE;
+    const targetBias       = biasPct * improvementRatio;
+    const targetAnnualWaste= annualRevenue * targetBias * wasteRate;
+    const annualSavings    = currentAnnualWaste - targetAnnualWaste;
+
+    /* Three scenarios (fixed waste-rate variants applied to current bias * revenue) */
+    const scCon  = annualRevenue * biasPct * 0.05;
+    const scExp  = annualRevenue * biasPct * 0.07;
+    const scOpt  = annualRevenue * biasPct * 0.09;
+    const scConTarget = annualRevenue * targetBias * 0.05;
+    const scExpTarget = annualRevenue * targetBias * 0.07;
+    const scOptTarget = annualRevenue * targetBias * 0.09;
+
+    /* 3-year projection: MAPE improves 5pp/year from monitoring feedback */
+    let y1 = annualSavings;
+    const mapeY2 = Math.max(targetMAPE - 0.05, 0.10);
+    const biasY2 = biasPct * (mapeY2 / currentMAPE);
+    const y2 = currentAnnualWaste - annualRevenue * biasY2 * wasteRate;
+    const mapeY3 = Math.max(mapeY2 - 0.05, 0.10);
+    const biasY3 = biasPct * (mapeY3 / currentMAPE);
+    const y3 = currentAnnualWaste - annualRevenue * biasY3 * wasteRate;
+    const threeYear = y1 + y2 + y3;
+
+    /* Monthly cumulative savings */
+    const monthlySavings = [];
+    for (let m = 1; m <= 12; m++) monthlySavings.push((annualSavings / 12) * m);
+
+    /* ── Update DOM ─────────────────────────────────── */
+    animateValue($('out-predictions'), annualPredictions, false);
+    animateValue($('out-revenue'),     annualRevenue,     true);
+    animateValue($('out-waste'),       currentAnnualWaste,true);
+    $('out-targetBias').textContent  = pct(targetBias * 100);
+    animateValue($('out-targetWaste'), targetAnnualWaste, true);
+    animateValue($('out-savings'),     annualSavings,     true);
+
+    /* Scenarios */
+    $('sc-con-waste').textContent = fmt(scCon);
+    $('sc-con-save').textContent  = fmt(scCon - scConTarget);
+    $('sc-exp-waste').textContent = fmt(scExp);
+    $('sc-exp-save').textContent  = fmt(scExp - scExpTarget);
+    $('sc-opt-waste').textContent = fmt(scOpt);
+    $('sc-opt-save').textContent  = fmt(scOpt - scOptTarget);
+
+    /* Summary */
+    animateValue($('sum-y1'), y1, true);
+    animateValue($('sum-y3'), threeYear, true);
+
+    /* Comparison bars (scale: 70% = max) */
+    const maxBar = 70;
+    const curW = Math.min((currentMAPE * 100 / 70) * maxBar, 100);
+    const tgtW = Math.min((targetMAPE * 100  / 70) * maxBar, 100);
+    $('bar-current').style.width = curW + '%';
+    $('bar-current').textContent = pct(currentMAPE * 100);
+    $('bar-target').style.width  = tgtW + '%';
+    $('bar-target').textContent  = pct(targetMAPE * 100);
+
+    /* Chart */
+    buildChart(monthlySavings);
+  }
+
+  /* ── Bind sliders ──────────────────────────────────── */
+  Object.keys(DEFAULTS).forEach(id => {
+    const el = $(id);
+    el.addEventListener('input', () => {
+      $('v-' + id).textContent = displayFmt[id](el.value);
+      calculate();
+    });
+  });
+
+  /* ── Reset ─────────────────────────────────────────── */
+  window.resetDefaults = function () {
+    Object.entries(DEFAULTS).forEach(([id, val]) => {
+      $(id).value = val;
+      $('v-' + id).textContent = displayFmt[id](val);
+    });
+    calculate();
+  };
+
+  /* ── Initial run ───────────────────────────────────── */
+  calculate();
+})();
+</script>
+</body>
+</html>

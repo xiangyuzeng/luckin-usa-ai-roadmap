@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UC-SC-01 Management Proposal — Demand Forecast Accuracy Monitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f1419;
+            --bg-secondary: #1a2332;
+            --bg-card: #1e2d3d;
+            --bg-card-hover: #243647;
+            --bg-input: #162029;
+            --text-primary: #e8edf2;
+            --text-secondary: #8899a6;
+            --text-muted: #657786;
+            --border-color: #2d4050;
+            --border-light: rgba(255,255,255,0.08);
+            --luckin-blue: #00529B;
+            --luckin-light: #1a8cff;
+            --luckin-dark: #002F5D;
+            --critical: #ff4444;
+            --critical-bg: rgba(255,68,68,0.12);
+            --warning: #ff9800;
+            --warning-bg: rgba(255,152,0,0.12);
+            --success: #4caf50;
+            --success-bg: rgba(76,175,80,0.12);
+            --info: #2196f3;
+            --info-bg: rgba(33,150,243,0.12);
+            --bias-yellow: #ffc107;
+            --sidebar-width: 260px;
+            --header-height: 56px;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+            --radius: 10px;
+            --radius-sm: 6px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            display: flex;
+        }
+
+        /* ===================== SIDEBAR ===================== */
+        .sidebar {
+            width: var(--sidebar-width);
+            min-height: 100vh;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+        .sidebar-brand {
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sidebar-brand-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+        .brand-logo {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--luckin-blue), var(--luckin-light));
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 14px; color: #fff;
+        }
+        .brand-name {
+            font-size: 15px; font-weight: 700; color: var(--text-primary);
+            line-height: 1.2;
+        }
+        .brand-sub {
+            font-size: 11px; color: var(--text-secondary);
+        }
+        .project-badge {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 3px 10px;
+            background: linear-gradient(135deg, var(--luckin-blue), var(--luckin-dark));
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+        .sidebar-nav {
+            flex: 1;
+            padding: 12px 0;
+            overflow-y: auto;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 13.5px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            user-select: none;
+        }
+        .nav-item:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+        .nav-item.active {
+            background: rgba(0,82,155,0.15);
+            color: var(--luckin-light);
+            border-left-color: var(--luckin-light);
+            font-weight: 600;
+        }
+        .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+        .sidebar-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* ===================== MAIN CONTENT ===================== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            min-height: 100vh;
+            padding: 32px 36px;
+            max-width: calc(100vw - var(--sidebar-width));
+        }
+        .view { display: none; animation: fadeIn 0.35s ease; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ===================== SHARED COMPONENTS ===================== */
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .section-title-cn {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            font-weight: 400;
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-critical { background: var(--critical-bg); color: var(--critical); }
+        .badge-warning { background: var(--warning-bg); color: var(--warning); }
+        .badge-success { background: var(--success-bg); color: var(--success); }
+        .badge-info { background: var(--info-bg); color: var(--info); }
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        table.data-table th {
+            text-align: left;
+            padding: 10px 12px;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        table.data-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-primary);
+        }
+        table.data-table tr:hover td { background: rgba(255,255,255,0.03); }
+        .chart-container { width: 100%; overflow: hidden; }
+        .chart-container svg { width: 100%; height: auto; }
+
+        /* ===================== VIEW 1: EXEC SUMMARY ===================== */
+        .hero {
+            background: linear-gradient(135deg, var(--luckin-blue) 0%, #004080 50%, var(--luckin-dark) 100%);
+            border-radius: var(--radius);
+            padding: 48px 40px;
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -60%; right: -20%;
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero-title {
+            font-size: 30px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            position: relative;
+        }
+        .hero-subtitle {
+            font-size: 16px;
+            color: rgba(255,255,255,0.75);
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .hero-tagline {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            position: relative;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+        }
+        .kpi-card.red::before { background: var(--critical); }
+        .kpi-card.orange::before { background: var(--warning); }
+        .kpi-card.yellow::before { background: var(--bias-yellow); }
+        .kpi-card.green::before { background: var(--success); }
+        .kpi-value {
+            font-size: 36px;
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            line-height: 1.1;
+            margin-bottom: 4px;
+        }
+        .kpi-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        .kpi-status {
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .impact-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        .impact-card {
+            border-radius: var(--radius);
+            padding: 20px;
+            border: 1px solid;
+        }
+        .impact-card.over {
+            background: rgba(255,68,68,0.06);
+            border-color: rgba(255,68,68,0.2);
+        }
+        .impact-card.under {
+            background: rgba(255,152,0,0.06);
+            border-color: rgba(255,152,0,0.2);
+        }
+        .impact-card.blind {
+            background: rgba(33,150,243,0.06);
+            border-color: rgba(33,150,243,0.2);
+        }
+        .impact-icon { font-size: 28px; margin-bottom: 10px; }
+        .impact-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+        .impact-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
+
+        /* ===================== VIEW 2: ARCHITECTURE ===================== */
+        .pipeline-flow {
+            display: flex;
+            gap: 0;
+            align-items: stretch;
+            overflow-x: auto;
+            padding: 20px 0;
+        }
+        .pipeline-step {
+            flex: 1;
+            min-width: 140px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            text-align: center;
+            position: relative;
+        }
+        .pipeline-step::after {
+            content: '→';
+            position: absolute;
+            right: -14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            color: var(--luckin-light);
+            z-index: 2;
+        }
+        .pipeline-step:last-child::after { display: none; }
+        .step-number {
+            width: 28px; height: 28px;
+            background: var(--luckin-blue);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .step-name {
+            font-size: 12.5px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .step-detail {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .server-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+        }
+        .server-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        .server-name {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .server-schema {
+            font-size: 12px;
+            color: var(--luckin-light);
+            font-family: 'Fira Code', monospace;
+            margin-bottom: 8px;
+        }
+        .server-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .join-key-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 13px;
+        }
+        .join-key-row:last-child { border-bottom: none; }
+        .join-col {
+            font-family: 'Fira Code', monospace;
+            font-size: 12px;
+            background: var(--bg-secondary);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .join-arrow { color: var(--luckin-light); font-weight: 700; }
+
+        /* ===================== VIEW 4: TIMELINE ===================== */
+        .gantt-container {
+            overflow-x: auto;
+        }
+        .gantt-header {
+            display: grid;
+            grid-template-columns: 200px repeat(20, 1fr);
+            gap: 0;
+            margin-bottom: 4px;
+        }
+        .gantt-header-cell {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 6px 2px;
+        }
+        .gantt-row {
+            display: grid;
+            grid-template-columns: 200px repeat(20, 1fr);
+            gap: 0;
+            min-height: 36px;
+            align-items: center;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .gantt-label {
+            font-size: 12.5px;
+            font-weight: 500;
+            padding-right: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .gantt-bar {
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .gantt-milestone {
+            width: 16px; height: 16px;
+            transform: rotate(45deg);
+            margin: 0 auto;
+        }
+
+        /* ===================== VIEW 5: ROI ===================== */
+        .scenario-card {
+            border-radius: var(--radius);
+            padding: 24px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .scenario-card.conservative { border-top: 3px solid var(--info); }
+        .scenario-card.expected { border-top: 3px solid var(--success); }
+        .scenario-card.optimistic { border-top: 3px solid var(--luckin-light); }
+        .scenario-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        .scenario-value {
+            font-size: 32px;
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            margin-bottom: 4px;
+        }
+        .scenario-detail {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        /* ===================== VIEW 6: RISK ===================== */
+        .risk-matrix {
+            display: grid;
+            grid-template-columns: 40px repeat(5, 1fr);
+            grid-template-rows: repeat(5, 60px) 30px;
+            gap: 4px;
+            margin: 0 auto;
+            max-width: 600px;
+        }
+        .risk-cell {
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            position: relative;
+        }
+        .risk-dot {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            position: absolute;
+            box-shadow: 0 0 8px rgba(0,0,0,0.5);
+        }
+        .risk-axis-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .risk-detail-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            border-left: 3px solid;
+        }
+        .risk-detail-card.high { border-left-color: var(--critical); }
+        .risk-detail-card.medium { border-left-color: var(--warning); }
+        .risk-detail-card.low { border-left-color: var(--success); }
+
+        /* ===================== VIEW 7: TEAM ===================== */
+        .team-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 24px;
+            text-align: center;
+        }
+        .team-avatar {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+        .team-name {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .team-role {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+        .team-tasks {
+            text-align: left;
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        .tech-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 12.5px;
+            font-weight: 500;
+            margin: 4px;
+        }
+
+        /* ===================== PRINT ===================== */
+        @media print {
+            body { background: #fff; color: #000; }
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; padding: 20px; }
+            .view { display: block !important; page-break-after: always; }
+            .card { border: 1px solid #ddd; box-shadow: none; }
+            .hero { background: #00529B !important; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== SIDEBAR ==================== -->
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="sidebar-brand-top">
+            <div class="brand-logo">LC</div>
+            <div>
+                <div class="brand-name">Luckin Coffee</div>
+                <div class="brand-sub">Supply Chain Intelligence</div>
+            </div>
+        </div>
+        <span class="project-badge">UC-SC-01 PROPOSAL</span>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-item active" onclick="showView('executive')" data-view="executive">
+            <span class="nav-icon">📊</span>
+            <span>Executive Summary</span>
+        </div>
+        <div class="nav-item" onclick="showView('architecture')" data-view="architecture">
+            <span class="nav-icon">🏗️</span>
+            <span>Architecture & Data Flow</span>
+        </div>
+        <div class="nav-item" onclick="showView('metrics')" data-view="metrics">
+            <span class="nav-icon">📈</span>
+            <span>Demo Metrics</span>
+        </div>
+        <div class="nav-item" onclick="showView('timeline')" data-view="timeline">
+            <span class="nav-icon">📅</span>
+            <span>Implementation Timeline</span>
+        </div>
+        <div class="nav-item" onclick="showView('roi')" data-view="roi">
+            <span class="nav-icon">💰</span>
+            <span>ROI & Business Case</span>
+        </div>
+        <div class="nav-item" onclick="showView('risk')" data-view="risk">
+            <span class="nav-icon">⚠️</span>
+            <span>Risk Assessment</span>
+        </div>
+        <div class="nav-item" onclick="showView('team')" data-view="team">
+            <span class="nav-icon">👥</span>
+            <span>Team & Resources</span>
+        </div>
+    </nav>
+    <div class="sidebar-footer">
+        Confidential — Internal Review<br>
+        February 2026
+    </div>
+</aside>
+
+<!-- ==================== MAIN CONTENT ==================== -->
+<div class="main-content">
+
+<!-- ==================== VIEW 1: EXECUTIVE SUMMARY ==================== -->
+<div class="view active" id="view-executive">
+    <div class="hero">
+        <div class="hero-title">Demand Forecast Accuracy Monitor</div>
+        <div class="hero-subtitle">需求预测准确度监控系统</div>
+        <div class="hero-tagline">AI-Driven Supply Chain Intelligence for Luckin Coffee USA &nbsp;|&nbsp; Project UC-SC-01</div>
+    </div>
+
+    <div class="section-title">Key Performance Indicators</div>
+    <div class="section-title-cn">关键绩效指标 — Current State Analysis (Feb 1–14, 2026)</div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card red">
+            <div class="kpi-label">MAPE</div>
+            <div class="kpi-value" style="color: var(--critical);" data-counter="37.8">0.0%</div>
+            <div class="kpi-status" style="color: var(--critical);">Target: &lt; 25% ● Needs Improvement</div>
+        </div>
+        <div class="kpi-card orange">
+            <div class="kpi-label">WMAPE</div>
+            <div class="kpi-value" style="color: var(--warning);" data-counter="30.7">0.0%</div>
+            <div class="kpi-status" style="color: var(--warning);">Target: &lt; 20% ● Above Target</div>
+        </div>
+        <div class="kpi-card yellow">
+            <div class="kpi-label">Bias / MFE</div>
+            <div class="kpi-value" style="color: var(--bias-yellow);" data-counter="9.1">+0.0%</div>
+            <div class="kpi-status" style="color: var(--bias-yellow);">Over-predicting ● Waste Risk</div>
+        </div>
+        <div class="kpi-card red">
+            <div class="kpi-label">Accuracy Rate (±20%)</div>
+            <div class="kpi-value" style="color: var(--critical);" data-counter="42.3">0.0%</div>
+            <div class="kpi-status" style="color: var(--critical);">Target: &gt; 70% ● Below Target</div>
+        </div>
+        <div class="kpi-card green">
+            <div class="kpi-label">Coverage</div>
+            <div class="kpi-value" style="color: var(--success);" data-counter="94.2">0.0%</div>
+            <div class="kpi-status" style="color: var(--success);">Target: &gt; 90% ● Healthy</div>
+        </div>
+        <div class="kpi-card orange">
+            <div class="kpi-label">Est. Annual Waste</div>
+            <div class="kpi-value" style="color: var(--warning); font-size: 28px;">$44–66K</div>
+            <div class="kpi-status" style="color: var(--warning);">Actionable ● Reduction Possible</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">🔍 Problem Statement / 问题陈述</div>
+        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.8;">
+            Luckin Coffee USA's AI-driven iReplenishment system generates daily demand predictions for <strong style="color: var(--text-primary);">~88 SKUs across 10 stores</strong>. These predictions directly drive automated ordering, but <strong style="color: var(--critical);">no systematic accuracy monitoring exists</strong>. Prediction errors go undetected for days or weeks, leading to inventory waste from over-prediction and stockouts from under-prediction. Without visibility, the ML team cannot identify model drift, seasonal pattern failures, or store-specific issues.
+        </p>
+    </div>
+
+    <div class="section-title">Business Impact</div>
+    <div class="section-title-cn">业务影响分析</div>
+    <div class="impact-cards">
+        <div class="impact-card over">
+            <div class="impact-icon">📦</div>
+            <div class="impact-title" style="color: var(--critical);">Over-prediction → Waste</div>
+            <div class="impact-desc">$120–180/day in perishable goods waste. Dairy & food items most affected. +9.1% systematic over-prediction bias detected.</div>
+        </div>
+        <div class="impact-card under">
+            <div class="impact-icon">🚫</div>
+            <div class="impact-title" style="color: var(--warning);">Under-prediction → Stockouts</div>
+            <div class="impact-desc">Lost revenue and customer dissatisfaction from out-of-stock items. Coffee beans and water most under-predicted.</div>
+        </div>
+        <div class="impact-card blind">
+            <div class="impact-icon">👁️</div>
+            <div class="impact-title" style="color: var(--info);">No Monitoring → Blind Spots</div>
+            <div class="impact-desc">Model drift goes undetected for weeks. No alerting on accuracy degradation. New store ramp-ups lack performance tracking.</div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== VIEW 2: ARCHITECTURE ==================== -->
+<div class="view" id="view-architecture">
+    <div class="section-title">System Architecture & Data Flow</div>
+    <div class="section-title-cn">系统架构与数据流</div>
+
+    <div class="card">
+        <div class="card-title">🗄️ Three-Server Architecture / 三服务器架构</div>
+        <div class="grid-3">
+            <div class="server-card" style="border-top: 3px solid var(--info);">
+                <div class="server-icon">🔮</div>
+                <div class="server-name">Predictions Server</div>
+                <div class="server-schema">aws-luckyus-ireplenishment-rw</div>
+                <div class="server-desc">
+                    <strong>Schema:</strong> luckyus_ireplenishment<br>
+                    <strong>Table:</strong> t_order_predict_alg_v2<br>
+                    <strong>Key field:</strong> vlt_avg_demand<br>
+                    <strong>Volume:</strong> ~880 rows/day
+                </div>
+            </div>
+            <div class="server-card" style="border-top: 3px solid var(--success);">
+                <div class="server-icon">📊</div>
+                <div class="server-name">Actuals Server</div>
+                <div class="server-schema">aws-luckyus-scm-shopstock-rw</div>
+                <div class="server-desc">
+                    <strong>Schema:</strong> luckyus_scm_shopstock<br>
+                    <strong>Table:</strong> t_shop_goods_stock_change_record<br>
+                    <strong>Filter:</strong> reason_code IN ('025','1001','1002')<br>
+                    <strong>Volume:</strong> ~50K rows/day
+                </div>
+            </div>
+            <div class="server-card" style="border-top: 3px solid #9c27b0;">
+                <div class="server-icon">📁</div>
+                <div class="server-name">Analytics Server</div>
+                <div class="server-schema">aws-luckyus-dbatest-rw</div>
+                <div class="server-desc">
+                    <strong>Schema:</strong> test<br>
+                    <strong>Tables:</strong> 4 analytics tables<br>
+                    <strong>Output:</strong> Metrics, alerts, summaries<br>
+                    <strong>Scheduler:</strong> MySQL EVENT daily
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">🔗 Join Key Mapping / 连接键映射</div>
+        <div class="join-key-row">
+            <span class="join-col" style="color: var(--info);">predictions.shop_dept_id</span>
+            <span class="join-arrow">↔</span>
+            <span class="join-col" style="color: var(--success);">actuals.shop_dept_id</span>
+            <span style="color: var(--text-muted); font-size: 12px; margin-left: auto;">Store identifier</span>
+        </div>
+        <div class="join-key-row">
+            <span class="join-col" style="color: var(--info);">predictions.goods_code</span>
+            <span class="join-arrow">↔</span>
+            <span class="join-col" style="color: var(--success);">actuals.goods_mid</span>
+            <span style="color: var(--text-muted); font-size: 12px; margin-left: auto;">Product (GS code)</span>
+        </div>
+        <div class="join-key-row">
+            <span class="join-col" style="color: var(--info);">predictions.plan_finish_date</span>
+            <span class="join-arrow">↔</span>
+            <span class="join-col" style="color: var(--success);">DATE(actuals.operated_time)</span>
+            <span style="color: var(--text-muted); font-size: 12px; margin-left: auto;">Date alignment</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">⚙️ 7-Step ETL Pipeline / 7步ETL管道</div>
+        <div class="pipeline-flow">
+            <div class="pipeline-step">
+                <div class="step-number">1</div>
+                <div class="step-name">Extract Predictions</div>
+                <div class="step-detail">iReplenishment DB<br>vlt_avg_demand</div>
+            </div>
+            <div class="pipeline-step">
+                <div class="step-number">2</div>
+                <div class="step-name">Extract Actuals</div>
+                <div class="step-detail">SCM ShopStock DB<br>SUM(ABS(adjust_num))</div>
+            </div>
+            <div class="pipeline-step">
+                <div class="step-number">3</div>
+                <div class="step-name">Join & Match</div>
+                <div class="step-detail">Store × Product × Date<br>~94% coverage</div>
+            </div>
+            <div class="pipeline-step">
+                <div class="step-number">4</div>
+                <div class="step-name">Compute Metrics</div>
+                <div class="step-detail">MAPE, WMAPE, MFE<br>RMSE, Accuracy</div>
+            </div>
+            <div class="pipeline-step">
+                <div class="step-number">5</div>
+                <div class="step-name">Aggregate</div>
+                <div class="step-detail">Store, Category<br>Daily, Weekly, Monthly</div>
+            </div>
+            <div class="pipeline-step">
+                <div class="step-number">6</div>
+                <div class="step-name">Detect Alerts</div>
+                <div class="step-detail">5 alert rules<br>3 severity levels</div>
+            </div>
+            <div class="pipeline-step">
+                <div class="step-number">7</div>
+                <div class="step-name">Dashboard Refresh</div>
+                <div class="step-detail">Grafana panels<br>Auto-refresh 5m</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">⏰ Daily Schedule / 每日调度</div>
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 12px 0;">
+            <div style="text-align: center; padding: 12px 20px; background: var(--bg-secondary); border-radius: var(--radius-sm);">
+                <div style="font-size: 20px; font-weight: 700; color: var(--luckin-light); font-family: 'Fira Code', monospace;">06:00</div>
+                <div style="font-size: 11px; color: var(--text-muted);">EST Trigger</div>
+            </div>
+            <div style="color: var(--luckin-light); font-size: 20px;">→</div>
+            <div style="text-align: center; padding: 12px 20px; background: var(--bg-secondary); border-radius: var(--radius-sm);">
+                <div style="font-size: 16px; font-weight: 600;">Extract</div>
+                <div style="font-size: 11px; color: var(--text-muted);">~2 min</div>
+            </div>
+            <div style="color: var(--luckin-light); font-size: 20px;">→</div>
+            <div style="text-align: center; padding: 12px 20px; background: var(--bg-secondary); border-radius: var(--radius-sm);">
+                <div style="font-size: 16px; font-weight: 600;">Compute</div>
+                <div style="font-size: 11px; color: var(--text-muted);">~3 min</div>
+            </div>
+            <div style="color: var(--luckin-light); font-size: 20px;">→</div>
+            <div style="text-align: center; padding: 12px 20px; background: var(--bg-secondary); border-radius: var(--radius-sm);">
+                <div style="font-size: 16px; font-weight: 600;">Alerts</div>
+                <div style="font-size: 11px; color: var(--text-muted);">~1 min</div>
+            </div>
+            <div style="color: var(--luckin-light); font-size: 20px;">→</div>
+            <div style="text-align: center; padding: 12px 20px; background: var(--success-bg); border: 1px solid rgba(76,175,80,0.3); border-radius: var(--radius-sm);">
+                <div style="font-size: 16px; font-weight: 600; color: var(--success);">✓ Ready</div>
+                <div style="font-size: 11px; color: var(--text-muted);">by 06:10 EST</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== VIEW 3: DEMO METRICS ==================== -->
+<div class="view" id="view-metrics">
+    <div class="section-title">Live Demo Metrics</div>
+    <div class="section-title-cn">实时指标演示 — Simulated Dashboard (Feb 1–14, 2026)</div>
+
+    <div class="card">
+        <div class="card-title">📉 Daily MAPE Trend / 每日MAPE趋势</div>
+        <div class="chart-container" id="chart-mape-trend"></div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title">🏪 MAPE by Store / 门店MAPE</div>
+            <div class="chart-container" id="chart-store-bars"></div>
+        </div>
+        <div class="card">
+            <div class="card-title">📦 MAPE by Category / 品类MAPE</div>
+            <div class="chart-container" id="chart-category-bars"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">🔴 Top 10 Worst Products / 预测最差的10个商品</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>GS Code</th>
+                    <th>Product / 商品</th>
+                    <th>Category</th>
+                    <th>MAPE</th>
+                    <th>Bias</th>
+                    <th>Avg Error</th>
+                </tr>
+            </thead>
+            <tbody id="worst-products-table"></tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="card-title">🚨 Active Alerts / 活跃告警</div>
+        <div id="alerts-feed"></div>
+    </div>
+</div>
+
+<!-- ==================== VIEW 4: TIMELINE ==================== -->
+<div class="view" id="view-timeline">
+    <div class="section-title">Implementation Timeline</div>
+    <div class="section-title-cn">实施时间表 — 4-Week Deployment Plan</div>
+
+    <div class="card">
+        <div class="card-title">📅 Gantt Chart / 甘特图</div>
+        <div class="gantt-container">
+            <div class="gantt-header">
+                <div class="gantt-header-cell" style="text-align: left; font-weight: 700;">Task</div>
+                <div class="gantt-header-cell" style="grid-column: 2/7; border-bottom: 2px solid var(--info);">Week 1</div>
+                <div class="gantt-header-cell" style="grid-column: 7/12; border-bottom: 2px solid var(--success);">Week 2</div>
+                <div class="gantt-header-cell" style="grid-column: 12/17; border-bottom: 2px solid var(--warning);">Week 3</div>
+                <div class="gantt-header-cell" style="grid-column: 17/21; border-bottom: 2px solid #9c27b0;">Week 4</div>
+            </div>
+            <div id="gantt-rows"></div>
+        </div>
+    </div>
+
+    <div class="grid-4">
+        <div class="card" style="border-top: 3px solid var(--info); text-align: center;">
+            <div style="font-size: 28px; margin-bottom: 8px;">🗄️</div>
+            <div style="font-size: 14px; font-weight: 700;">Week 1</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">DBA Setup</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Tables, access grants, initial load</div>
+        </div>
+        <div class="card" style="border-top: 3px solid var(--success); text-align: center;">
+            <div style="font-size: 28px; margin-bottom: 8px;">⚙️</div>
+            <div style="font-size: 14px; font-weight: 700;">Week 2</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">Pipeline Deploy</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Orchestrator, scheduling, monitoring</div>
+        </div>
+        <div class="card" style="border-top: 3px solid var(--warning); text-align: center;">
+            <div style="font-size: 28px; margin-bottom: 8px;">📊</div>
+            <div style="font-size: 14px; font-weight: 700;">Week 3</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">Dashboard & Alerts</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Grafana, alert rules, notifications</div>
+        </div>
+        <div class="card" style="border-top: 3px solid #9c27b0; text-align: center;">
+            <div style="font-size: 28px; margin-bottom: 8px;">✅</div>
+            <div style="font-size: 14px; font-weight: 700;">Week 4</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">Validation & Handoff</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">QA, docs, training, sign-off</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">📋 Detailed Task Breakdown / 详细任务分解</div>
+        <table class="data-table">
+            <thead>
+                <tr><th>Phase</th><th>Task</th><th>Owner</th><th>Days</th><th>Dependencies</th></tr>
+            </thead>
+            <tbody>
+                <tr><td rowspan="3" style="font-weight: 600; color: var(--info);">Week 1<br>DBA Setup</td>
+                    <td>Create 4 analytics tables on dbatest</td><td>DBA Team</td><td>1</td><td>Management approval</td></tr>
+                <tr><td>Grant cross-server read access</td><td>DBA Team</td><td>1</td><td>Table creation</td></tr>
+                <tr><td>Initial historical data load (14 days)</td><td>Data Eng</td><td>2</td><td>Access grants</td></tr>
+                <tr><td rowspan="3" style="font-weight: 600; color: var(--success);">Week 2<br>Pipeline</td>
+                    <td>Deploy Python orchestrator</td><td>Data Eng</td><td>2</td><td>Data load verified</td></tr>
+                <tr><td>Configure cron/scheduler (06:00 EST)</td><td>Data Eng</td><td>1</td><td>Orchestrator deployed</td></tr>
+                <tr><td>Pipeline monitoring & alerting</td><td>Data Eng</td><td>2</td><td>Scheduler active</td></tr>
+                <tr><td rowspan="3" style="font-weight: 600; color: var(--warning);">Week 3<br>Dashboard</td>
+                    <td>Import Grafana dashboard (29 panels)</td><td>BI Team</td><td>2</td><td>Pipeline running</td></tr>
+                <tr><td>Configure 5 alert rules</td><td>BI Team</td><td>1</td><td>Dashboard imported</td></tr>
+                <tr><td>Set up notification channels</td><td>BI Team</td><td>1</td><td>Alert rules active</td></tr>
+                <tr><td rowspan="3" style="font-weight: 600; color: #9c27b0;">Week 4<br>Validation</td>
+                    <td>Data quality validation (5 days of data)</td><td>All Teams</td><td>2</td><td>Full pipeline cycle</td></tr>
+                <tr><td>Documentation & runbook finalization</td><td>Data Eng</td><td>1</td><td>Validation passed</td></tr>
+                <tr><td>Team training & operational handoff</td><td>All Teams</td><td>2</td><td>Documentation complete</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ==================== VIEW 5: ROI ==================== -->
+<div class="view" id="view-roi">
+    <div class="section-title">ROI & Business Case</div>
+    <div class="section-title-cn">投资回报率与商业案例</div>
+
+    <div class="card">
+        <div class="card-title">📊 Current vs Target Performance / 现状与目标对比</div>
+        <div class="chart-container" id="chart-roi-comparison"></div>
+    </div>
+
+    <div class="grid-3">
+        <div class="scenario-card conservative" style="background: var(--bg-card);">
+            <div class="scenario-label" style="color: var(--info);">Conservative / 保守</div>
+            <div class="scenario-value" style="color: var(--info);">$6.6–9.9K</div>
+            <div class="scenario-detail">Annual Savings</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.6;">
+                15% waste reduction<br>
+                MAPE improvement: 37.8% → 32%<br>
+                Payback period: ~8 months
+            </div>
+        </div>
+        <div class="scenario-card expected" style="background: var(--bg-card);">
+            <div class="scenario-label" style="color: var(--success);">Expected / 预期</div>
+            <div class="scenario-value" style="color: var(--success);">$13.2–19.8K</div>
+            <div class="scenario-detail">Annual Savings</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.6;">
+                30% waste reduction<br>
+                MAPE improvement: 37.8% → 26%<br>
+                Payback period: ~4 months
+            </div>
+        </div>
+        <div class="scenario-card optimistic" style="background: var(--bg-card);">
+            <div class="scenario-label" style="color: var(--luckin-light);">Optimistic / 乐观</div>
+            <div class="scenario-value" style="color: var(--luckin-light);">$22–33K</div>
+            <div class="scenario-detail">Annual Savings</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.6;">
+                50% waste reduction<br>
+                MAPE improvement: 37.8% → 20%<br>
+                Payback period: ~2 months
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title">💵 Implementation Cost / 实施成本</div>
+            <table class="data-table">
+                <thead><tr><th>Item</th><th>Cost</th><th>Note</th></tr></thead>
+                <tbody>
+                    <tr><td>Infrastructure</td><td style="color: var(--success); font-weight: 600;">$0</td><td>Uses existing servers & Grafana</td></tr>
+                    <tr><td>Software/Licensing</td><td style="color: var(--success); font-weight: 600;">$0</td><td>Open-source stack (Python, MySQL)</td></tr>
+                    <tr><td>Staff Time (4 weeks)</td><td style="font-weight: 600;">~$12–15K</td><td>DBA + Data Eng + BI (partial allocation)</td></tr>
+                    <tr style="background: var(--bg-secondary);">
+                        <td style="font-weight: 700;">Total</td>
+                        <td style="font-weight: 700; color: var(--luckin-light);">~$12–15K</td>
+                        <td>One-time cost, ongoing cost near zero</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card">
+            <div class="card-title">🎯 Key Value Drivers / 关键价值驱动</div>
+            <div style="font-size: 13px; line-height: 2; color: var(--text-secondary);">
+                <div>✅ <strong style="color: var(--text-primary);">Visibility</strong> — First-ever systematic forecast accuracy tracking</div>
+                <div>✅ <strong style="color: var(--text-primary);">Actionability</strong> — 5 alert rules with auto-detection</div>
+                <div>✅ <strong style="color: var(--text-primary);">Accountability</strong> — Store × Category × Product drill-down</div>
+                <div>✅ <strong style="color: var(--text-primary);">Scalability</strong> — Ready for expansion to 50+ stores</div>
+                <div>✅ <strong style="color: var(--text-primary);">ML Feedback Loop</strong> — Enables data-driven retraining</div>
+                <div>✅ <strong style="color: var(--text-primary);">Zero Infrastructure Cost</strong> — Uses existing stack</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== VIEW 6: RISK ASSESSMENT ==================== -->
+<div class="view" id="view-risk">
+    <div class="section-title">Risk Assessment</div>
+    <div class="section-title-cn">风险评估</div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title">🎯 Risk Matrix / 风险矩阵</div>
+            <div id="risk-matrix-container" style="padding: 20px 0;"></div>
+        </div>
+        <div class="card">
+            <div class="card-title">📋 Risk Summary / 风险汇总</div>
+            <table class="data-table">
+                <thead><tr><th>#</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Level</th></tr></thead>
+                <tbody>
+                    <tr><td>1</td><td>Cross-server query failures</td><td>Medium</td><td>High</td><td><span class="badge badge-warning">Medium</span></td></tr>
+                    <tr><td>2</td><td>Data latency &gt; T+1</td><td>Low</td><td>Medium</td><td><span class="badge badge-success">Low</span></td></tr>
+                    <tr><td>3</td><td>Upstream schema changes</td><td>Medium</td><td>High</td><td><span class="badge badge-warning">Medium</span></td></tr>
+                    <tr><td>4</td><td>Alert fatigue</td><td>Medium</td><td>Medium</td><td><span class="badge badge-warning">Medium</span></td></tr>
+                    <tr><td>5</td><td>Model performance degradation</td><td>High</td><td>High</td><td><span class="badge badge-critical">High</span></td></tr>
+                    <tr><td>6</td><td>Staff turnover / knowledge loss</td><td>Low</td><td>High</td><td><span class="badge badge-warning">Medium</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="section-title" style="margin-top: 24px;">Mitigation Strategies / 缓解策略</div>
+    <div class="section-title-cn">&nbsp;</div>
+
+    <div class="grid-2">
+        <div class="risk-detail-card medium">
+            <div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">1. Cross-server Query Failures</div>
+            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.7;">
+                <strong>Risk:</strong> Network issues between 3 database servers<br>
+                <strong>Mitigation:</strong> Python orchestrator with retry logic (3 attempts, exponential backoff), pipeline health monitoring, Grafana alert on pipeline failure, fallback to last successful run data
+            </div>
+        </div>
+        <div class="risk-detail-card low">
+            <div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">2. Data Latency > T+1</div>
+            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.7;">
+                <strong>Risk:</strong> Actuals data delayed beyond next-day window<br>
+                <strong>Mitigation:</strong> Coverage alert at &lt;90%, pipeline run log tracking, graceful handling of missing data, manual rerun capability
+            </div>
+        </div>
+        <div class="risk-detail-card medium">
+            <div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">3. Upstream Schema Changes</div>
+            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.7;">
+                <strong>Risk:</strong> iReplenishment or ShopStock tables modified without notice<br>
+                <strong>Mitigation:</strong> Column existence validation in orchestrator, schema documentation, change management communication, automated column-check step in pipeline
+            </div>
+        </div>
+        <div class="risk-detail-card medium">
+            <div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">4. Alert Fatigue</div>
+            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.7;">
+                <strong>Risk:</strong> Too many alerts causing team to ignore them<br>
+                <strong>Mitigation:</strong> Tuned thresholds based on 14-day baseline, 3-tier severity escalation (P1/P2/P3), weekly threshold review cadence, aggregate alerts by root cause
+            </div>
+        </div>
+        <div class="risk-detail-card high">
+            <div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">5. Model Performance Degradation</div>
+            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.7;">
+                <strong>Risk:</strong> ML model accuracy degrades over time due to concept drift<br>
+                <strong>Mitigation:</strong> <em>This is exactly what UC-SC-01 detects.</em> Drift detection alerts (WoW MAPE change &gt;50%), tracking signal monitoring, automated retraining trigger recommendations
+            </div>
+        </div>
+        <div class="risk-detail-card medium">
+            <div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">6. Staff Turnover / Knowledge Loss</div>
+            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.7;">
+                <strong>Risk:</strong> Key personnel leave without knowledge transfer<br>
+                <strong>Mitigation:</strong> Comprehensive documentation (data dictionary, operational guide, SQL comments), self-healing pipeline design, runbook with step-by-step troubleshooting
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== VIEW 7: TEAM ==================== -->
+<div class="view" id="view-team">
+    <div class="section-title">Team & Resources</div>
+    <div class="section-title-cn">团队与资源</div>
+
+    <div class="grid-4">
+        <div class="team-card">
+            <div class="team-avatar" style="background: linear-gradient(135deg, var(--info), #1565c0);">🗄️</div>
+            <div class="team-name">DBA Team</div>
+            <div class="team-role">Database Administration</div>
+            <div class="team-tasks">
+                • Create analytics tables<br>
+                • Grant cross-server access<br>
+                • MySQL EVENT scheduling<br>
+                • Server performance monitoring
+            </div>
+        </div>
+        <div class="team-card">
+            <div class="team-avatar" style="background: linear-gradient(135deg, var(--success), #2e7d32);">⚙️</div>
+            <div class="team-name">Data Engineering</div>
+            <div class="team-role">Pipeline & ETL</div>
+            <div class="team-tasks">
+                • Python orchestrator deployment<br>
+                • Pipeline monitoring setup<br>
+                • ETL maintenance & optimization<br>
+                • Incident response (pipeline)
+            </div>
+        </div>
+        <div class="team-card">
+            <div class="team-avatar" style="background: linear-gradient(135deg, var(--warning), #e65100);">📊</div>
+            <div class="team-name">BI / Analytics</div>
+            <div class="team-role">Visualization & Reporting</div>
+            <div class="team-tasks">
+                • Grafana dashboard management<br>
+                • Alert rule configuration<br>
+                • Report generation<br>
+                • Metric analysis & insights
+            </div>
+        </div>
+        <div class="team-card">
+            <div class="team-avatar" style="background: linear-gradient(135deg, #9c27b0, #6a1b9a);">🤖</div>
+            <div class="team-name">ML Team</div>
+            <div class="team-role">Model Performance</div>
+            <div class="team-tasks">
+                • Model performance review<br>
+                • Retraining trigger analysis<br>
+                • Feature engineering feedback<br>
+                • Accuracy improvement initiatives
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <div class="card-title">⏱️ Effort Estimation / 工作量估算</div>
+        <table class="data-table">
+            <thead><tr><th>Phase</th><th>DBA</th><th>Data Eng</th><th>BI</th><th>ML Team</th><th>Total</th></tr></thead>
+            <tbody>
+                <tr><td>Week 1: DBA Setup</td><td>16h</td><td>8h</td><td>—</td><td>—</td><td>24h</td></tr>
+                <tr><td>Week 2: Pipeline</td><td>4h</td><td>24h</td><td>—</td><td>—</td><td>28h</td></tr>
+                <tr><td>Week 3: Dashboard & Alerts</td><td>—</td><td>4h</td><td>20h</td><td>4h</td><td>28h</td></tr>
+                <tr><td>Week 4: Validation</td><td>4h</td><td>8h</td><td>8h</td><td>8h</td><td>28h</td></tr>
+                <tr style="background: var(--bg-secondary); font-weight: 700;">
+                    <td>Total</td><td>24h</td><td>44h</td><td>28h</td><td>12h</td><td style="color: var(--luckin-light);">108h</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="card-title">🛠️ Technology Stack / 技术栈</div>
+        <div style="text-align: center; padding: 16px 0;">
+            <span class="tech-badge">MySQL 8.0+</span>
+            <span class="tech-badge">Python 3.9+</span>
+            <span class="tech-badge">PyMySQL</span>
+            <span class="tech-badge">Grafana 10+</span>
+            <span class="tech-badge">MySQL EVENT Scheduler</span>
+            <span class="tech-badge">Cron / systemd</span>
+        </div>
+        <div style="text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+            All components use existing infrastructure — <strong style="color: var(--success);">zero additional infrastructure cost</strong>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">✅ Approval Request / 审批请求</div>
+        <div style="padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-sm); font-size: 14px; line-height: 1.8;">
+            <strong>We request management approval to:</strong><br>
+            1. Create 4 analytics tables on <code style="background: var(--bg-input); padding: 1px 6px; border-radius: 3px; font-family: 'Fira Code', monospace; font-size: 12px;">aws-luckyus-dbatest-rw</code><br>
+            2. Grant read-only cross-server access for the Python orchestrator<br>
+            3. Deploy the daily ETL pipeline (06:00 EST schedule)<br>
+            4. Import the Grafana dashboard with 5 alert rules<br>
+            5. Allocate team hours as outlined above (~108h over 4 weeks)
+        </div>
+        <div style="margin-top: 16px; display: flex; gap: 12px; justify-content: center;">
+            <div style="padding: 10px 32px; background: var(--success); color: #fff; border-radius: var(--radius-sm); font-weight: 700; font-size: 14px; cursor: pointer;">✓ Approve</div>
+            <div style="padding: 10px 32px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-weight: 600; font-size: 14px; cursor: pointer;">Request Changes</div>
+        </div>
+    </div>
+</div>
+
+</div><!-- end main-content -->
+
+<!-- ==================== JAVASCRIPT ==================== -->
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const DATA = {
+    dailyMape: [
+        { date: 'Feb 1',  mape: 41.2, ma7: null },
+        { date: 'Feb 2',  mape: 39.8, ma7: null },
+        { date: 'Feb 3',  mape: 36.5, ma7: null },
+        { date: 'Feb 4',  mape: 34.1, ma7: null },
+        { date: 'Feb 5',  mape: 38.9, ma7: null },
+        { date: 'Feb 6',  mape: 40.3, ma7: null },
+        { date: 'Feb 7',  mape: 35.7, ma7: 38.1 },
+        { date: 'Feb 8',  mape: 37.4, ma7: 37.5 },
+        { date: 'Feb 9',  mape: 42.1, ma7: 37.9 },
+        { date: 'Feb 10', mape: 36.8, ma7: 37.9 },
+        { date: 'Feb 11', mape: 33.9, ma7: 37.9 },
+        { date: 'Feb 12', mape: 38.6, ma7: 37.8 },
+        { date: 'Feb 13', mape: 39.2, ma7: 37.7 },
+        { date: 'Feb 14', mape: 34.5, ma7: 37.5 }
+    ],
+    stores: [
+        { id: '1127',  name: '8th & Broadway',  mape: 33.6 },
+        { id: '1128',  name: '28th & 6th',      mape: 35.8 },
+        { id: '20011', name: '37th & Broadway',  mape: 34.7 },
+        { id: '20010', name: '102 Fulton',       mape: 36.9 },
+        { id: '1140',  name: '100 Maiden Ln',    mape: 37.6 },
+        { id: '20027', name: '21st & 3rd',       mape: 38.4 },
+        { id: '20008', name: '33rd & 10th',      mape: 39.2 },
+        { id: '20031', name: '15th & 3rd',       mape: 40.5 },
+        { id: '1141',  name: '54th & 8th',       mape: 41.8 },
+        { id: '20032', name: '221 Grand',        mape: 43.1 }
+    ],
+    categories: [
+        { name: 'Coffee Beans',    mape: 28.9 },
+        { name: 'Beverages/Syrups',mape: 32.4 },
+        { name: 'Packaging/Supplies', mape: 35.6 },
+        { name: 'Toppings/Ingredients', mape: 38.3 },
+        { name: 'Dairy/Milk',      mape: 41.2 },
+        { name: 'Food Items',      mape: 45.8 }
+    ],
+    worstProducts: [
+        { rank:1,  code:'GS07565', name:'Oat Milk',              cat:'Dairy',    mape:62.3, bias:'Over',  err:18.4 },
+        { rank:2,  code:'GS07786', name:'Whole Milk',            cat:'Dairy',    mape:51.3, bias:'Over',  err:14.7 },
+        { rank:3,  code:'GS07785', name:'Half & Half',           cat:'Dairy',    mape:48.7, bias:'Over',  err:12.1 },
+        { rank:4,  code:'GS07467', name:'Espresso Beans Medium', cat:'Coffee',   mape:45.2, bias:'Under', err:9.8  },
+        { rank:5,  code:'GS07579', name:'Vanilla Syrup',         cat:'Beverage', mape:43.8, bias:'Over',  err:8.3  },
+        { rank:6,  code:'GS07506', name:'Purified Water',        cat:'Beverage', mape:42.1, bias:'Under', err:7.6  },
+        { rank:7,  code:'GS07743', name:'Caramel Syrup',         cat:'Beverage', mape:40.5, bias:'Over',  err:6.9  },
+        { rank:8,  code:'GS07575', name:'Coconut Milk',          cat:'Dairy',    mape:39.2, bias:'Over',  err:6.2  },
+        { rank:9,  code:'GS07510', name:'Brown Sugar Syrup',     cat:'Beverage', mape:37.8, bias:'Over',  err:5.5  },
+        { rank:10, code:'GS07818', name:'Ice',                   cat:'Supplies', mape:36.4, bias:'Under', err:4.8  }
+    ],
+    alerts: [
+        { sev:'CRITICAL', type:'MAPE',     store:'Store 20032', msg:'7-day rolling MAPE 43.1% exceeds 40% threshold', ts:'2026-02-14 23:15' },
+        { sev:'CRITICAL', type:'MAPE',     store:'Store 1141',  msg:'7-day rolling MAPE 41.8% exceeds 40% threshold', ts:'2026-02-13 22:00' },
+        { sev:'WARNING',  type:'MAPE',     store:'Store 20031', msg:'7-day rolling MAPE 40.5% exceeds 30% threshold', ts:'2026-02-14 06:10' },
+        { sev:'WARNING',  type:'BIAS',     store:'System',      msg:'Positive bias for 14 consecutive days (MFE +9.1%)', ts:'2026-02-14 06:10' },
+        { sev:'WARNING',  type:'COVERAGE', store:'Store 20008', msg:'Coverage 87.3% below 90% threshold', ts:'2026-02-12 06:10' },
+        { sev:'INFO',     type:'DRIFT',    store:'Food Items',  msg:'Week-over-week MAPE increase 52%', ts:'2026-02-13 06:10' }
+    ],
+    ganttTasks: [
+        { name: 'Create analytics tables',    owner: 'DBA',   start: 1, end: 2,   color: '#2196f3' },
+        { name: 'Grant cross-server access',   owner: 'DBA',   start: 2, end: 3,   color: '#2196f3' },
+        { name: 'Initial data load (14 days)', owner: 'DE',    start: 3, end: 5,   color: '#2196f3' },
+        { name: 'Deploy Python orchestrator',  owner: 'DE',    start: 6, end: 8,   color: '#4caf50' },
+        { name: 'Configure scheduler',         owner: 'DE',    start: 8, end: 9,   color: '#4caf50' },
+        { name: 'Pipeline monitoring',          owner: 'DE',    start: 9, end: 10,  color: '#4caf50' },
+        { name: 'Import Grafana dashboard',    owner: 'BI',    start: 11, end: 13, color: '#ff9800' },
+        { name: 'Configure alert rules',       owner: 'BI',    start: 13, end: 14, color: '#ff9800' },
+        { name: 'Notification channels',       owner: 'BI',    start: 14, end: 15, color: '#ff9800' },
+        { name: 'Data quality validation',     owner: 'All',   start: 16, end: 18, color: '#9c27b0' },
+        { name: 'Documentation finalization',  owner: 'DE',    start: 18, end: 19, color: '#9c27b0' },
+        { name: 'Training & handoff',          owner: 'All',   start: 19, end: 20, color: '#9c27b0' }
+    ]
+};
+
+// ============================================================
+// VIEW SWITCHING
+// ============================================================
+let currentView = 'executive';
+
+function showView(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const view = document.getElementById('view-' + viewId);
+    if (view) {
+        view.classList.add('active');
+        currentView = viewId;
+    }
+    const navItem = document.querySelector(`.nav-item[data-view="${viewId}"]`);
+    if (navItem) navItem.classList.add('active');
+
+    // Render charts when view becomes active
+    if (viewId === 'metrics') renderMetricsCharts();
+    if (viewId === 'roi') renderRoiChart();
+    if (viewId === 'executive') animateCounters();
+}
+
+// ============================================================
+// SVG CHART HELPERS
+// ============================================================
+function getColor(val) {
+    if (val > 40) return '#ff4444';
+    if (val > 30) return '#ff9800';
+    return '#4caf50';
+}
+
+function renderMAPETrend(containerId) {
+    const data = DATA.dailyMape;
+    const w = 760, h = 280;
+    const pad = { t: 20, r: 30, b: 40, l: 50 };
+    const cw = w - pad.l - pad.r;
+    const ch = h - pad.t - pad.b;
+    const yMin = 20, yMax = 50;
+
+    function x(i) { return pad.l + (i / (data.length - 1)) * cw; }
+    function y(v) { return pad.t + (1 - (v - yMin) / (yMax - yMin)) * ch; }
+
+    // Area path
+    let areaPath = `M${x(0)},${y(data[0].mape)}`;
+    for (let i = 1; i < data.length; i++) areaPath += ` L${x(i)},${y(data[i].mape)}`;
+    areaPath += ` L${x(data.length-1)},${y(yMin)} L${x(0)},${y(yMin)} Z`;
+
+    // Line path
+    let linePath = `M${x(0)},${y(data[0].mape)}`;
+    for (let i = 1; i < data.length; i++) linePath += ` L${x(i)},${y(data[i].mape)}`;
+
+    // MA7 path
+    let ma7Path = '';
+    let started = false;
+    for (let i = 0; i < data.length; i++) {
+        if (data[i].ma7 !== null) {
+            if (!started) { ma7Path = `M${x(i)},${y(data[i].ma7)}`; started = true; }
+            else ma7Path += ` L${x(i)},${y(data[i].ma7)}`;
+        }
+    }
+
+    // Y-axis lines
+    let gridLines = '';
+    for (let v = 20; v <= 50; v += 5) {
+        gridLines += `<line x1="${pad.l}" y1="${y(v)}" x2="${w-pad.r}" y2="${y(v)}" stroke="#2d4050" stroke-width="1"/>`;
+        gridLines += `<text x="${pad.l-8}" y="${y(v)+4}" fill="#657786" font-size="11" text-anchor="end">${v}%</text>`;
+    }
+
+    // X-axis labels
+    let xLabels = '';
+    for (let i = 0; i < data.length; i += 2) {
+        xLabels += `<text x="${x(i)}" y="${h-8}" fill="#657786" font-size="10" text-anchor="middle">${data[i].date}</text>`;
+    }
+
+    // Data points
+    let dots = '';
+    for (let i = 0; i < data.length; i++) {
+        dots += `<circle cx="${x(i)}" cy="${y(data[i].mape)}" r="4" fill="${getColor(data[i].mape)}" stroke="#0f1419" stroke-width="2">
+            <title>${data[i].date}: ${data[i].mape}%</title></circle>`;
+    }
+
+    const svg = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ff9800" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#ff9800" stop-opacity="0.02"/>
+        </linearGradient></defs>
+        ${gridLines}
+        <!-- 25% target line -->
+        <line x1="${pad.l}" y1="${y(25)}" x2="${w-pad.r}" y2="${y(25)}" stroke="#4caf50" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <text x="${w-pad.r+4}" y="${y(25)+4}" fill="#4caf50" font-size="10">25%</text>
+        <!-- 40% critical line -->
+        <line x1="${pad.l}" y1="${y(40)}" x2="${w-pad.r}" y2="${y(40)}" stroke="#ff4444" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <text x="${w-pad.r+4}" y="${y(40)+4}" fill="#ff4444" font-size="10">40%</text>
+        <path d="${areaPath}" fill="url(#areaGrad)"/>
+        <path d="${linePath}" fill="none" stroke="#ff9800" stroke-width="2.5"/>
+        ${ma7Path ? `<path d="${ma7Path}" fill="none" stroke="#2196f3" stroke-width="2" stroke-dasharray="5,3"/>` : ''}
+        ${dots}
+        ${xLabels}
+        <!-- Legend -->
+        <circle cx="${pad.l+10}" cy="${h-6}" r="4" fill="#ff9800"/>
+        <text x="${pad.l+18}" y="${h-2}" fill="#8899a6" font-size="10">Daily MAPE</text>
+        <line x1="${pad.l+110}" y1="${h-6}" x2="${pad.l+130}" y2="${h-6}" stroke="#2196f3" stroke-width="2" stroke-dasharray="5,3"/>
+        <text x="${pad.l+134}" y="${h-2}" fill="#8899a6" font-size="10">7d MA</text>
+    </svg>`;
+
+    document.getElementById(containerId).innerHTML = svg;
+}
+
+function renderStoreBars(containerId) {
+    const stores = [...DATA.stores].sort((a, b) => b.mape - a.mape);
+    const w = 460, rowH = 32, pad = { l: 130, r: 50 };
+    const h = stores.length * rowH + 20;
+    const maxVal = 50;
+
+    let bars = '';
+    stores.forEach((s, i) => {
+        const barW = ((s.mape / maxVal) * (w - pad.l - pad.r));
+        const yPos = i * rowH + 10;
+        const color = getColor(s.mape);
+        bars += `<text x="${pad.l-8}" y="${yPos+20}" fill="#8899a6" font-size="12" text-anchor="end">${s.id} ${s.name}</text>`;
+        bars += `<rect x="${pad.l}" y="${yPos+6}" width="${barW}" height="20" rx="3" fill="${color}" opacity="0.85">
+            <title>${s.id}: ${s.mape}%</title></rect>`;
+        bars += `<text x="${pad.l + barW + 6}" y="${yPos+20}" fill="${color}" font-size="12" font-weight="600">${s.mape}%</text>`;
+    });
+
+    // Threshold lines
+    const t25x = pad.l + (25 / maxVal) * (w - pad.l - pad.r);
+    const t40x = pad.l + (40 / maxVal) * (w - pad.l - pad.r);
+    bars += `<line x1="${t25x}" y1="0" x2="${t25x}" y2="${h}" stroke="#4caf50" stroke-width="1" stroke-dasharray="4,3"/>`;
+    bars += `<line x1="${t40x}" y1="0" x2="${t40x}" y2="${h}" stroke="#ff4444" stroke-width="1" stroke-dasharray="4,3"/>`;
+
+    document.getElementById(containerId).innerHTML = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${bars}</svg>`;
+}
+
+function renderCategoryBars(containerId) {
+    const cats = DATA.categories;
+    const w = 400, h = 260;
+    const pad = { t: 10, r: 20, b: 60, l: 40 };
+    const cw = w - pad.l - pad.r;
+    const ch = h - pad.t - pad.b;
+    const barW = cw / cats.length * 0.65;
+    const gap = cw / cats.length;
+    const maxVal = 50;
+
+    let bars = '';
+    // Y grid
+    for (let v = 0; v <= 50; v += 10) {
+        const yp = pad.t + (1 - v / maxVal) * ch;
+        bars += `<line x1="${pad.l}" y1="${yp}" x2="${w-pad.r}" y2="${yp}" stroke="#2d4050" stroke-width="1"/>`;
+        bars += `<text x="${pad.l-6}" y="${yp+4}" fill="#657786" font-size="10" text-anchor="end">${v}%</text>`;
+    }
+    // 25% line
+    const y25 = pad.t + (1 - 25 / maxVal) * ch;
+    bars += `<line x1="${pad.l}" y1="${y25}" x2="${w-pad.r}" y2="${y25}" stroke="#4caf50" stroke-width="1.5" stroke-dasharray="5,3"/>`;
+
+    cats.forEach((c, i) => {
+        const bx = pad.l + i * gap + (gap - barW) / 2;
+        const barH = (c.mape / maxVal) * ch;
+        const by = pad.t + ch - barH;
+        const color = getColor(c.mape);
+        bars += `<rect x="${bx}" y="${by}" width="${barW}" height="${barH}" rx="3" fill="${color}" opacity="0.85">
+            <title>${c.name}: ${c.mape}%</title></rect>`;
+        bars += `<text x="${bx + barW/2}" y="${by - 6}" fill="${color}" font-size="10" font-weight="600" text-anchor="middle">${c.mape}%</text>`;
+        // X label (split long names)
+        const label = c.name.length > 12 ? c.name.substring(0, 12) + '...' : c.name;
+        bars += `<text x="${bx + barW/2}" y="${pad.t + ch + 16}" fill="#8899a6" font-size="9.5" text-anchor="middle" transform="rotate(-25, ${bx + barW/2}, ${pad.t + ch + 16})">${label}</text>`;
+    });
+
+    document.getElementById(containerId).innerHTML = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${bars}</svg>`;
+}
+
+function renderMetricsCharts() {
+    renderMAPETrend('chart-mape-trend');
+    renderStoreBars('chart-store-bars');
+    renderCategoryBars('chart-category-bars');
+
+    // Worst products table
+    let rows = '';
+    DATA.worstProducts.forEach(p => {
+        const color = getColor(p.mape);
+        const biasColor = p.bias === 'Over' ? '#ff9800' : '#2196f3';
+        rows += `<tr>
+            <td>${p.rank}</td>
+            <td style="font-family: 'Fira Code', monospace; font-size: 12px;">${p.code}</td>
+            <td>${p.name}</td>
+            <td>${p.cat}</td>
+            <td style="color: ${color}; font-weight: 700;">${p.mape}%</td>
+            <td style="color: ${biasColor};">${p.bias}</td>
+            <td>${p.err}</td>
+        </tr>`;
+    });
+    document.getElementById('worst-products-table').innerHTML = rows;
+
+    // Alerts feed
+    let alertsHtml = '';
+    DATA.alerts.forEach(a => {
+        const sevClass = a.sev === 'CRITICAL' ? 'badge-critical' : a.sev === 'WARNING' ? 'badge-warning' : 'badge-info';
+        alertsHtml += `<div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <span class="badge ${sevClass}">${a.sev}</span>
+            <span class="badge" style="background: var(--bg-secondary); color: var(--text-secondary);">${a.type}</span>
+            <span style="font-size: 13px; flex: 1;">${a.store} — ${a.msg}</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-family: 'Fira Code', monospace;">${a.ts}</span>
+        </div>`;
+    });
+    document.getElementById('alerts-feed').innerHTML = alertsHtml;
+}
+
+function renderRoiChart() {
+    const container = document.getElementById('chart-roi-comparison');
+    const w = 700, h = 220;
+    const pad = { t: 30, r: 40, b: 50, l: 60 };
+    const metrics = [
+        { label: 'MAPE', current: 37.8, target: 25, benchmark: 20, unit: '%' },
+        { label: 'WMAPE', current: 30.7, target: 20, benchmark: 15, unit: '%' },
+        { label: 'Accuracy', current: 42.3, target: 70, benchmark: 80, unit: '%' },
+        { label: 'Waste Reduction', current: 0, target: 30, benchmark: 50, unit: '%' }
+    ];
+    const cw = w - pad.l - pad.r;
+    const ch = h - pad.t - pad.b;
+    const groupW = cw / metrics.length;
+    const barW = 22;
+
+    let svg = `<defs>
+        <linearGradient id="currentGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff4444"/><stop offset="100%" stop-color="#cc3333"/></linearGradient>
+        <linearGradient id="targetGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4caf50"/><stop offset="100%" stop-color="#388e3c"/></linearGradient>
+        <linearGradient id="benchGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1a8cff"/><stop offset="100%" stop-color="#0066cc"/></linearGradient>
+    </defs>`;
+
+    // Y grid
+    const maxVal = 100;
+    for (let v = 0; v <= 100; v += 20) {
+        const yp = pad.t + (1 - v / maxVal) * ch;
+        svg += `<line x1="${pad.l}" y1="${yp}" x2="${w-pad.r}" y2="${yp}" stroke="#2d4050" stroke-width="1"/>`;
+        svg += `<text x="${pad.l-8}" y="${yp+4}" fill="#657786" font-size="10" text-anchor="end">${v}%</text>`;
+    }
+
+    metrics.forEach((m, i) => {
+        const gx = pad.l + i * groupW + groupW / 2;
+
+        // Current bar
+        const ch1 = (m.current / maxVal) * ch;
+        svg += `<rect x="${gx - barW * 1.5 - 2}" y="${pad.t + ch - ch1}" width="${barW}" height="${ch1}" rx="3" fill="url(#currentGrad)"/>`;
+        if (m.current > 0) svg += `<text x="${gx - barW}" y="${pad.t + ch - ch1 - 4}" fill="#ff4444" font-size="9" text-anchor="middle" font-weight="600">${m.current}</text>`;
+
+        // Target bar
+        const ch2 = (m.target / maxVal) * ch;
+        svg += `<rect x="${gx - barW/2}" y="${pad.t + ch - ch2}" width="${barW}" height="${ch2}" rx="3" fill="url(#targetGrad)"/>`;
+        svg += `<text x="${gx}" y="${pad.t + ch - ch2 - 4}" fill="#4caf50" font-size="9" text-anchor="middle" font-weight="600">${m.target}</text>`;
+
+        // Benchmark bar
+        const ch3 = (m.benchmark / maxVal) * ch;
+        svg += `<rect x="${gx + barW/2 + 2}" y="${pad.t + ch - ch3}" width="${barW}" height="${ch3}" rx="3" fill="url(#benchGrad)"/>`;
+        svg += `<text x="${gx + barW + 2}" y="${pad.t + ch - ch3 - 4}" fill="#1a8cff" font-size="9" text-anchor="middle" font-weight="600">${m.benchmark}</text>`;
+
+        // Label
+        svg += `<text x="${gx}" y="${pad.t + ch + 18}" fill="#8899a6" font-size="11" text-anchor="middle" font-weight="500">${m.label}</text>`;
+    });
+
+    // Legend
+    svg += `<rect x="${pad.l}" y="${h-14}" width="10" height="10" rx="2" fill="url(#currentGrad)"/>`;
+    svg += `<text x="${pad.l+14}" y="${h-5}" fill="#8899a6" font-size="10">Current</text>`;
+    svg += `<rect x="${pad.l+80}" y="${h-14}" width="10" height="10" rx="2" fill="url(#targetGrad)"/>`;
+    svg += `<text x="${pad.l+94}" y="${h-5}" fill="#8899a6" font-size="10">Target</text>`;
+    svg += `<rect x="${pad.l+150}" y="${h-14}" width="10" height="10" rx="2" fill="url(#benchGrad)"/>`;
+    svg += `<text x="${pad.l+164}" y="${h-5}" fill="#8899a6" font-size="10">Industry Benchmark</text>`;
+
+    container.innerHTML = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${svg}</svg>`;
+}
+
+// ============================================================
+// GANTT CHART
+// ============================================================
+function renderGantt() {
+    const container = document.getElementById('gantt-rows');
+    let html = '';
+    DATA.ganttTasks.forEach(task => {
+        html += `<div class="gantt-row">
+            <div class="gantt-label">${task.name} <span style="color: var(--text-muted); font-size: 10px;">(${task.owner})</span></div>`;
+        for (let d = 1; d <= 20; d++) {
+            if (d >= task.start && d < task.end) {
+                const isFirst = d === task.start;
+                const isLast = d === task.end - 1;
+                html += `<div><div class="gantt-bar" style="background: ${task.color}; border-radius: ${isFirst ? '4px' : '0'} ${isLast ? '4px' : '0'} ${isLast ? '4px' : '0'} ${isFirst ? '4px' : '0'};">${isFirst ? '' : ''}</div></div>`;
+            } else {
+                html += `<div></div>`;
+            }
+        }
+        html += `</div>`;
+    });
+    container.innerHTML = html;
+}
+
+// ============================================================
+// RISK MATRIX
+// ============================================================
+function renderRiskMatrix() {
+    const container = document.getElementById('risk-matrix-container');
+    // 5x5 grid, likelihood (x) vs impact (y)
+    const risks = [
+        { id: 1, name: 'Query fail', x: 3, y: 4, color: '#ff9800' },
+        { id: 2, name: 'Latency',    x: 2, y: 3, color: '#4caf50' },
+        { id: 3, name: 'Schema',     x: 3, y: 4, color: '#ff9800' },
+        { id: 4, name: 'Fatigue',    x: 3, y: 3, color: '#ff9800' },
+        { id: 5, name: 'Drift',      x: 4, y: 5, color: '#ff4444' },
+        { id: 6, name: 'Turnover',   x: 2, y: 4, color: '#ff9800' }
+    ];
+
+    const size = 60;
+    const w = 6 * size + 40;
+    const h = 6 * size + 40;
+
+    let svg = '';
+
+    // Grid cells
+    for (let iy = 1; iy <= 5; iy++) {
+        for (let ix = 1; ix <= 5; ix++) {
+            const score = ix * iy;
+            let fill;
+            if (score >= 15) fill = 'rgba(255,68,68,0.15)';
+            else if (score >= 8) fill = 'rgba(255,152,0,0.12)';
+            else if (score >= 4) fill = 'rgba(255,193,7,0.08)';
+            else fill = 'rgba(76,175,80,0.06)';
+            const cx = 40 + (ix - 1) * size;
+            const cy = (5 - iy) * size;
+            svg += `<rect x="${cx}" y="${cy}" width="${size-2}" height="${size-2}" rx="4" fill="${fill}" stroke="#2d4050" stroke-width="1"/>`;
+        }
+    }
+
+    // Axis labels
+    const yLabels = ['Very Low', 'Low', 'Medium', 'High', 'Very High'];
+    for (let i = 0; i < 5; i++) {
+        svg += `<text x="36" y="${(4-i)*size + size/2}" fill="#657786" font-size="9" text-anchor="end" dominant-baseline="middle">${yLabels[i]}</text>`;
+    }
+    const xLabels = ['Rare', 'Low', 'Medium', 'High', 'Very High'];
+    for (let i = 0; i < 5; i++) {
+        svg += `<text x="${40 + i*size + size/2}" y="${5*size + 16}" fill="#657786" font-size="9" text-anchor="middle">${xLabels[i]}</text>`;
+    }
+    svg += `<text x="4" y="${2.5*size}" fill="#8899a6" font-size="10" text-anchor="middle" transform="rotate(-90, 4, ${2.5*size})" font-weight="600">Impact</text>`;
+    svg += `<text x="${40 + 2.5*size}" y="${5*size + 32}" fill="#8899a6" font-size="10" text-anchor="middle" font-weight="600">Likelihood</text>`;
+
+    // Risk dots
+    risks.forEach(r => {
+        const cx = 40 + (r.x - 1) * size + size / 2;
+        const cy = (5 - r.y) * size + size / 2;
+        svg += `<circle cx="${cx}" cy="${cy}" r="16" fill="${r.color}" stroke="#0f1419" stroke-width="2" opacity="0.9">
+            <title>Risk ${r.id}: ${r.name}</title></circle>`;
+        svg += `<text x="${cx}" y="${cy + 4}" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">${r.id}</text>`;
+    });
+
+    container.innerHTML = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="max-width: 480px; margin: 0 auto; display: block;">${svg}</svg>`;
+}
+
+// ============================================================
+// ANIMATED COUNTERS
+// ============================================================
+function animateCounters() {
+    document.querySelectorAll('[data-counter]').forEach(el => {
+        const target = parseFloat(el.getAttribute('data-counter'));
+        const duration = 1200;
+        const start = performance.now();
+        const isPositive = el.textContent.includes('+');
+        function tick(now) {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const current = (target * eased).toFixed(1);
+            el.textContent = (isPositive ? '+' : '') + current + '%';
+            if (progress < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+    });
+}
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    animateCounters();
+    renderGantt();
+    renderRiskMatrix();
+});
+</script>
+</body>
+</html>

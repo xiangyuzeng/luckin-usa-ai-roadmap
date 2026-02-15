@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Architecture -- Forecast Accuracy Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-primary: #0f1419;
+    --bg-secondary: #192734;
+    --bg-card: #22303c;
+    --bg-hover: #2d4050;
+    --text-primary: #ffffff;
+    --text-secondary: #8899a6;
+    --text-muted: #657786;
+    --border-color: #38444d;
+    --luckin-blue: #00529B;
+    --prediction-color: #3b82f6;
+    --actuals-color: #f97316;
+    --analytics-color: #52c41a;
+    --alert-color: #ef4444;
+    --critical-color: #ef4444;
+    --warning-color: #f97316;
+    --info-color: #3b82f6;
+    --success-color: #52c41a;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+code, .mono { font-family: 'Fira Code', monospace; }
+/* Header */
+.header {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--luckin-blue) 100%);
+    padding: 40px 0 0;
+    position: sticky; top: 0; z-index: 100;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+.header-inner { max-width: 1400px; margin: 0 auto; padding: 0 32px; }
+.header h1 {
+    font-size: 28px; font-weight: 700; letter-spacing: -0.5px;
+    background: linear-gradient(90deg, #fff 0%, #8899a6 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.header .subtitle {
+    font-size: 14px; color: var(--text-secondary); margin-top: 4px;
+    font-family: 'Fira Code', monospace;
+}
+/* Tab navigation */
+.tab-nav {
+    display: flex; gap: 0; margin-top: 24px;
+}
+.tab-btn {
+    padding: 12px 24px; background: transparent; border: none;
+    color: var(--text-secondary); font-family: 'Inter', sans-serif;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border-bottom: 3px solid transparent; transition: all 0.3s;
+    white-space: nowrap;
+}
+.tab-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.04); }
+.tab-btn.active {
+    color: var(--text-primary); border-bottom-color: var(--prediction-color);
+    background: rgba(59,130,246,0.08);
+}
+/* Sections */
+.section {
+    display: none; max-width: 1400px; margin: 0 auto;
+    padding: 40px 32px 80px; min-height: 80vh;
+    animation: fadeIn 0.4s ease;
+}
+.section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.section-title {
+    font-size: 22px; font-weight: 600; margin-bottom: 8px;
+}
+.section-subtitle {
+    font-size: 13px; color: var(--text-muted); margin-bottom: 32px;
+    font-family: 'Fira Code', monospace;
+}
+/* SVG shared */
+.arch-svg { width: 100%; height: auto; }
+.arch-svg text { font-family: 'Inter', sans-serif; }
+.arch-svg .mono-text { font-family: 'Fira Code', monospace; }
+/* Flow animation */
+@keyframes flowDown {
+    0% { stroke-dashoffset: 20; }
+    100% { stroke-dashoffset: 0; }
+}
+@keyframes flowRight {
+    0% { stroke-dashoffset: 20; }
+    100% { stroke-dashoffset: 0; }
+}
+.flow-line {
+    stroke-dasharray: 8 4;
+    animation: flowDown 1.5s linear infinite;
+    transition: opacity 0.3s;
+}
+.flow-line-right {
+    stroke-dasharray: 8 4;
+    animation: flowRight 1.2s linear infinite;
+    transition: opacity 0.3s;
+}
+/* Particle animation */
+@keyframes particleFlow {
+    0% { offset-distance: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { offset-distance: 100%; opacity: 0; }
+}
+.data-particle {
+    position: absolute; width: 6px; height: 6px; border-radius: 50%;
+    animation: particleFlow 3s linear infinite;
+}
+/* SVG hover states */
+.server-group { cursor: pointer; transition: opacity 0.3s; }
+.server-group:hover .server-glow { opacity: 0.3; }
+.server-group .server-glow { opacity: 0; transition: opacity 0.3s; }
+.dimmed { opacity: 0.2 !important; }
+.highlighted .flow-line, .highlighted .flow-line-right { stroke-width: 3; }
+/* Tooltip */
+.tooltip {
+    position: fixed; background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: 8px; padding: 14px 18px; z-index: 200;
+    pointer-events: none; opacity: 0; transition: opacity 0.2s;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5); max-width: 320px;
+    font-size: 13px; line-height: 1.5;
+}
+.tooltip.visible { opacity: 1; }
+.tooltip h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.tooltip .mono { font-size: 11px; color: var(--text-secondary); }
+/* Pipeline step expand */
+.step-detail {
+    position: fixed; background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: 10px; padding: 20px; z-index: 150;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6); width: 340px;
+    font-size: 13px; display: none;
+}
+.step-detail.show { display: block; animation: fadeIn 0.3s ease; }
+.step-detail h4 { font-size: 15px; margin-bottom: 8px; }
+.step-detail pre {
+    background: var(--bg-primary); border-radius: 6px; padding: 10px;
+    font-family: 'Fira Code', monospace; font-size: 11px;
+    color: var(--text-secondary); overflow-x: auto; margin-top: 8px;
+}
+.step-detail .close-btn {
+    position: absolute; top: 8px; right: 12px; background: none;
+    border: none; color: var(--text-muted); cursor: pointer; font-size: 18px;
+}
+/* Section 2: Data Lineage */
+.lineage-svg text { font-family: 'Fira Code', monospace; font-size: 11px; }
+/* Section 3: Alert cards */
+.alert-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 24px; }
+.alert-card {
+    background: var(--bg-card); border-radius: 10px; padding: 20px;
+    border-left: 4px solid var(--border-color); transition: transform 0.2s, box-shadow 0.2s;
+}
+.alert-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+.alert-card.critical { border-left-color: var(--critical-color); }
+.alert-card.warning { border-left-color: var(--warning-color); }
+.alert-card.bias { border-left-color: var(--warning-color); }
+.alert-card.coverage { border-left-color: #eab308; }
+.alert-card.drift { border-left-color: var(--info-color); }
+.alert-card .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 12px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; margin-right: 8px;
+}
+.badge-critical { background: rgba(239,68,68,0.15); color: var(--critical-color); }
+.badge-warning { background: rgba(249,115,22,0.15); color: var(--warning-color); }
+.badge-info { background: rgba(59,130,246,0.15); color: var(--info-color); }
+.badge-yellow { background: rgba(234,179,8,0.15); color: #eab308; }
+.alert-card h4 { font-size: 16px; margin: 8px 0 4px; }
+.alert-card .condition { font-family: 'Fira Code', monospace; font-size: 12px; color: var(--text-secondary); }
+.alert-card .meta { display: flex; gap: 16px; margin-top: 10px; font-size: 12px; color: var(--text-muted); }
+.channel-icon {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.05);
+    font-size: 11px;
+}
+.triggered-count {
+    float: right; font-size: 22px; font-weight: 700;
+}
+/* Section 4: Timeline */
+@keyframes timelinePulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+.timeline-marker { animation: timelinePulse 2s ease-in-out infinite; }
+@keyframes progressSweep {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(880px); }
+}
+/* Stats counter */
+.stat-row {
+    display: flex; gap: 24px; margin-bottom: 32px; flex-wrap: wrap;
+}
+.stat-box {
+    background: var(--bg-card); border-radius: 10px; padding: 16px 24px;
+    border: 1px solid var(--border-color); min-width: 160px; flex: 1;
+}
+.stat-box .num {
+    font-size: 28px; font-weight: 700;
+    background: linear-gradient(90deg, var(--prediction-color), var(--analytics-color));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.stat-box .label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+/* Background grid pattern */
+.bg-grid {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -1; opacity: 0.03;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+/* Scroll indicator */
+@keyframes scrollHint {
+    0%, 100% { transform: translateY(0); opacity: 0.5; }
+    50% { transform: translateY(6px); opacity: 1; }
+}
+.scroll-hint {
+    position: fixed; bottom: 24px; right: 24px; z-index: 50;
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: 20px; padding: 8px 16px; font-size: 11px;
+    color: var(--text-muted); opacity: 0.7; pointer-events: none;
+    animation: scrollHint 2s ease-in-out infinite;
+    transition: opacity 0.3s;
+}
+.scroll-hint.hidden { opacity: 0; }
+/* Footer */
+.footer {
+    max-width: 1400px; margin: 0 auto; padding: 32px;
+    border-top: 1px solid var(--border-color);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+}
+.footer-left { font-size: 12px; color: var(--text-muted); }
+.footer-right { display: flex; gap: 16px; }
+.footer-tag {
+    font-size: 10px; padding: 4px 10px; border-radius: 4px;
+    background: rgba(255,255,255,0.04); color: var(--text-muted);
+    font-family: 'Fira Code', monospace;
+}
+/* Responsive adjustments */
+@media (max-width: 900px) {
+    .header h1 { font-size: 20px; }
+    .tab-btn { padding: 10px 14px; font-size: 11px; }
+    .stat-row { gap: 12px; }
+    .stat-box { min-width: 120px; padding: 12px 16px; }
+    .stat-box .num { font-size: 22px; }
+}
+/* WMAPE formula highlight */
+.formula-box {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: 10px; padding: 20px 24px; margin-top: 24px;
+}
+.formula-box h4 { font-size: 14px; margin-bottom: 12px; color: var(--text-primary); }
+.formula-row {
+    display: flex; align-items: center; gap: 12px; margin: 8px 0;
+    font-family: 'Fira Code', monospace; font-size: 12px; color: var(--text-secondary);
+}
+.formula-row .symbol {
+    color: #a855f7; font-weight: 600; min-width: 80px;
+}
+/* Pulse ring on alert cards */
+@keyframes pulseRing {
+    0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); }
+    70% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+    100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+}
+.alert-card.critical .triggered-count { animation: pulseRing 2s ease-out infinite; border-radius: 4px; }
+/* Notification channel badges */
+.channel-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 500;
+}
+.channel-badge.slack { background: rgba(74,21,75,0.3); color: #e01e5a; }
+.channel-badge.email { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.channel-badge.dashboard { background: rgba(82,196,26,0.15); color: #52c41a; }
+</style>
+</head>
+<body>
+
+<!-- Background grid -->
+<div class="bg-grid"></div>
+
+<!-- Header -->
+<div class="header">
+<div class="header-inner">
+    <h1>System Architecture &mdash; Forecast Accuracy Monitor / 系统架构图</h1>
+    <div class="subtitle">UC-SC-01 &nbsp;|&nbsp; Cross-Server ETL Pipeline &nbsp;|&nbsp; 3 MySQL Databases</div>
+    <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="pipeline">ETL Pipeline / ETL管道</button>
+        <button class="tab-btn" data-tab="lineage">Data Lineage / 数据血缘</button>
+        <button class="tab-btn" data-tab="alerts">Alert Flow / 报警流</button>
+        <button class="tab-btn" data-tab="schedule">Schedule / 调度时间线</button>
+    </nav>
+</div>
+</div>
+
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip"></div>
+<!-- Step Detail Panel -->
+<div class="step-detail" id="stepDetail">
+    <button class="close-btn" onclick="closeStepDetail()">&times;</button>
+    <div id="stepDetailContent"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1: Three-Server ETL Pipeline                         -->
+<!-- ============================================================ -->
+<div class="section active" id="section-pipeline">
+    <h2 class="section-title">Three-Server ETL Pipeline / 三服务器ETL管道</h2>
+    <p class="section-subtitle">Real-time data flow from source systems through orchestration to analytics</p>
+    <div class="stat-row">
+        <div class="stat-box"><div class="num" data-count="3">0</div><div class="label">MySQL Servers</div></div>
+        <div class="stat-box"><div class="num" data-count="7">0</div><div class="label">Pipeline Steps</div></div>
+        <div class="stat-box"><div class="num" data-count="1166">0</div><div class="label">Lines of Python</div></div>
+        <div class="stat-box"><div class="num" data-count="29">0</div><div class="label">Grafana Panels</div></div>
+        <div class="stat-box"><div class="num" data-count="5">0</div><div class="label">Alert Rules</div></div>
+    </div>
+    <svg class="arch-svg" viewBox="0 0 1100 820" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <filter id="glow-blue"><feGaussianBlur stdDeviation="6" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <filter id="glow-orange"><feGaussianBlur stdDeviation="6" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <filter id="glow-green"><feGaussianBlur stdDeviation="6" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <linearGradient id="grad-blue" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0.05"/></linearGradient>
+            <linearGradient id="grad-orange" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f97316" stop-opacity="0.2"/><stop offset="100%" stop-color="#f97316" stop-opacity="0.05"/></linearGradient>
+            <linearGradient id="grad-green" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#52c41a" stop-opacity="0.2"/><stop offset="100%" stop-color="#52c41a" stop-opacity="0.05"/></linearGradient>
+            <!-- Particle markers -->
+            <circle id="particle-blue" r="4" fill="#3b82f6"/>
+            <circle id="particle-orange" r="4" fill="#f97316"/>
+            <circle id="particle-green" r="4" fill="#52c41a"/>
+            <circle id="particle-red" r="4" fill="#ef4444"/>
+            <!-- Flow paths for particles -->
+            <path id="path-pred" d="M310,165 L310,280" fill="none"/>
+            <path id="path-act" d="M790,165 L790,280" fill="none"/>
+            <path id="path-orch-analytics" d="M400,380 L400,500" fill="none"/>
+            <path id="path-analytics-grafana" d="M560,620 L780,620" fill="none"/>
+        </defs>
+
+        <!-- Layer Label: Source Systems -->
+        <text x="20" y="28" fill="#657786" font-size="11" font-weight="600" letter-spacing="1.5" text-transform="uppercase" class="mono-text">LAYER 1 &mdash; SOURCE SYSTEMS</text>
+
+        <!-- Prediction Server (Left Cylinder) -->
+        <g class="server-group" id="srv-pred" data-tooltip="pred">
+            <ellipse class="server-glow" cx="310" cy="90" rx="160" ry="80" fill="#3b82f6" filter="url(#glow-blue)"/>
+            <!-- Cylinder body -->
+            <rect x="150" y="55" width="320" height="90" rx="4" fill="url(#grad-blue)" stroke="#3b82f6" stroke-width="1.5"/>
+            <!-- Top ellipse -->
+            <ellipse cx="310" cy="55" rx="160" ry="18" fill="var(--bg-card)" stroke="#3b82f6" stroke-width="1.5"/>
+            <!-- Bottom ellipse -->
+            <ellipse cx="310" cy="145" rx="160" ry="18" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4 2" opacity="0.4"/>
+            <!-- Labels -->
+            <text x="310" y="50" text-anchor="middle" fill="#3b82f6" font-size="12" font-weight="600">Predictions Server / 预测服务器</text>
+            <text x="310" y="80" text-anchor="middle" fill="var(--text-secondary)" font-size="10" class="mono-text">aws-luckyus-ireplenishment-rw</text>
+            <text x="310" y="96" text-anchor="middle" fill="var(--text-muted)" font-size="10" class="mono-text">DB: luckyus_ireplenishment</text>
+            <text x="310" y="112" text-anchor="middle" fill="var(--text-muted)" font-size="10" class="mono-text">t_order_predict_alg_v2</text>
+            <text x="310" y="130" text-anchor="middle" fill="#3b82f6" font-size="10" font-weight="500" class="mono-text">key: vlt_avg_demand</text>
+            <!-- DB icon -->
+            <circle cx="185" cy="90" r="12" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.5"/>
+            <text x="185" y="94" text-anchor="middle" fill="#3b82f6" font-size="10">DB</text>
+        </g>
+
+        <!-- Actuals Server (Right Cylinder) -->
+        <g class="server-group" id="srv-act" data-tooltip="act">
+            <ellipse class="server-glow" cx="790" cy="90" rx="160" ry="80" fill="#f97316" filter="url(#glow-orange)"/>
+            <rect x="630" y="55" width="320" height="90" rx="4" fill="url(#grad-orange)" stroke="#f97316" stroke-width="1.5"/>
+            <ellipse cx="790" cy="55" rx="160" ry="18" fill="var(--bg-card)" stroke="#f97316" stroke-width="1.5"/>
+            <ellipse cx="790" cy="145" rx="160" ry="18" fill="none" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4 2" opacity="0.4"/>
+            <text x="790" y="50" text-anchor="middle" fill="#f97316" font-size="12" font-weight="600">Actuals Server / 实际消耗服务器</text>
+            <text x="790" y="80" text-anchor="middle" fill="var(--text-secondary)" font-size="10" class="mono-text">aws-luckyus-scm-shopstock-rw</text>
+            <text x="790" y="96" text-anchor="middle" fill="var(--text-muted)" font-size="10" class="mono-text">DB: luckyus_scm_shopstock</text>
+            <text x="790" y="112" text-anchor="middle" fill="var(--text-muted)" font-size="10" class="mono-text">t_shop_goods_stock_change_record</text>
+            <text x="790" y="130" text-anchor="middle" fill="#f97316" font-size="10" font-weight="500" class="mono-text">key: ABS(total_adjust_num)</text>
+            <circle cx="665" cy="90" r="12" fill="none" stroke="#f97316" stroke-width="1" opacity="0.5"/>
+            <text x="665" y="94" text-anchor="middle" fill="#f97316" font-size="10">DB</text>
+        </g>
+
+        <!-- Flow lines: Source -> Orchestrator -->
+        <line class="flow-line" id="line-pred" x1="310" y1="165" x2="310" y2="280" stroke="#3b82f6" stroke-width="2"/>
+        <line class="flow-line" id="line-act" x1="790" y1="165" x2="790" y2="280" stroke="#f97316" stroke-width="2"/>
+        <!-- Arrow heads -->
+        <polygon points="305,278 310,290 315,278" fill="#3b82f6" class="flow-line" style="animation:none"/>
+        <polygon points="785,278 790,290 795,278" fill="#f97316" class="flow-line" style="animation:none"/>
+
+        <!-- Particles on source lines -->
+        <circle r="4" fill="#3b82f6" opacity="0"><animateMotion dur="2.5s" repeatCount="indefinite" path="M310,165 L310,280"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2.5s" repeatCount="indefinite"/></circle>
+        <circle r="4" fill="#3b82f6" opacity="0"><animateMotion dur="2.5s" repeatCount="indefinite" path="M310,165 L310,280" begin="1.2s"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2.5s" repeatCount="indefinite" begin="1.2s"/></circle>
+        <circle r="4" fill="#f97316" opacity="0"><animateMotion dur="2.5s" repeatCount="indefinite" path="M790,165 L790,280"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2.5s" repeatCount="indefinite"/></circle>
+        <circle r="4" fill="#f97316" opacity="0"><animateMotion dur="2.5s" repeatCount="indefinite" path="M790,165 L790,280" begin="1.3s"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2.5s" repeatCount="indefinite" begin="1.3s"/></circle>
+
+        <!-- Layer Label: Orchestrator -->
+        <text x="20" y="272" fill="#657786" font-size="11" font-weight="600" letter-spacing="1.5" class="mono-text">LAYER 2 &mdash; ORCHESTRATOR</text>
+
+        <!-- Orchestrator Box -->
+        <g class="server-group" id="srv-orch" data-tooltip="orch">
+            <rect x="100" y="290" width="900" height="90" rx="8" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5"/>
+            <rect x="100" y="290" width="900" height="4" rx="2" fill="var(--luckin-blue)"/>
+            <text x="140" y="316" fill="var(--text-primary)" font-size="14" font-weight="600">Python Orchestrator / Python编排器</text>
+            <text x="460" y="316" fill="var(--text-muted)" font-size="11" class="mono-text">run_pipeline.py (1,166 lines)</text>
+            <!-- 7 pipeline steps -->
+            <g class="pipeline-step" data-step="1" style="cursor:pointer">
+                <rect x="120" y="332" width="110" height="36" rx="6" fill="rgba(59,130,246,0.12)" stroke="#3b82f6" stroke-width="1"/>
+                <text x="128" y="347" fill="#3b82f6" font-size="9" font-weight="600">1</text>
+                <text x="140" y="348" fill="var(--text-secondary)" font-size="10">Extract Pred</text>
+                <text x="175" y="361" fill="var(--text-muted)" font-size="8" text-anchor="middle" class="mono-text">预测提取</text>
+            </g>
+            <text x="237" y="352" fill="var(--text-muted)" font-size="14">&rarr;</text>
+            <g class="pipeline-step" data-step="2" style="cursor:pointer">
+                <rect x="252" y="332" width="110" height="36" rx="6" fill="rgba(249,115,22,0.12)" stroke="#f97316" stroke-width="1"/>
+                <text x="260" y="347" fill="#f97316" font-size="9" font-weight="600">2</text>
+                <text x="272" y="348" fill="var(--text-secondary)" font-size="10">Extract Acts</text>
+                <text x="307" y="361" fill="var(--text-muted)" font-size="8" text-anchor="middle" class="mono-text">实际提取</text>
+            </g>
+            <text x="369" y="352" fill="var(--text-muted)" font-size="14">&rarr;</text>
+            <g class="pipeline-step" data-step="3" style="cursor:pointer">
+                <rect x="384" y="332" width="110" height="36" rx="6" fill="rgba(82,196,26,0.12)" stroke="#52c41a" stroke-width="1"/>
+                <text x="392" y="347" fill="#52c41a" font-size="9" font-weight="600">3</text>
+                <text x="404" y="348" fill="var(--text-secondary)" font-size="10">Load Staging</text>
+                <text x="439" y="361" fill="var(--text-muted)" font-size="8" text-anchor="middle" class="mono-text">加载暂存</text>
+            </g>
+            <text x="501" y="352" fill="var(--text-muted)" font-size="14">&rarr;</text>
+            <g class="pipeline-step" data-step="4" style="cursor:pointer">
+                <rect x="516" y="332" width="110" height="36" rx="6" fill="rgba(82,196,26,0.12)" stroke="#52c41a" stroke-width="1"/>
+                <text x="524" y="347" fill="#52c41a" font-size="9" font-weight="600">4</text>
+                <text x="536" y="348" fill="var(--text-secondary)" font-size="10">Compute Acc</text>
+                <text x="571" y="361" fill="var(--text-muted)" font-size="8" text-anchor="middle" class="mono-text">计算精度</text>
+            </g>
+            <text x="633" y="352" fill="var(--text-muted)" font-size="14">&rarr;</text>
+            <g class="pipeline-step" data-step="5" style="cursor:pointer">
+                <rect x="648" y="332" width="110" height="36" rx="6" fill="rgba(82,196,26,0.12)" stroke="#52c41a" stroke-width="1"/>
+                <text x="656" y="347" fill="#52c41a" font-size="9" font-weight="600">5</text>
+                <text x="668" y="348" fill="var(--text-secondary)" font-size="10">Agg Metrics</text>
+                <text x="703" y="361" fill="var(--text-muted)" font-size="8" text-anchor="middle" class="mono-text">聚合指标</text>
+            </g>
+            <text x="765" y="352" fill="var(--text-muted)" font-size="14">&rarr;</text>
+            <g class="pipeline-step" data-step="6" style="cursor:pointer">
+                <rect x="780" y="332" width="100" height="36" rx="6" fill="rgba(239,68,68,0.12)" stroke="#ef4444" stroke-width="1"/>
+                <text x="788" y="347" fill="#ef4444" font-size="9" font-weight="600">6</text>
+                <text x="800" y="348" fill="var(--text-secondary)" font-size="10">Drift Detect</text>
+                <text x="830" y="361" fill="var(--text-muted)" font-size="8" text-anchor="middle" class="mono-text">漂移检测</text>
+            </g>
+            <text x="887" y="352" fill="var(--text-muted)" font-size="14">&rarr;</text>
+            <g class="pipeline-step" data-step="7" style="cursor:pointer">
+                <rect x="900" y="332" width="84" height="36" rx="6" fill="rgba(101,119,134,0.15)" stroke="var(--text-muted)" stroke-width="1"/>
+                <text x="908" y="347" fill="var(--text-muted)" font-size="9" font-weight="600">7</text>
+                <text x="920" y="348" fill="var(--text-secondary)" font-size="10">Cleanup</text>
+                <text x="942" y="361" fill="var(--text-muted)" font-size="8" text-anchor="middle" class="mono-text">清理</text>
+            </g>
+        </g>
+
+        <!-- Flow lines: Orchestrator -> Analytics -->
+        <line class="flow-line" id="line-orch-db" x1="400" y1="380" x2="400" y2="500" stroke="#52c41a" stroke-width="2"/>
+        <polygon points="395,498 400,510 405,498" fill="#52c41a"/>
+        <circle r="4" fill="#52c41a" opacity="0"><animateMotion dur="2.5s" repeatCount="indefinite" path="M400,380 L400,500"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2.5s" repeatCount="indefinite"/></circle>
+
+        <!-- Layer Label: Analytics Engine -->
+        <text x="20" y="494" fill="#657786" font-size="11" font-weight="600" letter-spacing="1.5" class="mono-text">LAYER 3 &mdash; ANALYTICS ENGINE</text>
+
+        <!-- Analytics Server -->
+        <g class="server-group" id="srv-analytics" data-tooltip="analytics">
+            <ellipse class="server-glow" cx="340" cy="590" rx="200" ry="90" fill="#52c41a" filter="url(#glow-green)"/>
+            <rect x="140" y="510" width="400" height="170" rx="8" fill="url(#grad-green)" stroke="#52c41a" stroke-width="1.5"/>
+            <ellipse cx="340" cy="510" rx="200" ry="18" fill="var(--bg-card)" stroke="#52c41a" stroke-width="1.5"/>
+            <text x="340" y="506" text-anchor="middle" fill="#52c41a" font-size="13" font-weight="600">Analytics Server / 分析服务器</text>
+            <text x="340" y="538" text-anchor="middle" fill="var(--text-secondary)" font-size="10" class="mono-text">aws-luckyus-dbatest-rw</text>
+            <text x="340" y="554" text-anchor="middle" fill="var(--text-muted)" font-size="10" class="mono-text">DB: test</text>
+            <!-- Table list -->
+            <rect x="170" y="570" width="340" height="24" rx="4" fill="rgba(82,196,26,0.08)"/>
+            <text x="182" y="586" fill="var(--text-secondary)" font-size="10" class="mono-text">forecast_accuracy_daily</text>
+            <text x="430" y="586" fill="var(--text-muted)" font-size="9" text-anchor="end">row-level metrics</text>
+            <rect x="170" y="598" width="340" height="24" rx="4" fill="rgba(82,196,26,0.05)"/>
+            <text x="182" y="614" fill="var(--text-secondary)" font-size="10" class="mono-text">forecast_accuracy_summary</text>
+            <text x="430" y="614" fill="var(--text-muted)" font-size="9" text-anchor="end">aggregated views</text>
+            <rect x="170" y="626" width="340" height="24" rx="4" fill="rgba(82,196,26,0.08)"/>
+            <text x="182" y="642" fill="var(--text-secondary)" font-size="10" class="mono-text">forecast_alerts</text>
+            <text x="430" y="642" fill="var(--text-muted)" font-size="9" text-anchor="end">drift detection</text>
+            <rect x="170" y="654" width="340" height="24" rx="4" fill="rgba(82,196,26,0.05)"/>
+            <text x="182" y="670" fill="var(--text-secondary)" font-size="10" class="mono-text">forecast_pipeline_run_log</text>
+            <text x="430" y="670" fill="var(--text-muted)" font-size="9" text-anchor="end">execution audit</text>
+        </g>
+
+        <!-- Flow lines: Analytics -> Presentation -->
+        <line class="flow-line-right" id="line-analytics-grafana" x1="540" y1="570" x2="640" y2="570" stroke="#52c41a" stroke-width="2"/>
+        <polygon points="638,565 650,570 638,575" fill="#52c41a"/>
+        <line class="flow-line-right" id="line-analytics-alerts" x1="540" y1="660" x2="640" y2="660" stroke="#ef4444" stroke-width="2"/>
+        <polygon points="638,655 650,660 638,665" fill="#ef4444"/>
+        <!-- Particles horizontal -->
+        <circle r="3" fill="#52c41a" opacity="0"><animateMotion dur="2s" repeatCount="indefinite" path="M540,570 L640,570"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2s" repeatCount="indefinite"/></circle>
+        <circle r="3" fill="#ef4444" opacity="0"><animateMotion dur="2s" repeatCount="indefinite" path="M540,660 L640,660"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2s" repeatCount="indefinite" begin="0.8s"/></circle>
+
+        <!-- Layer Label: Presentation -->
+        <text x="660" y="494" fill="#657786" font-size="11" font-weight="600" letter-spacing="1.5" class="mono-text">LAYER 4 &mdash; PRESENTATION</text>
+
+        <!-- Grafana Dashboard Box -->
+        <g class="server-group" id="srv-grafana" data-tooltip="grafana">
+            <rect x="660" y="510" width="380" height="80" rx="8" fill="var(--bg-card)" stroke="var(--analytics-color)" stroke-width="1.5"/>
+            <rect x="660" y="510" width="380" height="4" rx="2" fill="var(--analytics-color)"/>
+            <text x="680" y="536" fill="var(--text-primary)" font-size="13" font-weight="600">Grafana Dashboard</text>
+            <text x="680" y="554" fill="var(--text-secondary)" font-size="10" class="mono-text">29 panels &middot; UID: uc-sc-01-forecast-accuracy</text>
+            <text x="680" y="572" fill="var(--text-muted)" font-size="10">MAPE trends, store heatmaps, drill-down views</text>
+            <!-- Grafana logo placeholder -->
+            <circle cx="1010" cy="550" r="18" fill="none" stroke="var(--analytics-color)" stroke-width="1.5" opacity="0.5"/>
+            <text x="1010" y="554" text-anchor="middle" fill="var(--analytics-color)" font-size="11" font-weight="600">G</text>
+        </g>
+
+        <!-- Alert Engine Box -->
+        <g class="server-group" id="srv-alerteng" data-tooltip="alerteng">
+            <rect x="660" y="620" width="380" height="80" rx="8" fill="var(--bg-card)" stroke="var(--alert-color)" stroke-width="1.5"/>
+            <rect x="660" y="620" width="380" height="4" rx="2" fill="var(--alert-color)"/>
+            <text x="680" y="646" fill="var(--text-primary)" font-size="13" font-weight="600">Alert Engine / 报警引擎</text>
+            <text x="680" y="664" fill="var(--text-secondary)" font-size="10" class="mono-text">5 rules: CRITICAL, WARNING, BIAS, COVERAGE, DRIFT</text>
+            <text x="680" y="682" fill="var(--text-muted)" font-size="10">Slack + Email + Dashboard notifications</text>
+            <circle cx="1010" cy="660" r="18" fill="none" stroke="var(--alert-color)" stroke-width="1.5" opacity="0.5"/>
+            <text x="1010" y="664" text-anchor="middle" fill="var(--alert-color)" font-size="14">!</text>
+        </g>
+
+        <!-- Legend -->
+        <g transform="translate(20,760)">
+            <text x="0" y="12" fill="var(--text-muted)" font-size="10" font-weight="600">DATA FLOW LEGEND:</text>
+            <line x1="140" y1="8" x2="180" y2="8" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6 3"/>
+            <text x="186" y="12" fill="var(--text-muted)" font-size="10">Prediction data</text>
+            <line x1="300" y1="8" x2="340" y2="8" stroke="#f97316" stroke-width="2" stroke-dasharray="6 3"/>
+            <text x="346" y="12" fill="var(--text-muted)" font-size="10">Actuals data</text>
+            <line x1="440" y1="8" x2="480" y2="8" stroke="#52c41a" stroke-width="2" stroke-dasharray="6 3"/>
+            <text x="486" y="12" fill="var(--text-muted)" font-size="10">Computed metrics</text>
+            <line x1="610" y1="8" x2="650" y2="8" stroke="#ef4444" stroke-width="2" stroke-dasharray="6 3"/>
+            <text x="656" y="12" fill="var(--text-muted)" font-size="10">Alert signals</text>
+        </g>
+    </svg>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: Data Lineage Diagram                              -->
+<!-- ============================================================ -->
+<div class="section" id="section-lineage">
+    <h2 class="section-title">Data Lineage / 数据血缘图</h2>
+    <p class="section-subtitle">Column-level data flow from source fields through computation to output metrics</p>
+    <svg class="lineage-svg" viewBox="0 0 1200 620" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="lg-blue" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#3b82f6" stop-opacity="0.8"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0.2"/></linearGradient>
+            <linearGradient id="lg-orange" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#f97316" stop-opacity="0.8"/><stop offset="100%" stop-color="#f97316" stop-opacity="0.2"/></linearGradient>
+            <linearGradient id="lg-green" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#52c41a" stop-opacity="0.6"/><stop offset="100%" stop-color="#52c41a" stop-opacity="0.2"/></linearGradient>
+        </defs>
+        <!-- Column Headers -->
+        <text x="80" y="30" fill="var(--text-muted)" font-size="12" font-weight="600" text-anchor="middle">SOURCE COLUMNS</text>
+        <text x="80" y="46" fill="var(--text-muted)" font-size="10" text-anchor="middle">源字段</text>
+        <text x="480" y="30" fill="var(--text-muted)" font-size="12" font-weight="600" text-anchor="middle">COMPUTED COLUMNS</text>
+        <text x="480" y="46" fill="var(--text-muted)" font-size="10" text-anchor="middle">计算字段</text>
+        <text x="850" y="30" fill="var(--text-muted)" font-size="12" font-weight="600" text-anchor="middle">DERIVED METRICS</text>
+        <text x="850" y="46" fill="var(--text-muted)" font-size="10" text-anchor="middle">派生指标</text>
+        <text x="1080" y="30" fill="var(--text-muted)" font-size="12" font-weight="600" text-anchor="middle">OUTPUT</text>
+        <text x="1080" y="46" fill="var(--text-muted)" font-size="10" text-anchor="middle">输出指标</text>
+
+        <!-- Source: vlt_avg_demand -->
+        <rect x="10" y="70" width="230" height="36" rx="6" fill="rgba(59,130,246,0.1)" stroke="#3b82f6" stroke-width="1"/>
+        <text x="24" y="93" fill="#3b82f6" font-size="11">vlt_avg_demand</text>
+
+        <!-- Source: ABS(total_adjust_num) -->
+        <rect x="10" y="126" width="230" height="56" rx="6" fill="rgba(249,115,22,0.1)" stroke="#f97316" stroke-width="1"/>
+        <text x="24" y="148" fill="#f97316" font-size="11">ABS(total_adjust_num)</text>
+        <text x="24" y="168" fill="var(--text-muted)" font-size="9">WHERE reason_code IN ('025','1001','1002')</text>
+
+        <!-- Computed: predicted_demand -->
+        <rect x="360" y="70" width="220" height="36" rx="6" fill="rgba(59,130,246,0.08)" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4 2"/>
+        <text x="374" y="93" fill="#3b82f6" font-size="11">predicted_demand</text>
+        <!-- Computed: actual_consumption -->
+        <rect x="360" y="126" width="220" height="36" rx="6" fill="rgba(249,115,22,0.08)" stroke="#f97316" stroke-width="1" stroke-dasharray="4 2"/>
+        <text x="374" y="149" fill="#f97316" font-size="11">actual_consumption</text>
+
+        <!-- Lines: Source -> Computed -->
+        <line x1="240" y1="88" x2="360" y2="88" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4 2" opacity="0.6"/>
+        <polygon points="356,84 364,88 356,92" fill="#3b82f6" opacity="0.6"/>
+        <line x1="240" y1="148" x2="360" y2="144" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4 2" opacity="0.6"/>
+        <polygon points="356,140 364,144 356,148" fill="#f97316" opacity="0.6"/>
+
+        <!-- Computed: derived metrics -->
+        <rect x="360" y="200" width="300" height="36" rx="6" fill="rgba(82,196,26,0.1)" stroke="#52c41a" stroke-width="1"/>
+        <text x="374" y="223" fill="#52c41a" font-size="11">absolute_error = |pred - actual|</text>
+
+        <rect x="360" y="252" width="300" height="36" rx="6" fill="rgba(82,196,26,0.1)" stroke="#52c41a" stroke-width="1"/>
+        <text x="374" y="275" fill="#52c41a" font-size="11">absolute_pct_error = |error|/actual</text>
+
+        <rect x="360" y="304" width="300" height="36" rx="6" fill="rgba(82,196,26,0.1)" stroke="#52c41a" stroke-width="1"/>
+        <text x="374" y="327" fill="#52c41a" font-size="11">forecast_error = pred - actual</text>
+
+        <rect x="360" y="356" width="300" height="36" rx="6" fill="rgba(82,196,26,0.1)" stroke="#52c41a" stroke-width="1"/>
+        <text x="374" y="379" fill="#52c41a" font-size="11">squared_error = (pred - actual)^2</text>
+
+        <rect x="360" y="408" width="300" height="36" rx="6" fill="rgba(82,196,26,0.1)" stroke="#52c41a" stroke-width="1"/>
+        <text x="374" y="431" fill="#52c41a" font-size="11">accuracy_within_20 = (APE &le; 0.20)</text>
+
+        <!-- Fan-out lines from computed columns to derived -->
+        <path d="M470,108 L470,160 L470,200" fill="none" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3 2" opacity="0.4"/>
+        <line x1="470" y1="200" x2="470" y2="200" stroke="var(--text-muted)" stroke-width="1"/>
+        <line x1="470" y1="160" x2="360" y2="218" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3 2" opacity="0.4"/>
+        <line x1="470" y1="160" x2="360" y2="270" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3 2" opacity="0.4"/>
+        <line x1="470" y1="160" x2="360" y2="322" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3 2" opacity="0.4"/>
+        <line x1="470" y1="160" x2="360" y2="374" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3 2" opacity="0.4"/>
+        <line x1="470" y1="160" x2="360" y2="426" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3 2" opacity="0.4"/>
+
+        <!-- Output metrics (purple) -->
+        <rect x="770" y="246" width="170" height="36" rx="6" fill="rgba(168,85,247,0.12)" stroke="#a855f7" stroke-width="1.5"/>
+        <text x="784" y="269" fill="#a855f7" font-size="12" font-weight="600">MAPE</text>
+        <text x="840" y="269" fill="var(--text-muted)" font-size="10">&middot; Mean Abs Pct Error</text>
+
+        <rect x="770" y="298" width="170" height="36" rx="6" fill="rgba(168,85,247,0.12)" stroke="#a855f7" stroke-width="1.5"/>
+        <text x="784" y="321" fill="#a855f7" font-size="12" font-weight="600">MFE / Bias</text>
+        <text x="870" y="321" fill="var(--text-muted)" font-size="10">&middot; Mean Forecast Err</text>
+
+        <rect x="770" y="350" width="170" height="36" rx="6" fill="rgba(168,85,247,0.12)" stroke="#a855f7" stroke-width="1.5"/>
+        <text x="784" y="373" fill="#a855f7" font-size="12" font-weight="600">RMSE</text>
+        <text x="840" y="373" fill="var(--text-muted)" font-size="10">&middot; Root Mean Sq Err</text>
+
+        <rect x="770" y="402" width="170" height="36" rx="6" fill="rgba(168,85,247,0.12)" stroke="#a855f7" stroke-width="1.5"/>
+        <text x="784" y="425" fill="#a855f7" font-size="12" font-weight="600">Accuracy Rate</text>
+        <text x="896" y="425" fill="var(--text-muted)" font-size="10">&middot; &le;20%</text>
+
+        <!-- Lines: Derived -> Output -->
+        <line x1="660" y1="270" x2="770" y2="264" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="4 2" opacity="0.5"/>
+        <line x1="660" y1="322" x2="770" y2="316" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="4 2" opacity="0.5"/>
+        <line x1="660" y1="374" x2="770" y2="368" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="4 2" opacity="0.5"/>
+        <line x1="660" y1="426" x2="770" y2="420" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="4 2" opacity="0.5"/>
+
+        <!-- Final output -->
+        <rect x="1000" y="246" width="160" height="192" rx="8" fill="var(--bg-card)" stroke="#a855f7" stroke-width="1"/>
+        <text x="1080" y="275" text-anchor="middle" fill="#a855f7" font-size="12" font-weight="600">Grafana</text>
+        <text x="1080" y="295" text-anchor="middle" fill="#a855f7" font-size="12" font-weight="600">Dashboard</text>
+        <text x="1080" y="320" text-anchor="middle" fill="var(--text-muted)" font-size="10">29 panels</text>
+        <text x="1080" y="340" text-anchor="middle" fill="var(--text-muted)" font-size="10">WMAPE trendlines</text>
+        <text x="1080" y="358" text-anchor="middle" fill="var(--text-muted)" font-size="10">Store heatmaps</text>
+        <text x="1080" y="376" text-anchor="middle" fill="var(--text-muted)" font-size="10">Category drill-down</text>
+        <text x="1080" y="394" text-anchor="middle" fill="var(--text-muted)" font-size="10">Bias scatter plots</text>
+        <text x="1080" y="420" text-anchor="middle" fill="var(--text-muted)" font-size="10">Alert status table</text>
+        <line x1="940" y1="340" x2="1000" y2="340" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="4 2" opacity="0.5"/>
+        <polygon points="996,336 1004,340 996,344" fill="#a855f7" opacity="0.5"/>
+
+        <!-- Join keys section -->
+        <text x="24" y="250" fill="var(--text-muted)" font-size="10" font-weight="600">JOIN KEYS / 关联键</text>
+        <rect x="10" y="262" width="230" height="30" rx="4" fill="rgba(255,255,255,0.03)" stroke="var(--border-color)" stroke-width="1"/>
+        <text x="24" y="282" fill="var(--text-secondary)" font-size="10">shop_dept_id &rarr; shop_dept_id</text>
+        <rect x="10" y="298" width="230" height="30" rx="4" fill="rgba(255,255,255,0.03)" stroke="var(--border-color)" stroke-width="1"/>
+        <text x="24" y="318" fill="var(--text-secondary)" font-size="10">goods_code / goods_mid &rarr; goods_code</text>
+        <rect x="10" y="334" width="230" height="30" rx="4" fill="rgba(255,255,255,0.03)" stroke="var(--border-color)" stroke-width="1"/>
+        <text x="24" y="354" fill="var(--text-secondary)" font-size="10">dt / DATE(operated_time) &rarr; accuracy_date</text>
+
+        <!-- Additional output metric: WMAPE -->
+        <rect x="770" y="454" width="170" height="36" rx="6" fill="rgba(168,85,247,0.12)" stroke="#a855f7" stroke-width="1.5"/>
+        <text x="784" y="477" fill="#a855f7" font-size="12" font-weight="600">WMAPE</text>
+        <text x="855" y="477" fill="var(--text-muted)" font-size="10">&middot; Weighted MAPE</text>
+        <line x1="660" y1="270" x2="770" y2="472" stroke="#a855f7" stroke-width="1" stroke-dasharray="4 2" opacity="0.3"/>
+
+        <!-- Filtering annotations -->
+        <text x="24" y="410" fill="var(--text-muted)" font-size="10" font-weight="600">FILTERS / 过滤条件</text>
+        <rect x="10" y="422" width="230" height="30" rx="4" fill="rgba(249,115,22,0.05)" stroke="var(--border-color)" stroke-width="1"/>
+        <text x="24" y="442" fill="var(--text-secondary)" font-size="10">total_adjust_num &lt; 0 (outbound only)</text>
+        <rect x="10" y="458" width="230" height="30" rx="4" fill="rgba(249,115,22,0.05)" stroke="var(--border-color)" stroke-width="1"/>
+        <text x="24" y="478" fill="var(--text-secondary)" font-size="10">actual_consumption &gt; 0 (non-zero)</text>
+        <rect x="10" y="494" width="230" height="30" rx="4" fill="rgba(59,130,246,0.05)" stroke="var(--border-color)" stroke-width="1"/>
+        <text x="24" y="514" fill="var(--text-secondary)" font-size="10">predicted_demand &gt; 0 (active SKUs)</text>
+
+        <!-- Data volume annotations -->
+        <text x="24" y="560" fill="var(--text-muted)" font-size="10" font-weight="600">DAILY VOLUME / 日数据量</text>
+        <rect x="10" y="572" width="230" height="26" rx="4" fill="rgba(59,130,246,0.05)" stroke="var(--border-color)" stroke-width="1"/>
+        <text x="24" y="590" fill="#3b82f6" font-size="10">Predictions: ~50K rows/day</text>
+        <rect x="10" y="602" width="230" height="26" rx="4" fill="rgba(249,115,22,0.05)" stroke="var(--border-color)" stroke-width="1"/>
+        <text x="24" y="618" fill="#f97316" font-size="10">Actuals: ~80K rows/day</text>
+    </svg>
+
+    <!-- Formula breakdown below the SVG -->
+    <div class="formula-box">
+        <h4>Key Metric Formulas / 关键指标计算公式</h4>
+        <div class="formula-row">
+            <span class="symbol">MAPE</span>
+            <span>= AVG( |predicted - actual| / actual ) &times; 100%</span>
+        </div>
+        <div class="formula-row">
+            <span class="symbol">WMAPE</span>
+            <span>= SUM( |predicted - actual| &times; actual ) / SUM( actual ) &times; 100%</span>
+        </div>
+        <div class="formula-row">
+            <span class="symbol">MFE</span>
+            <span>= AVG( predicted - actual ) -- positive = over-prediction bias</span>
+        </div>
+        <div class="formula-row">
+            <span class="symbol">RMSE</span>
+            <span>= SQRT( AVG( (predicted - actual)^2 ) )</span>
+        </div>
+        <div class="formula-row">
+            <span class="symbol">Accuracy</span>
+            <span>= COUNT(APE &le; 0.20) / COUNT(*) &times; 100% -- within 20% threshold</span>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: Alert Flow                                        -->
+<!-- ============================================================ -->
+<div class="section" id="section-alerts">
+    <h2 class="section-title">Alert Flow / 报警流</h2>
+    <p class="section-subtitle">Five-tier alert rules with escalation paths and notification channels</p>
+    <svg viewBox="0 0 1100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;margin-bottom:16px;">
+        <!-- Source label -->
+        <rect x="20" y="20" width="300" height="54" rx="8" fill="var(--bg-card)" stroke="var(--analytics-color)" stroke-width="1.5"/>
+        <text x="170" y="43" text-anchor="middle" fill="var(--analytics-color)" font-size="12" font-weight="600">Daily Accuracy Data</text>
+        <text x="170" y="60" text-anchor="middle" fill="var(--text-muted)" font-size="10" class="mono-text">forecast_accuracy_daily</text>
+        <!-- Arrow down -->
+        <line x1="170" y1="74" x2="170" y2="94" stroke="var(--text-muted)" stroke-width="1.5" stroke-dasharray="4 2"/>
+        <polygon points="165,92 170,100 175,92" fill="var(--text-muted)"/>
+    </svg>
+    <div class="alert-grid">
+        <!-- Rule 1: CRITICAL -->
+        <div class="alert-card critical">
+            <span class="badge badge-critical">CRITICAL</span>
+            <span class="badge badge-critical">P1</span>
+            <span class="triggered-count" style="color:var(--critical-color)">1</span>
+            <h4>Rule 1: CRITICAL &mdash; High MAPE per Store / 严重:单店高误差</h4>
+            <div class="condition">7d rolling MAPE &gt; 40% per store</div>
+            <div class="meta">
+                <span>Response: <strong>30 minutes</strong></span>
+                <span class="channel-icon">Slack</span>
+                <span class="channel-icon">Email</span>
+                <span>Escalation: Supply Chain Director</span>
+            </div>
+        </div>
+        <!-- Rule 2: WARNING -->
+        <div class="alert-card warning">
+            <span class="badge badge-warning">WARNING</span>
+            <span class="badge badge-warning">P2</span>
+            <span class="triggered-count" style="color:var(--warning-color)">2</span>
+            <h4>Rule 2: WARNING &mdash; Elevated MAPE per Store / 警告:单店误差偏高</h4>
+            <div class="condition">7d rolling MAPE &gt; 30% per store</div>
+            <div class="meta">
+                <span>Response: <strong>4 hours</strong></span>
+                <span class="channel-icon">Slack</span>
+                <span>Escalation: Forecast Analyst</span>
+            </div>
+        </div>
+        <!-- Rule 3: BIAS -->
+        <div class="alert-card bias">
+            <span class="badge badge-warning">BIAS</span>
+            <span class="badge badge-warning">P2</span>
+            <span class="triggered-count" style="color:var(--warning-color)">1</span>
+            <h4>Rule 3: BIAS &mdash; Systematic Over/Under Prediction / 偏差:系统性预测偏移</h4>
+            <div class="condition">Same-sign MFE for 14+ consecutive days</div>
+            <div class="meta">
+                <span>Response: <strong>Next business day</strong></span>
+                <span class="channel-icon">Dashboard</span>
+                <span>Escalation: Data Science Team</span>
+            </div>
+        </div>
+        <!-- Rule 4: COVERAGE -->
+        <div class="alert-card coverage">
+            <span class="badge badge-yellow">COVERAGE</span>
+            <span class="badge badge-yellow">P2</span>
+            <span class="triggered-count" style="color:#eab308">0</span>
+            <h4>Rule 4: COVERAGE &mdash; Low Prediction Match Rate / 覆盖率:预测匹配率低</h4>
+            <div class="condition">&lt;90% of actuals have matched predictions</div>
+            <div class="meta">
+                <span>Response: <strong>4 hours</strong></span>
+                <span class="channel-icon">Dashboard</span>
+                <span>Escalation: Data Engineering</span>
+            </div>
+        </div>
+        <!-- Rule 5: DRIFT -->
+        <div class="alert-card drift">
+            <span class="badge badge-info">DRIFT</span>
+            <span class="badge badge-info">P3</span>
+            <span class="triggered-count" style="color:var(--info-color)">0</span>
+            <h4>Rule 5: DRIFT &mdash; Week-over-Week Degradation / 漂移:周环比恶化</h4>
+            <div class="condition">WoW MAPE change &gt;50% per category</div>
+            <div class="meta">
+                <span>Response: <strong>Next business day</strong></span>
+                <span class="channel-icon">Dashboard</span>
+                <span>Escalation: Analytics Review</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: Scheduling Timeline                               -->
+<!-- ============================================================ -->
+<div class="section" id="section-schedule">
+    <h2 class="section-title">Scheduling Timeline / 调度时间线</h2>
+    <p class="section-subtitle">Daily pipeline execution at 06:00 CST with estimated stage durations</p>
+    <div class="stat-row">
+        <div class="stat-box"><div class="num" style="-webkit-text-fill-color:#f97316">~35</div><div class="label">Minutes Total Runtime</div></div>
+        <div class="stat-box"><div class="num" style="-webkit-text-fill-color:#3b82f6">06:00</div><div class="label">Daily Trigger (CST)</div></div>
+        <div class="stat-box"><div class="num" style="-webkit-text-fill-color:#52c41a">4</div><div class="label">Major Stages</div></div>
+    </div>
+    <svg class="arch-svg" viewBox="0 0 1100 360" xmlns="http://www.w3.org/2000/svg">
+        <!-- Time axis -->
+        <line x1="60" y1="60" x2="1060" y2="60" stroke="var(--border-color)" stroke-width="2"/>
+        <!-- Tick marks and labels -->
+        <g fill="var(--text-muted)" font-size="11" class="mono-text" text-anchor="middle">
+            <line x1="60" y1="55" x2="60" y2="65" stroke="var(--text-muted)" stroke-width="1.5"/>
+            <text x="60" y="80">05:55</text>
+            <line x1="185" y1="55" x2="185" y2="65" stroke="var(--text-muted)" stroke-width="1.5"/>
+            <text x="185" y="80">06:00</text>
+            <line x1="310" y1="55" x2="310" y2="65" stroke="var(--text-muted)" stroke-width="1.5"/>
+            <text x="310" y="80">06:05</text>
+            <line x1="435" y1="55" x2="435" y2="65" stroke="var(--text-muted)" stroke-width="1.5"/>
+            <text x="435" y="80">06:10</text>
+            <line x1="560" y1="55" x2="560" y2="65" stroke="var(--text-muted)" stroke-width="1.5"/>
+            <text x="560" y="80">06:15</text>
+            <line x1="685" y1="55" x2="685" y2="65" stroke="var(--text-muted)" stroke-width="1.5"/>
+            <text x="685" y="80">06:20</text>
+            <line x1="810" y1="55" x2="810" y2="65" stroke="var(--text-muted)" stroke-width="1.5"/>
+            <text x="810" y="80">06:25</text>
+            <line x1="935" y1="55" x2="935" y2="65" stroke="var(--text-muted)" stroke-width="1.5"/>
+            <text x="935" y="80">06:30</text>
+            <line x1="1060" y1="55" x2="1060" y2="65" stroke="var(--text-muted)" stroke-width="1.5"/>
+            <text x="1060" y="80">06:35</text>
+        </g>
+
+        <!-- Stage 1: Pre-checks & Trigger -->
+        <rect x="80" y="100" width="160" height="60" rx="8" fill="rgba(59,130,246,0.12)" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="160" y="125" text-anchor="middle" fill="#3b82f6" font-size="12" font-weight="600">TRIGGER</text>
+        <text x="160" y="143" text-anchor="middle" fill="var(--text-muted)" font-size="10">Cron + Pre-checks</text>
+        <text x="160" y="170" text-anchor="middle" fill="var(--text-muted)" font-size="9" class="mono-text">~2 min</text>
+        <!-- Connector -->
+        <line x1="240" y1="130" x2="280" y2="130" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4 2"/>
+        <polygon points="276,126 284,130 276,134" fill="var(--text-muted)"/>
+
+        <!-- Stage 2: Extract Predictions + Actuals -->
+        <rect x="280" y="100" width="230" height="60" rx="8" fill="rgba(249,115,22,0.12)" stroke="#f97316" stroke-width="1.5"/>
+        <text x="395" y="125" text-anchor="middle" fill="#f97316" font-size="12" font-weight="600">EXTRACT</text>
+        <text x="395" y="143" text-anchor="middle" fill="var(--text-muted)" font-size="10">Predictions + Actuals (parallel)</text>
+        <text x="395" y="170" text-anchor="middle" fill="var(--text-muted)" font-size="9" class="mono-text">~8 min</text>
+        <line x1="510" y1="130" x2="550" y2="130" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4 2"/>
+        <polygon points="546,126 554,130 546,134" fill="var(--text-muted)"/>
+
+        <!-- Stage 3: Compute Accuracy + Aggregate -->
+        <rect x="550" y="100" width="230" height="60" rx="8" fill="rgba(82,196,26,0.12)" stroke="#52c41a" stroke-width="1.5"/>
+        <text x="665" y="125" text-anchor="middle" fill="#52c41a" font-size="12" font-weight="600">COMPUTE</text>
+        <text x="665" y="143" text-anchor="middle" fill="var(--text-muted)" font-size="10">Accuracy + Aggregate Summaries</text>
+        <text x="665" y="170" text-anchor="middle" fill="var(--text-muted)" font-size="9" class="mono-text">~12 min</text>
+        <line x1="780" y1="130" x2="820" y2="130" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4 2"/>
+        <polygon points="816,126 824,130 816,134" fill="var(--text-muted)"/>
+
+        <!-- Stage 4: Alerts + Grafana Refresh -->
+        <rect x="820" y="100" width="200" height="60" rx="8" fill="rgba(239,68,68,0.12)" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="920" y="125" text-anchor="middle" fill="#ef4444" font-size="12" font-weight="600">ALERTS</text>
+        <text x="920" y="143" text-anchor="middle" fill="var(--text-muted)" font-size="10">Drift Detect + Notify</text>
+        <text x="920" y="170" text-anchor="middle" fill="var(--text-muted)" font-size="9" class="mono-text">~5 min</text>
+
+        <!-- Sub-stages row -->
+        <rect x="80" y="200" width="160" height="46" rx="6" fill="rgba(59,130,246,0.06)" stroke="#3b82f6" stroke-width="1" stroke-dasharray="3 2"/>
+        <text x="160" y="222" text-anchor="middle" fill="var(--text-secondary)" font-size="10">Connection Checks</text>
+        <text x="160" y="236" text-anchor="middle" fill="var(--text-muted)" font-size="9">3 servers ping</text>
+
+        <rect x="550" y="200" width="230" height="46" rx="6" fill="rgba(82,196,26,0.06)" stroke="#52c41a" stroke-width="1" stroke-dasharray="3 2"/>
+        <text x="665" y="222" text-anchor="middle" fill="var(--text-secondary)" font-size="10">AGGREGATE Summaries</text>
+        <text x="665" y="236" text-anchor="middle" fill="var(--text-muted)" font-size="9">Store &times; Category &times; Period</text>
+
+        <rect x="820" y="200" width="200" height="46" rx="6" fill="rgba(239,68,68,0.06)" stroke="#ef4444" stroke-width="1" stroke-dasharray="3 2"/>
+        <text x="920" y="222" text-anchor="middle" fill="var(--text-secondary)" font-size="10">GRAFANA Refresh</text>
+        <text x="920" y="236" text-anchor="middle" fill="var(--text-muted)" font-size="9">Dashboard cache invalidation</text>
+
+        <!-- Animated progress indicator -->
+        <g id="progressIndicator">
+            <line x1="60" y1="56" x2="60" y2="56" stroke="#3b82f6" stroke-width="3" stroke-linecap="round">
+                <animate attributeName="x1" values="60;1060;60" dur="12s" repeatCount="indefinite"/>
+                <animate attributeName="x2" values="60;1060;60" dur="12s" repeatCount="indefinite"/>
+            </line>
+            <circle r="6" fill="#3b82f6" opacity="0.9">
+                <animate attributeName="cx" values="60;1060;60" dur="12s" repeatCount="indefinite"/>
+                <animate attributeName="cy" values="58;58;58" dur="12s" repeatCount="indefinite"/>
+            </circle>
+            <circle r="12" fill="#3b82f6" opacity="0.15">
+                <animate attributeName="cx" values="60;1060;60" dur="12s" repeatCount="indefinite"/>
+                <animate attributeName="cy" values="58;58;58" dur="12s" repeatCount="indefinite"/>
+            </circle>
+        </g>
+
+        <!-- Summary timeline bar at bottom -->
+        <text x="60" y="290" fill="var(--text-muted)" font-size="10" font-weight="600">PIPELINE SUMMARY:</text>
+        <rect x="60" y="300" width="1000" height="28" rx="6" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1"/>
+        <!-- Segments -->
+        <rect x="60" y="300" width="100" height="28" rx="6" fill="rgba(59,130,246,0.2)"/>
+        <text x="110" y="318" text-anchor="middle" fill="#3b82f6" font-size="9" font-weight="500">Pre-check</text>
+        <rect x="160" y="300" width="260" height="28" fill="rgba(249,115,22,0.2)"/>
+        <text x="290" y="318" text-anchor="middle" fill="#f97316" font-size="9" font-weight="500">Extract (Pred + Actuals)</text>
+        <rect x="420" y="300" width="360" height="28" fill="rgba(82,196,26,0.2)"/>
+        <text x="600" y="318" text-anchor="middle" fill="#52c41a" font-size="9" font-weight="500">Compute Accuracy + Aggregate</text>
+        <rect x="780" y="300" width="180" height="28" fill="rgba(239,68,68,0.2)"/>
+        <text x="870" y="318" text-anchor="middle" fill="#ef4444" font-size="9" font-weight="500">Alerts + Cleanup</text>
+        <rect x="960" y="300" width="100" height="28" rx="6" fill="rgba(82,196,26,0.1)"/>
+        <text x="1010" y="318" text-anchor="middle" fill="var(--analytics-color)" font-size="9" font-weight="500">Done</text>
+    </svg>
+</div>
+
+<!-- ============================================================ -->
+<!-- JAVASCRIPT                                                   -->
+<!-- ============================================================ -->
+<script>
+(function() {
+    'use strict';
+
+    // --- Tab Switching ---
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const sections = document.querySelectorAll('.section');
+    const tabMap = { pipeline: 'section-pipeline', lineage: 'section-lineage', alerts: 'section-alerts', schedule: 'section-schedule' };
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            sections.forEach(s => s.classList.remove('active'));
+            btn.classList.add('active');
+            const target = tabMap[btn.dataset.tab];
+            if (target) document.getElementById(target).classList.add('active');
+            // Animate counters when pipeline tab shown
+            if (btn.dataset.tab === 'pipeline') animateCounters();
+        });
+    });
+
+    // --- Animated Counters ---
+    function animateCounters() {
+        document.querySelectorAll('.stat-box .num[data-count]').forEach(el => {
+            const target = parseInt(el.dataset.count);
+            const duration = 1200;
+            const start = performance.now();
+            const initial = 0;
+            function tick(now) {
+                const elapsed = now - start;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.round(initial + (target - initial) * eased);
+                if (progress < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        });
+    }
+    // Run on load
+    setTimeout(animateCounters, 300);
+
+    // --- Tooltip Data ---
+    const tooltipData = {
+        pred: {
+            title: 'Predictions Server / 预测服务器',
+            lines: [
+                'Host: aws-luckyus-ireplenishment-rw',
+                'Port: 3306',
+                'Database: luckyus_ireplenishment',
+                'Table: t_order_predict_alg_v2',
+                'Key: vlt_avg_demand (float)',
+                'Records: ~50K/day per store'
+            ]
+        },
+        act: {
+            title: 'Actuals Server / 实际消耗服务器',
+            lines: [
+                'Host: aws-luckyus-scm-shopstock-rw',
+                'Port: 3306',
+                'Database: luckyus_scm_shopstock',
+                'Table: t_shop_goods_stock_change_record',
+                'Key: ABS(total_adjust_num)',
+                'Filter: reason_code IN (025, 1001, 1002)'
+            ]
+        },
+        orch: {
+            title: 'Python Orchestrator / Python编排器',
+            lines: [
+                'File: run_pipeline.py',
+                'Size: 1,166 lines of Python',
+                'Steps: 7 sequential stages',
+                'Parallelism: Extract steps run concurrently',
+                'Retry: 3x with exponential backoff',
+                'Logging: Structured JSON to pipeline_run_log'
+            ]
+        },
+        analytics: {
+            title: 'Analytics Server / 分析服务器',
+            lines: [
+                'Host: aws-luckyus-dbatest-rw',
+                'Port: 3306',
+                'Database: test',
+                'Tables: 4 (daily, summary, alerts, log)',
+                'Retention: 90 days rolling',
+                'Indexes: Composite on (date, store, goods)'
+            ]
+        },
+        grafana: {
+            title: 'Grafana Dashboard',
+            lines: [
+                'UID: uc-sc-01-forecast-accuracy',
+                'Panels: 29 total',
+                'Data source: MySQL (analytics server)',
+                'Refresh: 15-minute auto-refresh',
+                'Sections: Overview, Store, Category, Trends'
+            ]
+        },
+        alerteng: {
+            title: 'Alert Engine / 报警引擎',
+            lines: [
+                'Rules: 5 active alert rules',
+                'Types: CRITICAL, WARNING, BIAS, COVERAGE, DRIFT',
+                'Channels: Slack, Email, Dashboard',
+                'Evaluation: Every pipeline run',
+                'History: 30 days retained'
+            ]
+        }
+    };
+
+    // --- Tooltip Handling ---
+    const tooltip = document.getElementById('tooltip');
+    document.querySelectorAll('.server-group').forEach(group => {
+        group.addEventListener('mouseenter', (e) => {
+            const key = group.dataset.tooltip;
+            if (!key || !tooltipData[key]) return;
+            const data = tooltipData[key];
+            tooltip.innerHTML = '<h4>' + data.title + '</h4>' +
+                data.lines.map(l => '<div class="mono">' + l + '</div>').join('');
+            tooltip.classList.add('visible');
+            positionTooltip(e);
+            // Dim other server groups
+            document.querySelectorAll('.server-group').forEach(g => {
+                if (g !== group) g.classList.add('dimmed');
+            });
+        });
+        group.addEventListener('mousemove', positionTooltip);
+        group.addEventListener('mouseleave', () => {
+            tooltip.classList.remove('visible');
+            document.querySelectorAll('.server-group').forEach(g => g.classList.remove('dimmed'));
+        });
+    });
+
+    function positionTooltip(e) {
+        let x = e.clientX + 16;
+        let y = e.clientY + 16;
+        if (x + 320 > window.innerWidth) x = e.clientX - 336;
+        if (y + 200 > window.innerHeight) y = e.clientY - 200;
+        tooltip.style.left = x + 'px';
+        tooltip.style.top = y + 'px';
+    }
+
+    // --- Pipeline Step Click-to-Expand ---
+    const stepDetails = {
+        1: { title: 'Step 1: Extract Predictions / 提取预测数据', sql: 'SELECT shop_dept_id, goods_code,\n       dt AS accuracy_date,\n       vlt_avg_demand AS predicted_demand\nFROM t_order_predict_alg_v2\nWHERE dt = :target_date\n  AND shop_dept_id IN (:stores)', desc: 'Extracts demand predictions from the iReplenishment algorithm output table. Filters by target date and active store list.' },
+        2: { title: 'Step 2: Extract Actuals / 提取实际消耗', sql: 'SELECT shop_dept_id,\n       goods_mid AS goods_code,\n       DATE(operated_time) AS accuracy_date,\n       ABS(SUM(total_adjust_num))\n         AS actual_consumption\nFROM t_shop_goods_stock_change_record\nWHERE reason_code IN (025,1001,1002)\n  AND total_adjust_num < 0\nGROUP BY 1,2,3', desc: 'Aggregates actual consumption from stock change records. Filters for consumption reason codes only (outbound movements).' },
+        3: { title: 'Step 3: Load Staging / 加载暂存区', sql: 'INSERT INTO forecast_accuracy_daily\n  (accuracy_date, shop_dept_id,\n   goods_code, predicted_demand,\n   actual_consumption)\nSELECT p.accuracy_date, p.shop_dept_id,\n       p.goods_code, p.predicted_demand,\n       a.actual_consumption\nFROM staging_predictions p\nJOIN staging_actuals a USING(...)', desc: 'Joins prediction and actual data on (date, store, goods) composite key and loads into the analytics database.' },
+        4: { title: 'Step 4: Compute Accuracy / 计算精度', sql: 'UPDATE forecast_accuracy_daily\nSET absolute_error =\n      ABS(predicted - actual),\n    absolute_pct_error =\n      ABS(predicted - actual)/actual,\n    forecast_error =\n      predicted - actual,\n    accuracy_within_20 =\n      CASE WHEN APE <= 0.20 THEN 1\n           ELSE 0 END\nWHERE accuracy_date = :dt', desc: 'Computes all error metrics at the row level: AE, APE, FE, SE, and binary accuracy flag.' },
+        5: { title: 'Step 5: Aggregate Metrics / 聚合指标', sql: 'INSERT INTO forecast_accuracy_summary\nSELECT accuracy_date,\n  shop_dept_id, category,\n  AVG(absolute_pct_error) AS mape,\n  SUM(ABS(err)*actual)\n    /SUM(actual) AS wmape,\n  AVG(forecast_error) AS mfe,\n  SQRT(AVG(squared_error)) AS rmse\nFROM forecast_accuracy_daily\nGROUP BY 1,2,3', desc: 'Aggregates row-level metrics into store-category-day summaries including MAPE, WMAPE, MFE, RMSE.' },
+        6: { title: 'Step 6: Drift Detection / 漂移检测', sql: 'INSERT INTO forecast_alerts\nSELECT *,\n  CASE\n    WHEN mape_7d > 0.40 THEN \'CRITICAL\'\n    WHEN mape_7d > 0.30 THEN \'WARNING\'\n    WHEN consecutive_bias >= 14\n      THEN \'BIAS\'\n    WHEN wow_mape_change > 0.50\n      THEN \'DRIFT\'\n  END AS alert_type\nFROM computed_metrics\nWHERE alert_type IS NOT NULL', desc: 'Evaluates all 5 alert rules against computed metrics and inserts triggered alerts into the alerts table.' },
+        7: { title: 'Step 7: Cleanup / 清理', sql: '-- Drop staging tables\nDROP TABLE IF EXISTS\n  staging_predictions;\nDROP TABLE IF EXISTS\n  staging_actuals;\n-- Purge old data (>90 days)\nDELETE FROM forecast_accuracy_daily\nWHERE accuracy_date\n  < DATE_SUB(NOW(), INTERVAL 90 DAY);', desc: 'Removes temporary staging tables and purges data older than 90-day retention window.' }
+    };
+
+    const stepDetailPanel = document.getElementById('stepDetail');
+    const stepDetailContent = document.getElementById('stepDetailContent');
+
+    document.querySelectorAll('.pipeline-step').forEach(step => {
+        step.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const num = step.dataset.step;
+            const data = stepDetails[num];
+            if (!data) return;
+            stepDetailContent.innerHTML =
+                '<h4>' + data.title + '</h4>' +
+                '<p style="color:var(--text-secondary);font-size:12px;margin-bottom:8px;">' + data.desc + '</p>' +
+                '<pre>' + data.sql + '</pre>';
+            stepDetailPanel.classList.add('show');
+            // Position near the click
+            const rect = step.getBoundingClientRect();
+            let x = rect.left;
+            let y = rect.bottom + 8;
+            if (x + 340 > window.innerWidth) x = window.innerWidth - 360;
+            if (y + 260 > window.innerHeight) y = rect.top - 270;
+            stepDetailPanel.style.left = x + 'px';
+            stepDetailPanel.style.top = y + 'px';
+        });
+    });
+
+    // Close step detail on outside click
+    document.addEventListener('click', (e) => {
+        if (!stepDetailPanel.contains(e.target) && !e.target.closest('.pipeline-step')) {
+            closeStepDetail();
+        }
+    });
+
+    // Keyboard close
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeStepDetail();
+    });
+})();
+
+function closeStepDetail() {
+    document.getElementById('stepDetail').classList.remove('show');
+}
+</script>
+
+</body>
+</html>
