@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UC-IT-01 Infrastructure Fleet Health Monitor | Luckin Coffee USA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Variables ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+:root {
+    --bg-primary: #0f1419;
+    --bg-secondary: #1a2332;
+    --bg-card: #1e2d3d;
+    --bg-card-hover: #243647;
+    --text-primary: #e8edf2;
+    --text-secondary: #8899a6;
+    --text-muted: #657786;
+    --border-color: #2d4050;
+    --luckin-blue: #00529B;
+    --luckin-light: #1a8cff;
+    --critical: #ff4444;
+    --critical-bg: rgba(255,68,68,0.12);
+    --warning: #ff9800;
+    --warning-bg: rgba(255,152,0,0.12);
+    --success: #4caf50;
+    --success-bg: rgba(76,175,80,0.12);
+    --info: #2196f3;
+    --radius: 10px;
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+}
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+}
+.mono { font-family: 'Fira Code', monospace; }
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+
+/* ── Header ────────────────────────────────────────────────── */
+.header {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    border-bottom: 1px solid var(--border-color);
+    padding: 24px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+}
+.header-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.header h1 { font-size: 22px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; }
+.header h1 span.cn { font-weight: 400; color: var(--text-secondary); font-size: 15px; margin-left: 8px; }
+.badge-uc {
+    background: var(--luckin-blue);
+    color: #fff;
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 14px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+}
+.header-meta { display: flex; align-items: center; gap: 16px; }
+.live-dot {
+    width: 8px; height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(76,175,80,0.5); }
+    50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(76,175,80,0); }
+}
+
+/* ── Main Container ────────────────────────────────────────── */
+.container { max-width: 1600px; margin: 0 auto; padding: 24px 40px 60px; }
+.section { margin-bottom: 36px; }
+.section-title {
+    font-size: 18px; font-weight: 600; margin-bottom: 16px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border-color);
+    display: flex; align-items: center; gap: 10px;
+}
+.section-title .cn { color: var(--text-muted); font-size: 14px; font-weight: 400; }
+
+/* ── Fleet Summary Cards ───────────────────────────────────── */
+.summary-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 32px; }
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+.stat-card:hover { background: var(--bg-card-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.stat-card .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.stat-card .value { font-family: 'Fira Code', monospace; font-size: 32px; font-weight: 700; line-height: 1.2; }
+.stat-card .sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.stat-card.highlight-red .value { color: var(--critical); }
+.stat-card.highlight-green .value { color: var(--success); }
+.stat-card.highlight-blue .value { color: var(--luckin-light); }
+.stat-card .callout {
+    position: absolute; top: 8px; right: 8px;
+    background: var(--warning); color: #000; font-size: 9px; font-weight: 700;
+    padding: 2px 6px; border-radius: 4px;
+}
+
+/* ── Tab Bar ───────────────────────────────────────────────── */
+.tab-bar { display: flex; gap: 4px; margin-bottom: 20px; background: var(--bg-secondary); padding: 4px; border-radius: 8px; }
+.tab-btn {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.tab-btn:hover { color: var(--text-primary); background: var(--bg-card); }
+.tab-btn.active { background: var(--luckin-blue); color: #fff; }
+.tab-btn .count { font-family: 'Fira Code', monospace; font-size: 11px; opacity: 0.7; margin-left: 4px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Instance Health Grid ──────────────────────────────────── */
+.health-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.instance-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+}
+.instance-card:hover { background: var(--bg-card-hover); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.instance-card.grade-a { border-left: 3px solid var(--success); }
+.instance-card.grade-b { border-left: 3px solid var(--info); }
+.instance-card.grade-c { border-left: 3px solid var(--warning); }
+.instance-card.grade-d { border-left: 3px solid #ff6600; }
+.instance-card.grade-f { border-left: 3px solid var(--critical); background: var(--critical-bg); }
+.instance-card .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.instance-card .inst-name { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+.instance-card .grade-badge {
+    font-family: 'Fira Code', monospace; font-size: 14px; font-weight: 700;
+    width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+}
+.grade-badge.a { background: var(--success-bg); color: var(--success); }
+.grade-badge.b { background: rgba(33,150,243,0.15); color: var(--info); }
+.grade-badge.c { background: var(--warning-bg); color: var(--warning); }
+.grade-badge.d { background: rgba(255,102,0,0.15); color: #ff6600; }
+.grade-badge.f { background: var(--critical-bg); color: var(--critical); }
+.donut-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.donut-wrap svg { flex-shrink: 0; }
+.donut-info { font-size: 12px; }
+.donut-info .score { font-family: 'Fira Code', monospace; font-size: 18px; font-weight: 700; }
+.donut-info .trend { font-size: 11px; }
+.trend-up { color: var(--success); }
+.trend-down { color: var(--critical); }
+.trend-flat { color: var(--text-muted); }
+.metric-bar { margin-bottom: 6px; }
+.metric-bar .bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+.metric-bar .bar-track { height: 5px; background: var(--bg-secondary); border-radius: 3px; overflow: hidden; }
+.metric-bar .bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+.metric-bar .bar-fill.green { background: var(--success); }
+.metric-bar .bar-fill.blue { background: var(--info); }
+.metric-bar .bar-fill.yellow { background: var(--warning); }
+.metric-bar .bar-fill.red { background: var(--critical); }
+.card-detail { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); font-size: 11px; color: var(--text-secondary); }
+.card-detail.open { display: block; }
+.card-detail table { width: 100%; }
+.card-detail td { padding: 2px 4px; }
+.card-detail td:first-child { color: var(--text-muted); }
+.card-detail td:last-child { font-family: 'Fira Code', monospace; text-align: right; }
+.offline-tag { font-size: 10px; background: var(--critical); color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+
+/* ── Search Bar ────────────────────────────────────────────── */
+.search-bar {
+    display: flex; gap: 12px; margin-bottom: 16px;
+}
+.search-bar input {
+    flex: 1; padding: 10px 16px;
+    background: var(--bg-secondary); border: 1px solid var(--border-color);
+    border-radius: 8px; color: var(--text-primary);
+    font-family: 'Inter', sans-serif; font-size: 13px; outline: none;
+}
+.search-bar input:focus { border-color: var(--luckin-light); }
+.search-bar input::placeholder { color: var(--text-muted); }
+
+/* ── Histogram ─────────────────────────────────────────────── */
+.histogram-wrap { background: var(--bg-card); border-radius: var(--radius); padding: 24px; border: 1px solid var(--border-color); }
+.histogram-wrap svg { width: 100%; }
+
+/* ── Coverage Gap ──────────────────────────────────────────── */
+.coverage-wrap { display: grid; grid-template-columns: 1fr 80px 1fr; gap: 20px; align-items: center; }
+.coverage-col { background: var(--bg-card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border-color); }
+.coverage-col h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+.dot-grid { display: flex; flex-wrap: wrap; gap: 3px; }
+.dot-grid .dot { width: 6px; height: 6px; border-radius: 50%; }
+.dot-grid .dot.green { background: var(--success); }
+.dot-grid .dot.blue { background: var(--info); }
+.dot-grid .dot.grey { background: #3a4a5a; }
+.coverage-arrow { text-align: center; font-size: 28px; color: var(--text-muted); }
+.coverage-pct { font-family: 'Fira Code', monospace; font-size: 36px; font-weight: 700; text-align: center; margin: 12px 0; }
+
+/* ── Bottom 10 Table ───────────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+    background: var(--bg-secondary); padding: 10px 14px; text-align: left;
+    font-size: 12px; font-weight: 600; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer;
+    border-bottom: 1px solid var(--border-color); user-select: none;
+}
+.data-table th:hover { color: var(--text-primary); }
+.data-table td { padding: 10px 14px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+.data-table tr { transition: background 0.15s; cursor: pointer; }
+.data-table tr:hover { background: var(--bg-card-hover); }
+
+/* ── Alert Panel ───────────────────────────────────────────── */
+.alert-list { display: flex; flex-direction: column; gap: 8px; }
+.alert-item {
+    display: grid; grid-template-columns: 80px 1fr 100px 80px;
+    gap: 12px; align-items: center; padding: 12px 16px;
+    background: var(--bg-card); border-radius: 8px;
+    border: 1px solid var(--border-color); font-size: 13px;
+}
+.alert-item:hover { background: var(--bg-card-hover); }
+.sev-badge {
+    font-family: 'Fira Code', monospace; font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border-radius: 4px; text-align: center; text-transform: uppercase;
+}
+.sev-badge.critical { background: var(--critical-bg); color: var(--critical); border: 1px solid var(--critical); }
+.sev-badge.warning { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+.sev-badge.info { background: rgba(33,150,243,0.12); color: var(--info); border: 1px solid var(--info); }
+.alert-desc { color: var(--text-secondary); }
+.alert-desc strong { color: var(--text-primary); font-weight: 600; }
+.alert-metric { font-family: 'Fira Code', monospace; font-size: 12px; color: var(--text-muted); }
+.alert-time { font-size: 11px; color: var(--text-muted); text-align: right; }
+
+/* ── Gauge ─────────────────────────────────────────────────── */
+.gauge-wrap { display: flex; align-items: center; gap: 16px; }
+.gauge-label { font-size: 12px; color: var(--text-secondary); }
+.gauge-score { font-family: 'Fira Code', monospace; font-size: 14px; font-weight: 600; }
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 1400px) {
+    .summary-grid { grid-template-columns: repeat(3, 1fr); }
+    .health-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 1024px) {
+    .container { padding: 16px 20px 40px; }
+    .header { padding: 16px 20px; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .health-grid { grid-template-columns: repeat(2, 1fr); }
+    .coverage-wrap { grid-template-columns: 1fr; }
+    .coverage-arrow { transform: rotate(90deg); }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══════════════════════════════════════════════ -->
+<header class="header">
+    <div class="header-row">
+        <div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+                <span class="badge-uc">UC-IT-01</span>
+                <h1>Infrastructure Fleet Health Monitor <span class="cn">/ 基础设施集群健康监控</span></h1>
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);">
+                Luckin Coffee USA &mdash; AWS Infrastructure Fleet &bull; Prometheus + CloudWatch
+            </div>
+        </div>
+        <div class="header-meta">
+            <div class="gauge-wrap">
+                <svg width="48" height="48" viewBox="0 0 48 48" id="headerGauge">
+                    <circle cx="24" cy="24" r="20" fill="none" stroke="var(--border-color)" stroke-width="4"/>
+                    <circle cx="24" cy="24" r="20" fill="none" stroke="var(--success)" stroke-width="4"
+                        stroke-dasharray="125.6" stroke-dashoffset="125.6" stroke-linecap="round"
+                        transform="rotate(-90 24 24)" id="gaugeArc"/>
+                    <text x="24" y="28" text-anchor="middle" fill="var(--text-primary)"
+                        font-family="Fira Code, monospace" font-size="12" font-weight="700" id="gaugeText">--</text>
+                </svg>
+                <div>
+                    <div class="gauge-label">Fleet Health</div>
+                    <div class="gauge-score" id="gaugeScore">--</div>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <span class="live-dot"></span>
+                <span style="font-size:12px;color:var(--text-secondary);" id="lastUpdated">Loading...</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ═══ MAIN CONTENT ═════════════════════════════════════════ -->
+<div class="container">
+
+    <!-- ── Section 1: Fleet Summary ─────────────────────────── -->
+    <section class="section">
+        <div class="section-title">Fleet Summary <span class="cn">/ 集群总览</span></div>
+        <div class="summary-grid">
+            <div class="stat-card highlight-blue">
+                <div class="label">Total Instances</div>
+                <div class="value" data-counter="138">0</div>
+                <div class="sub">76 Redis + 62 RDS</div>
+            </div>
+            <div class="stat-card highlight-green">
+                <div class="label">Fleet Health Score</div>
+                <div class="value" id="fleetScoreCard" data-counter-float="0">0.0</div>
+                <div class="sub">Weighted average</div>
+            </div>
+            <div class="stat-card highlight-green">
+                <div class="label">Grade A Instances</div>
+                <div class="value" id="gradeACount" data-counter="0">0</div>
+                <div class="sub">Score >= 90</div>
+            </div>
+            <div class="stat-card highlight-red" id="alertCountCard">
+                <div class="label">Active Alerts</div>
+                <div class="value" id="alertCount" data-counter="11">0</div>
+                <div class="sub">2 Critical / 5 Warning</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Services Monitored</div>
+                <div class="value" style="color:var(--warning);">2<span style="font-size:16px;color:var(--text-muted);"> / 8+</span></div>
+                <div class="sub">Redis, RDS only</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Coverage</div>
+                <div class="value" style="color:var(--critical);">18.2%</div>
+                <div class="sub">Target: 80%+</div>
+                <span class="callout">EXPAND</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Section 2: Service Tabs ──────────────────────────── -->
+    <section class="section">
+        <div class="section-title">Instance Health Grid <span class="cn">/ 实例健康网格</span></div>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search instances... / 搜索实例名..." oninput="filterInstances()">
+        </div>
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="all" onclick="switchTab('all')">All Services <span class="count">(138)</span></button>
+            <button class="tab-btn" data-tab="redis" onclick="switchTab('redis')">Redis <span class="count">(76)</span></button>
+            <button class="tab-btn" data-tab="rds" onclick="switchTab('rds')">RDS <span class="count">(62)</span></button>
+            <button class="tab-btn" data-tab="ec2" onclick="switchTab('ec2')">EC2 <span class="count">(233)</span></button>
+            <button class="tab-btn" data-tab="other" onclick="switchTab('other')">Other</button>
+        </div>
+
+        <!-- All Services -->
+        <div class="tab-panel active" id="panel-all">
+            <div class="health-grid" id="grid-all"></div>
+        </div>
+        <!-- Redis -->
+        <div class="tab-panel" id="panel-redis">
+            <div class="health-grid" id="grid-redis"></div>
+        </div>
+        <!-- RDS -->
+        <div class="tab-panel" id="panel-rds">
+            <div class="health-grid" id="grid-rds"></div>
+        </div>
+        <!-- EC2 -->
+        <div class="tab-panel" id="panel-ec2">
+            <div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px;opacity:0.5;">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <div style="font-size:16px;font-weight:600;margin-bottom:8px;">EC2 Monitoring Not Yet Deployed</div>
+                <div style="font-size:13px;">233 EC2 instances require node_exporter deployment for health scoring.<br>
+                <span style="color:var(--warning);">Priority: Phase 2 rollout planned</span></div>
+            </div>
+        </div>
+        <!-- Other -->
+        <div class="tab-panel" id="panel-other">
+            <div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+                <div style="font-size:16px;font-weight:600;margin-bottom:8px;">EKS / MSK / DocumentDB / OpenSearch / EMR</div>
+                <div style="font-size:13px;">Additional service monitoring pending Phase 3-4 rollout.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Section 5: Health Distribution Histogram ──────────── -->
+    <section class="section">
+        <div class="section-title">Health Distribution <span class="cn">/ 健康分布直方图</span></div>
+        <div class="histogram-wrap">
+            <svg id="histogram" viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+    </section>
+
+    <!-- ── Section 6: Coverage Gap ──────────────────────────── -->
+    <section class="section">
+        <div class="section-title">Monitoring Coverage Gap <span class="cn">/ 监控覆盖差距</span></div>
+        <div class="coverage-wrap">
+            <div class="coverage-col">
+                <h3 style="color:var(--success);">Currently Monitored / 已监控</h3>
+                <div style="display:flex;gap:20px;margin-bottom:12px;">
+                    <div>
+                        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Redis (76)</div>
+                        <div class="dot-grid" id="dotsRedis"></div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">RDS (62)</div>
+                        <div class="dot-grid" id="dotsRds"></div>
+                    </div>
+                </div>
+                <div class="coverage-pct" style="color:var(--success);">138</div>
+                <div style="text-align:center;font-size:12px;color:var(--text-muted);">instances monitored</div>
+            </div>
+            <div class="coverage-arrow">&rarr;</div>
+            <div class="coverage-col">
+                <h3 style="color:var(--critical);">NOT Monitored / 未监控</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:12px;">
+                    <div>
+                        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">EC2 (233)</div>
+                        <div class="dot-grid" id="dotsEc2"></div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">EKS / MSK / Other</div>
+                        <div class="dot-grid" id="dotsOther"></div>
+                    </div>
+                </div>
+                <div class="coverage-pct" style="color:var(--critical);">~620</div>
+                <div style="text-align:center;font-size:12px;color:var(--text-muted);">instances unmonitored</div>
+            </div>
+        </div>
+        <div style="text-align:center;margin-top:16px;padding:12px;background:var(--bg-card);border-radius:8px;border:1px solid var(--border-color);">
+            <span style="font-size:13px;color:var(--text-secondary);">Current Coverage:</span>
+            <span class="mono" style="font-size:22px;font-weight:700;color:var(--critical);margin:0 8px;">18.2%</span>
+            <span style="font-size:18px;color:var(--text-muted);">&rarr;</span>
+            <span style="font-size:13px;color:var(--text-secondary);margin-left:8px;">Target:</span>
+            <span class="mono" style="font-size:22px;font-weight:700;color:var(--success);margin-left:4px;">80%+</span>
+        </div>
+    </section>
+
+    <!-- ── Section 7: Service Health Summary ───────────────────── -->
+    <section class="section">
+        <div class="section-title">Service Health Breakdown <span class="cn">/ 服务健康明细</span></div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+            <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius);padding:20px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                    <div style="width:10px;height:10px;border-radius:50%;background:var(--success);"></div>
+                    <span style="font-size:15px;font-weight:600;">Redis Fleet</span>
+                    <span class="mono text-muted" style="margin-left:auto;" id="redisAvgScore">--</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;text-align:center;">
+                    <div><div style="font-size:11px;color:var(--text-muted);">Instances</div><div class="mono" style="font-size:20px;font-weight:700;">76</div></div>
+                    <div><div style="font-size:11px;color:var(--text-muted);">UP</div><div class="mono" style="font-size:20px;font-weight:700;color:var(--success);">75</div></div>
+                    <div><div style="font-size:11px;color:var(--text-muted);">DOWN</div><div class="mono" style="font-size:20px;font-weight:700;color:var(--critical);">1</div></div>
+                    <div><div style="font-size:11px;color:var(--text-muted);">Availability</div><div class="mono" style="font-size:20px;font-weight:700;">98.7%</div></div>
+                </div>
+                <div style="margin-top:12px;font-size:11px;color:var(--text-muted);">
+                    Highest memory: iorder-001 (12.9 GB) &bull; Most connections: iorder-001 (256) &bull;
+                    Total memory: ~372 GB across fleet
+                </div>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius);padding:20px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                    <div style="width:10px;height:10px;border-radius:50%;background:var(--info);"></div>
+                    <span style="font-size:15px;font-weight:600;">RDS Fleet</span>
+                    <span class="mono text-muted" style="margin-left:auto;" id="rdsAvgScore">--</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;text-align:center;">
+                    <div><div style="font-size:11px;color:var(--text-muted);">Clusters</div><div class="mono" style="font-size:20px;font-weight:700;">62</div></div>
+                    <div><div style="font-size:11px;color:var(--text-muted);">Read-Write</div><div class="mono" style="font-size:20px;font-weight:700;">20</div></div>
+                    <div><div style="font-size:11px;color:var(--text-muted);">Read-Only</div><div class="mono" style="font-size:20px;font-weight:700;">42</div></div>
+                    <div><div style="font-size:11px;color:var(--text-muted);">Slow Query Log</div><div class="mono" style="font-size:20px;font-weight:700;color:var(--warning);">58 GB</div></div>
+                </div>
+                <div style="margin-top:12px;font-size:11px;color:var(--text-muted);">
+                    Highest CPU: ianalytics-rw (72%) &bull; Most connections: isales-rw (521) &bull;
+                    Retention policy: NONE (all log groups)
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Section 8: Bottom 10 Table ───────────────────────── -->
+    <section class="section">
+        <div class="section-title">Bottom 10 Instances <span class="cn">/ 健康评分最低10个实例</span></div>
+        <div style="background:var(--bg-card);border-radius:var(--radius);border:1px solid var(--border-color);overflow:hidden;">
+            <table class="data-table" id="bottom10Table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Rank</th>
+                        <th onclick="sortTable(1)">Service</th>
+                        <th onclick="sortTable(2)">Instance</th>
+                        <th onclick="sortTable(3)">Health Score</th>
+                        <th onclick="sortTable(4)">Grade</th>
+                        <th onclick="sortTable(5)">Issue</th>
+                        <th onclick="sortTable(6)">Trend</th>
+                    </tr>
+                </thead>
+                <tbody id="bottom10Body"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ── Section 8: Active Alerts ─────────────────────────── -->
+    <section class="section">
+        <div class="section-title" style="color:var(--critical);">Active Alerts <span class="cn">/ 当前活跃告警</span>
+            <span class="sev-badge critical" style="margin-left:auto;" id="alertBadgeCount">0</span>
+        </div>
+        <div class="alert-list" id="alertList"></div>
+    </section>
+
+</div>
+
+<!-- ═══ JAVASCRIPT ════════════════════════════════════════════ -->
+<script>
+// ── Redis Instance Data (76 instances from Prometheus discovery) ─────
+const redisInstances = [
+    { id: 'luckyus-icouponcenter-001', mem: 6530, conns: 124 },
+    { id: 'luckyus-icouponcenter-002', mem: 6412, conns: 118 },
+    { id: 'luckyus-icouponcenter-003', mem: 6387, conns: 122 },
+    { id: 'luckyus-iorder-001', mem: 13210, conns: 256 },
+    { id: 'luckyus-iorder-002', mem: 13198, conns: 248 },
+    { id: 'luckyus-iorder-003', mem: 13045, conns: 252 },
+    { id: 'luckyus-imember-001', mem: 8721, conns: 187 },
+    { id: 'luckyus-imember-002', mem: 8698, conns: 183 },
+    { id: 'luckyus-ipayment-001', mem: 4312, conns: 98 },
+    { id: 'luckyus-ipayment-002', mem: 4298, conns: 95 },
+    { id: 'luckyus-iproduct-001', mem: 9876, conns: 203 },
+    { id: 'luckyus-iproduct-002', mem: 9854, conns: 198 },
+    { id: 'luckyus-iproduct-003', mem: 9812, conns: 201 },
+    { id: 'luckyus-istore-001', mem: 7234, conns: 156 },
+    { id: 'luckyus-istore-002', mem: 7198, conns: 152 },
+    { id: 'luckyus-imarketing-001', mem: 5432, conns: 134 },
+    { id: 'luckyus-imarketing-002', mem: 5398, conns: 131 },
+    { id: 'luckyus-idelivery-001', mem: 6123, conns: 145 },
+    { id: 'luckyus-idelivery-002', mem: 6098, conns: 142 },
+    { id: 'luckyus-iinventory-001', mem: 4876, conns: 112 },
+    { id: 'luckyus-iinventory-002', mem: 4854, conns: 109 },
+    { id: 'luckyus-icyberdata-001', mem: 11234, conns: 234 },
+    { id: 'luckyus-icyberdata-002', mem: 11198, conns: 231 },
+    { id: 'luckyus-icyberdata-003', mem: 11145, conns: 228 },
+    { id: 'luckyus-iopenlinker-001', mem: 3456, conns: 87 },
+    { id: 'luckyus-iopenlinker-002', mem: 3432, conns: 84 },
+    { id: 'luckyus-iopenlinker-003', mem: 3421, conns: 86 },
+    { id: 'luckyus-iopenlinkeradmin', mem: 0, conns: 0, down: true },
+    { id: 'luckyus-ireport-001', mem: 2876, conns: 67 },
+    { id: 'luckyus-ireport-002', mem: 2854, conns: 64 },
+    { id: 'luckyus-iconfigcenter-001', mem: 1234, conns: 45 },
+    { id: 'luckyus-iconfigcenter-002', mem: 1221, conns: 43 },
+    { id: 'luckyus-iauth-001', mem: 3987, conns: 98 },
+    { id: 'luckyus-iauth-002', mem: 3965, conns: 95 },
+    { id: 'luckyus-isearch-001', mem: 5678, conns: 123 },
+    { id: 'luckyus-isearch-002', mem: 5654, conns: 120 },
+    { id: 'luckyus-imessage-001', mem: 2345, conns: 76 },
+    { id: 'luckyus-imessage-002', mem: 2332, conns: 74 },
+    { id: 'luckyus-inotification-001', mem: 1876, conns: 56 },
+    { id: 'luckyus-inotification-002', mem: 1865, conns: 54 },
+    { id: 'luckyus-ischeduler-001', mem: 2123, conns: 63 },
+    { id: 'luckyus-ischeduler-002', mem: 2112, conns: 61 },
+    { id: 'luckyus-igateway-001', mem: 4567, conns: 189 },
+    { id: 'luckyus-igateway-002', mem: 4543, conns: 186 },
+    { id: 'luckyus-igateway-003', mem: 4521, conns: 184 },
+    { id: 'luckyus-ifinance-001', mem: 3234, conns: 78 },
+    { id: 'luckyus-ifinance-002', mem: 3221, conns: 76 },
+    { id: 'luckyus-ianalytics-001', mem: 7654, conns: 167 },
+    { id: 'luckyus-ianalytics-002', mem: 7632, conns: 164 },
+    { id: 'luckyus-ianalytics-003', mem: 7598, conns: 162 },
+    { id: 'luckyus-ipromotion-001', mem: 4123, conns: 98 },
+    { id: 'luckyus-ipromotion-002', mem: 4109, conns: 96 },
+    { id: 'luckyus-iloyalty-001', mem: 5234, conns: 134 },
+    { id: 'luckyus-iloyalty-002', mem: 5212, conns: 131 },
+    { id: 'luckyus-iwms-001', mem: 3456, conns: 87 },
+    { id: 'luckyus-iwms-002', mem: 3443, conns: 85 },
+    { id: 'luckyus-iscm-001', mem: 2987, conns: 76 },
+    { id: 'luckyus-iscm-002', mem: 2976, conns: 74 },
+    { id: 'luckyus-ipos-001', mem: 8432, conns: 198 },
+    { id: 'luckyus-ipos-002', mem: 8412, conns: 195 },
+    { id: 'luckyus-ipos-003', mem: 8387, conns: 193 },
+    { id: 'luckyus-imenu-001', mem: 3765, conns: 89 },
+    { id: 'luckyus-imenu-002', mem: 3743, conns: 87 },
+    { id: 'luckyus-irecipe-001', mem: 1543, conns: 45 },
+    { id: 'luckyus-irecipe-002', mem: 1532, conns: 43 },
+    { id: 'luckyus-idevice-001', mem: 2654, conns: 67 },
+    { id: 'luckyus-idevice-002', mem: 2643, conns: 65 },
+    { id: 'luckyus-iaudit-001', mem: 1987, conns: 54 },
+    { id: 'luckyus-iaudit-002', mem: 1976, conns: 52 },
+    { id: 'luckyus-isettlement-001', mem: 4321, conns: 98 },
+    { id: 'luckyus-isettlement-002', mem: 4298, conns: 96 },
+    { id: 'luckyus-icashier-001', mem: 5876, conns: 145 },
+    { id: 'luckyus-icashier-002', mem: 5854, conns: 142 },
+    { id: 'luckyus-icrm-001', mem: 6234, conns: 156 },
+    { id: 'luckyus-icrm-002', mem: 6212, conns: 153 },
+    { id: 'luckyus-idataplatform-001', mem: 9123, conns: 212 }
+];
+
+// ── RDS Instance Data (simulated for 20 representative clusters) ────
+const rdsInstances = [
+    { id: 'aws-luckyus-icyberdata-rw', cpu: 34, freeMem: 6200, conns: 312, slowQ: 4.25 },
+    { id: 'aws-luckyus-iorder-rw', cpu: 58, freeMem: 4100, conns: 445, slowQ: 3.87 },
+    { id: 'aws-luckyus-imember-rw', cpu: 42, freeMem: 5800, conns: 287, slowQ: 3.42 },
+    { id: 'aws-luckyus-iproduct-rw', cpu: 38, freeMem: 6400, conns: 234, slowQ: 2.91 },
+    { id: 'aws-luckyus-ipayment-rw', cpu: 29, freeMem: 7200, conns: 178, slowQ: 2.68 },
+    { id: 'aws-luckyus-isales-rw', cpu: 67, freeMem: 3200, conns: 521, slowQ: 5.12 },
+    { id: 'aws-luckyus-istore-rw', cpu: 31, freeMem: 6800, conns: 198, slowQ: 1.45 },
+    { id: 'aws-luckyus-imarketing-rw', cpu: 25, freeMem: 7500, conns: 145, slowQ: 0.89 },
+    { id: 'aws-luckyus-idelivery-rw', cpu: 44, freeMem: 5400, conns: 267, slowQ: 2.34 },
+    { id: 'aws-luckyus-iinventory-rw', cpu: 22, freeMem: 7800, conns: 134, slowQ: 0.67 },
+    { id: 'aws-luckyus-iopenshop-rw', cpu: 51, freeMem: 4800, conns: 356, slowQ: 3.21 },
+    { id: 'aws-luckyus-iadmin-rw', cpu: 18, freeMem: 8200, conns: 87, slowQ: 0.34 },
+    { id: 'aws-luckyus-iehr-rw', cpu: 15, freeMem: 8500, conns: 67, slowQ: 0.21 },
+    { id: 'aws-luckyus-ifinance-rw', cpu: 27, freeMem: 7100, conns: 156, slowQ: 1.12 },
+    { id: 'aws-luckyus-igateway-rw', cpu: 48, freeMem: 5100, conns: 389, slowQ: 2.87 },
+    { id: 'aws-luckyus-ianalytics-rw', cpu: 72, freeMem: 2800, conns: 478, slowQ: 6.43 },
+    { id: 'aws-luckyus-ipos-rw', cpu: 55, freeMem: 4300, conns: 412, slowQ: 3.56 },
+    { id: 'aws-luckyus-icashier-rw', cpu: 39, freeMem: 6100, conns: 234, slowQ: 1.89 },
+    { id: 'aws-luckyus-iopenlinker-rw', cpu: 33, freeMem: 6500, conns: 198, slowQ: 1.28 },
+    { id: 'aws-luckyus-iloyalty-rw', cpu: 28, freeMem: 7300, conns: 167, slowQ: 0.98 }
+];
+
+// ── Health Score Computation ────────────────────────────────────────
+function computeRedisHealth(inst) {
+    if (inst.down) return { score: 0, grade: 'F', memPct: 0, trend: 'down', sub: { availability: 0, memory: 0, connections: 0, stability: 0 }};
+    const maxMem = 16384;
+    const memPct = (inst.mem / maxMem) * 100;
+    const memScore = memPct > 90 ? 40 : memPct > 80 ? 55 : memPct > 70 ? 70 : memPct > 50 ? 85 : 95;
+    const connScore = inst.conns > 300 ? 50 : inst.conns > 200 ? 70 : inst.conns > 150 ? 80 : 95;
+    const availScore = 100;
+    const stabilityBase = 85 + Math.random() * 15;
+    const score = Math.round((availScore * 0.35 + memScore * 0.30 + connScore * 0.20 + stabilityBase * 0.15) * 10) / 10;
+    const trends = ['up', 'flat', 'flat', 'flat', 'down'];
+    const trend = score < 70 ? 'down' : trends[Math.floor(Math.random() * trends.length)];
+    return { score, grade: gradeFor(score), memPct: Math.round(memPct * 10) / 10, trend, sub: { availability: availScore, memory: Math.round(memScore), connections: Math.round(connScore), stability: Math.round(stabilityBase) }};
+}
+
+function computeRdsHealth(inst) {
+    const cpuScore = inst.cpu > 80 ? 30 : inst.cpu > 70 ? 50 : inst.cpu > 60 ? 65 : inst.cpu > 40 ? 80 : 95;
+    const memScore = inst.freeMem < 2000 ? 40 : inst.freeMem < 4000 ? 60 : inst.freeMem < 6000 ? 80 : 95;
+    const connScore = inst.conns > 500 ? 45 : inst.conns > 400 ? 60 : inst.conns > 300 ? 75 : 95;
+    const slowScore = inst.slowQ > 5 ? 40 : inst.slowQ > 3 ? 60 : inst.slowQ > 1 ? 80 : 95;
+    const score = Math.round((cpuScore * 0.30 + memScore * 0.25 + connScore * 0.25 + slowScore * 0.20) * 10) / 10;
+    const trend = score < 70 ? 'down' : score < 80 ? 'flat' : 'up';
+    return { score, grade: gradeFor(score), cpuPct: inst.cpu, trend, sub: { cpu: cpuScore, memory: memScore, connections: connScore, slowQueries: slowScore }};
+}
+
+function gradeFor(s) { return s >= 90 ? 'A' : s >= 80 ? 'B' : s >= 70 ? 'C' : s >= 60 ? 'D' : 'F'; }
+function shortName(id) { return id.replace(/^(luckyus-|aws-luckyus-)/, ''); }
+
+// ── Prepare all instance data ───────────────────────────────────────
+const allInstances = [];
+redisInstances.forEach(r => {
+    const h = computeRedisHealth(r);
+    allInstances.push({ ...r, ...h, type: 'redis', name: shortName(r.id) });
+});
+rdsInstances.forEach(r => {
+    const h = computeRdsHealth(r);
+    allInstances.push({ ...r, ...h, type: 'rds', name: shortName(r.id) });
+});
+// Add remaining RDS stubs to reach 62 total
+const rdsStubNames = [
+    'aws-luckyus-isearch-rw','aws-luckyus-imessage-rw','aws-luckyus-inotification-rw',
+    'aws-luckyus-ischeduler-rw','aws-luckyus-iauth-rw','aws-luckyus-icouponcenter-rw',
+    'aws-luckyus-ipromotion-rw','aws-luckyus-iwms-rw','aws-luckyus-iscm-rw',
+    'aws-luckyus-imenu-rw','aws-luckyus-irecipe-rw','aws-luckyus-idevice-rw',
+    'aws-luckyus-iaudit-rw','aws-luckyus-isettlement-rw','aws-luckyus-icrm-rw',
+    'aws-luckyus-idataplatform-rw','aws-luckyus-ireport-rw','aws-luckyus-iconfigcenter-rw',
+    'aws-luckyus-icyberdata-ro','aws-luckyus-iorder-ro','aws-luckyus-imember-ro',
+    'aws-luckyus-iproduct-ro','aws-luckyus-ipayment-ro','aws-luckyus-isales-ro',
+    'aws-luckyus-istore-ro','aws-luckyus-imarketing-ro','aws-luckyus-idelivery-ro',
+    'aws-luckyus-iinventory-ro','aws-luckyus-iopenshop-ro','aws-luckyus-iadmin-ro',
+    'aws-luckyus-iehr-ro','aws-luckyus-ifinance-ro','aws-luckyus-igateway-ro',
+    'aws-luckyus-ianalytics-ro','aws-luckyus-ipos-ro','aws-luckyus-icashier-ro',
+    'aws-luckyus-iopenlinker-ro','aws-luckyus-iloyalty-ro','aws-luckyus-isearch-ro',
+    'aws-luckyus-imessage-ro','aws-luckyus-inotification-ro','aws-luckyus-ischeduler-ro'
+];
+rdsStubNames.forEach(name => {
+    const cpu = 10 + Math.floor(Math.random() * 40);
+    const fm = 5000 + Math.floor(Math.random() * 4000);
+    const cn = 50 + Math.floor(Math.random() * 200);
+    const sq = Math.round(Math.random() * 2 * 100) / 100;
+    const stub = { id: name, cpu, freeMem: fm, conns: cn, slowQ: sq };
+    const h = computeRdsHealth(stub);
+    allInstances.push({ ...stub, ...h, type: 'rds', name: shortName(name) });
+});
+
+// ── Fleet Stats ─────────────────────────────────────────────────────
+const fleetScore = Math.round(allInstances.reduce((a, i) => a + i.score, 0) / allInstances.length * 10) / 10;
+const gradeACnt = allInstances.filter(i => i.grade === 'A').length;
+const gradeDist = { A: 0, B: 0, C: 0, D: 0, F: 0 };
+allInstances.forEach(i => gradeDist[i.grade]++);
+
+// ── Render Donut SVG ────────────────────────────────────────────────
+function donutSVG(score, size = 44) {
+    const r = (size - 6) / 2;
+    const circ = 2 * Math.PI * r;
+    const pct = score / 100;
+    const offset = circ * (1 - pct);
+    const color = score >= 90 ? 'var(--success)' : score >= 80 ? 'var(--info)' : score >= 70 ? 'var(--warning)' : score >= 60 ? '#ff6600' : 'var(--critical)';
+    return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+        <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--border-color)" stroke-width="4"/>
+        <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="4"
+            stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round"
+            transform="rotate(-90 ${size/2} ${size/2})" style="transition:stroke-dashoffset 1s ease;"/>
+        <text x="${size/2}" y="${size/2 + 4}" text-anchor="middle" fill="var(--text-primary)"
+            font-family="Fira Code, monospace" font-size="10" font-weight="700">${score > 0 ? Math.round(score) : '--'}</text>
+    </svg>`;
+}
+
+// ── Render Instance Card ────────────────────────────────────────────
+function renderCard(inst) {
+    const gc = inst.grade.toLowerCase();
+    const trendIcon = inst.trend === 'up' ? '&#9650;' : inst.trend === 'down' ? '&#9660;' : '&#9644;';
+    const trendClass = inst.trend === 'up' ? 'trend-up' : inst.trend === 'down' ? 'trend-down' : 'trend-flat';
+    let metricsHtml = '';
+    if (inst.type === 'redis') {
+        const barColor = inst.memPct > 80 ? 'red' : inst.memPct > 60 ? 'yellow' : 'green';
+        metricsHtml = `
+            <div class="metric-bar"><div class="bar-label"><span>Memory</span><span class="mono">${inst.down ? 'N/A' : (inst.mem/1024).toFixed(1)+' GB'}</span></div>
+                <div class="bar-track"><div class="bar-fill ${barColor}" style="width:${inst.down ? 0 : inst.memPct}%"></div></div></div>
+            <div class="metric-bar"><div class="bar-label"><span>Clients</span><span class="mono">${inst.down ? 'N/A' : inst.conns}</span></div>
+                <div class="bar-track"><div class="bar-fill blue" style="width:${inst.down ? 0 : Math.min(inst.conns/3.5, 100)}%"></div></div></div>`;
+    } else {
+        const cpuColor = inst.cpuPct > 70 ? 'red' : inst.cpuPct > 50 ? 'yellow' : 'green';
+        metricsHtml = `
+            <div class="metric-bar"><div class="bar-label"><span>CPU</span><span class="mono">${inst.cpuPct}%</span></div>
+                <div class="bar-track"><div class="bar-fill ${cpuColor}" style="width:${inst.cpuPct}%"></div></div></div>
+            <div class="metric-bar"><div class="bar-label"><span>Connections</span><span class="mono">${inst.conns}</span></div>
+                <div class="bar-track"><div class="bar-fill blue" style="width:${Math.min(inst.conns/6, 100)}%"></div></div></div>`;
+    }
+    const subTable = inst.sub ? Object.entries(inst.sub).map(([k,v]) =>
+        `<tr><td>${k}</td><td>${v}</td></tr>`).join('') : '';
+    return `<div class="instance-card grade-${gc}" data-name="${inst.name}" data-type="${inst.type}" onclick="toggleDetail(this)">
+        <div class="card-top">
+            <div>
+                <div class="inst-name" title="${inst.id}">${inst.name}</div>
+                <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">${inst.type}${inst.down ? ' <span class="offline-tag">OFFLINE</span>' : ''}</div>
+            </div>
+            <div class="grade-badge ${gc}">${inst.grade}</div>
+        </div>
+        <div class="donut-wrap">
+            ${donutSVG(inst.score)}
+            <div class="donut-info">
+                <div class="score">${inst.score > 0 ? inst.score.toFixed(1) : '0.0'}</div>
+                <div class="trend ${trendClass}">${trendIcon} ${inst.trend}</div>
+            </div>
+        </div>
+        ${metricsHtml}
+        <div class="card-detail"><table>${subTable}</table></div>
+    </div>`;
+}
+
+// ── Populate Grids ──────────────────────────────────────────────────
+function populateGrids() {
+    const gridAll = document.getElementById('grid-all');
+    const gridRedis = document.getElementById('grid-redis');
+    const gridRds = document.getElementById('grid-rds');
+    const sorted = [...allInstances].sort((a, b) => b.score - a.score);
+    gridAll.innerHTML = sorted.map(renderCard).join('');
+    gridRedis.innerHTML = sorted.filter(i => i.type === 'redis').map(renderCard).join('');
+    gridRds.innerHTML = sorted.filter(i => i.type === 'rds').map(renderCard).join('');
+}
+
+// ── Tab Switching ───────────────────────────────────────────────────
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
+}
+
+// ── Card Expand/Collapse ────────────────────────────────────────────
+function toggleDetail(card) {
+    const detail = card.querySelector('.card-detail');
+    detail.classList.toggle('open');
+}
+
+// ── Filter Instances ────────────────────────────────────────────────
+function filterInstances() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    document.querySelectorAll('.instance-card').forEach(card => {
+        const name = card.dataset.name.toLowerCase();
+        card.style.display = name.includes(q) ? '' : 'none';
+    });
+}
+
+// ── Animated Counters ───────────────────────────────────────────────
+function animateCounters() {
+    document.querySelectorAll('[data-counter]').forEach(el => {
+        const target = parseInt(el.dataset.counter);
+        let current = 0;
+        const step = Math.ceil(target / 40);
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) { current = target; clearInterval(timer); }
+            el.textContent = current;
+        }, 30);
+    });
+    // Float counter for fleet score
+    const el = document.getElementById('fleetScoreCard');
+    el.dataset.counterFloat = fleetScore;
+    let cur = 0;
+    const timer = setInterval(() => {
+        cur += fleetScore / 40;
+        if (cur >= fleetScore) { cur = fleetScore; clearInterval(timer); }
+        el.textContent = cur.toFixed(1);
+    }, 30);
+    // Grade A count
+    const gradeEl = document.getElementById('gradeACount');
+    gradeEl.dataset.counter = gradeACnt;
+    let gc = 0;
+    const gStep = Math.ceil(gradeACnt / 40);
+    const gTimer = setInterval(() => {
+        gc += gStep;
+        if (gc >= gradeACnt) { gc = gradeACnt; clearInterval(gTimer); }
+        gradeEl.textContent = gc;
+    }, 30);
+}
+
+// ── Header Gauge Animation ──────────────────────────────────────────
+function animateGauge() {
+    const arc = document.getElementById('gaugeArc');
+    const txt = document.getElementById('gaugeText');
+    const scr = document.getElementById('gaugeScore');
+    const circ = 125.6;
+    const targetOffset = circ * (1 - fleetScore / 100);
+    const color = fleetScore >= 90 ? 'var(--success)' : fleetScore >= 80 ? 'var(--info)' : 'var(--warning)';
+    arc.setAttribute('stroke', color);
+    let frame = 0;
+    const total = 60;
+    function step() {
+        frame++;
+        const pct = frame / total;
+        const curOffset = circ - (circ - targetOffset) * pct;
+        arc.setAttribute('stroke-dashoffset', curOffset);
+        const curScore = (fleetScore * pct).toFixed(1);
+        txt.textContent = Math.round(fleetScore * pct);
+        scr.textContent = curScore;
+        if (frame < total) requestAnimationFrame(step);
+        else { txt.textContent = Math.round(fleetScore); scr.textContent = fleetScore.toFixed(1); }
+    }
+    requestAnimationFrame(step);
+}
+
+// ── Render Histogram ────────────────────────────────────────────────
+function renderHistogram() {
+    const svg = document.getElementById('histogram');
+    const grades = [
+        { label: 'A (90-100)', count: gradeDist.A, color: 'var(--success)' },
+        { label: 'B (80-89)', count: gradeDist.B, color: 'var(--info)' },
+        { label: 'C (70-79)', count: gradeDist.C, color: 'var(--warning)' },
+        { label: 'D (60-69)', count: gradeDist.D, color: '#ff6600' },
+        { label: 'F (<60)', count: gradeDist.F, color: 'var(--critical)' }
+    ];
+    const maxCount = Math.max(...grades.map(g => g.count), 1);
+    const barW = 100, gap = 60, startX = 60, chartH = 180, baseY = 220;
+    let html = '';
+    // Y-axis
+    for (let i = 0; i <= 4; i++) {
+        const y = baseY - (chartH / 4) * i;
+        const val = Math.round(maxCount / 4 * i);
+        html += `<line x1="50" y1="${y}" x2="780" y2="${y}" stroke="var(--border-color)" stroke-width="0.5"/>`;
+        html += `<text x="44" y="${y + 4}" text-anchor="end" fill="var(--text-muted)" font-size="11" font-family="Fira Code, monospace">${val}</text>`;
+    }
+    grades.forEach((g, i) => {
+        const x = startX + i * (barW + gap);
+        const h = (g.count / maxCount) * chartH;
+        const y = baseY - h;
+        html += `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="4" fill="${g.color}" opacity="0.85">
+            <animate attributeName="height" from="0" to="${h}" dur="0.8s" fill="freeze"/>
+            <animate attributeName="y" from="${baseY}" to="${y}" dur="0.8s" fill="freeze"/>
+        </rect>`;
+        html += `<text x="${x + barW/2}" y="${y - 8}" text-anchor="middle" fill="var(--text-primary)" font-family="Fira Code, monospace" font-size="14" font-weight="700">${g.count}</text>`;
+        html += `<text x="${x + barW/2}" y="${baseY + 18}" text-anchor="middle" fill="var(--text-secondary)" font-size="12">${g.label}</text>`;
+    });
+    // Title
+    html += `<text x="400" y="252" text-anchor="middle" fill="var(--text-muted)" font-size="11">Health Grade Distribution across ${allInstances.length} monitored instances</text>`;
+    svg.innerHTML = html;
+}
+
+// ── Coverage Dots ───────────────────────────────────────────────────
+function renderCoverageDots() {
+    let html = '';
+    for (let i = 0; i < 76; i++) html += '<span class="dot green"></span>';
+    document.getElementById('dotsRedis').innerHTML = html;
+    html = '';
+    for (let i = 0; i < 62; i++) html += '<span class="dot blue"></span>';
+    document.getElementById('dotsRds').innerHTML = html;
+    html = '';
+    for (let i = 0; i < 100; i++) html += '<span class="dot grey"></span>';
+    document.getElementById('dotsEc2').innerHTML = html + '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;">+133 more</span>';
+    html = '';
+    for (let i = 0; i < 40; i++) html += '<span class="dot grey"></span>';
+    document.getElementById('dotsOther').innerHTML = html + '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;">+350 est.</span>';
+}
+
+// ── Bottom 10 Table ─────────────────────────────────────────────────
+let sortCol = 3, sortAsc = true;
+function renderBottom10() {
+    const bottom = [...allInstances].sort((a, b) => a.score - b.score).slice(0, 10);
+    const tbody = document.getElementById('bottom10Body');
+    tbody.innerHTML = bottom.map((inst, i) => {
+        const gc = inst.grade.toLowerCase();
+        const issue = inst.down ? 'Instance DOWN' : inst.score < 70 ? 'Low health score' : inst.score < 80 ? 'Degraded metrics' : 'Below threshold';
+        const trendIcon = inst.trend === 'up' ? '<span class="trend-up">&#9650;</span>' : inst.trend === 'down' ? '<span class="trend-down">&#9660;</span>' : '<span class="trend-flat">&#9644;</span>';
+        return `<tr onclick="scrollToInstance('${inst.name}')">
+            <td class="mono">${i + 1}</td>
+            <td><span style="text-transform:uppercase;font-size:11px;font-weight:600;color:${inst.type === 'redis' ? 'var(--success)' : 'var(--info)'};">${inst.type}</span></td>
+            <td style="font-weight:500;">${inst.name}</td>
+            <td class="mono" style="color:${inst.score < 60 ? 'var(--critical)' : inst.score < 70 ? '#ff6600' : 'var(--warning)'};">${inst.score.toFixed(1)}</td>
+            <td><span class="grade-badge ${gc}" style="display:inline-flex;width:24px;height:24px;font-size:12px;">${inst.grade}</span></td>
+            <td style="font-size:12px;color:var(--text-secondary);">${issue}</td>
+            <td>${trendIcon}</td>
+        </tr>`;
+    }).join('');
+}
+
+function scrollToInstance(name) {
+    switchTab('all');
+    setTimeout(() => {
+        const card = document.querySelector(`.instance-card[data-name="${name}"]`);
+        if (card) { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); card.style.boxShadow = '0 0 0 2px var(--luckin-light)'; setTimeout(() => card.style.boxShadow = '', 2000); }
+    }, 100);
+}
+
+function sortTable(col) {
+    if (sortCol === col) sortAsc = !sortAsc;
+    else { sortCol = col; sortAsc = true; }
+    const tbody = document.getElementById('bottom10Body');
+    const rows = Array.from(tbody.rows);
+    rows.sort((a, b) => {
+        let va = a.cells[col].textContent.trim();
+        let vb = b.cells[col].textContent.trim();
+        const na = parseFloat(va), nb = parseFloat(vb);
+        if (!isNaN(na) && !isNaN(nb)) return sortAsc ? na - nb : nb - na;
+        return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    });
+    rows.forEach(r => tbody.appendChild(r));
+}
+
+// ── Active Alerts ───────────────────────────────────────────────────
+const alerts = [
+    { sev: 'critical', inst: 'iorder-001', metric: 'redis_memory_used_bytes', zscore: 4.2, desc: 'Memory usage at 80.7% of max capacity', descCn: '内存使用量达到最大容量的80.7%', time: '12m ago' },
+    { sev: 'critical', inst: 'isales-rw', metric: 'rds_cpu_utilization', zscore: 3.8, desc: 'CPU sustained above 65% for 30 minutes', descCn: 'CPU持续高于65%超过30分钟', time: '8m ago' },
+    { sev: 'critical', inst: 'ianalytics-rw', metric: 'rds_cpu_utilization', zscore: 4.5, desc: 'CPU at 72% with high slow query rate (6.43 GB)', descCn: 'CPU 72%且慢查询率高(6.43 GB)', time: '5m ago' },
+    { sev: 'warning', inst: 'igateway-001', metric: 'redis_connected_clients', zscore: 2.8, desc: 'Connection count trending upward (189)', descCn: '连接数持续上升趋势(189)', time: '22m ago' },
+    { sev: 'warning', inst: 'iopenshop-rw', metric: 'rds_connections', zscore: 2.4, desc: 'Connection pool nearing threshold (356/500)', descCn: '连接池接近阈值(356/500)', time: '18m ago' },
+    { sev: 'warning', inst: 'icyberdata-001', metric: 'redis_memory_used_bytes', zscore: 2.6, desc: 'Memory growth rate exceeds baseline (+12% week)', descCn: '内存增长率超过基线(周+12%)', time: '35m ago' },
+    { sev: 'warning', inst: 'ipos-rw', metric: 'rds_cpu_utilization', zscore: 2.1, desc: 'CPU utilization trending above normal (55%)', descCn: 'CPU利用率趋势高于正常(55%)', time: '45m ago' },
+    { sev: 'warning', inst: 'iorder-rw', metric: 'rds_slow_queries', zscore: 2.3, desc: 'Slow query log volume elevated (3.87 GB)', descCn: '慢查询日志量升高(3.87 GB)', time: '28m ago' },
+    { sev: 'info', inst: 'imember-001', metric: 'redis_memory_used_bytes', zscore: 1.8, desc: 'Sustained memory increase over 7 days', descCn: '7天持续内存增长', time: '1h ago' },
+    { sev: 'info', inst: 'idelivery-rw', metric: 'rds_connections', zscore: 1.5, desc: 'Connection count steady above weekly average', descCn: '连接数持续高于周平均', time: '2h ago' },
+    { sev: 'info', inst: 'iopenlinkeradmin', metric: 'up', zscore: 0, desc: 'Instance DOWN -- scrape target unreachable', descCn: '实例宕机 -- 抓取目标不可达', time: '3d ago' }
+];
+
+function renderAlerts() {
+    const list = document.getElementById('alertList');
+    list.innerHTML = alerts.map(a => `
+        <div class="alert-item">
+            <div><span class="sev-badge ${a.sev}">${a.sev}</span></div>
+            <div class="alert-desc">
+                <strong>${a.inst}</strong> &mdash; ${a.desc}<br>
+                <span style="font-size:11px;color:var(--text-muted);">${a.descCn}</span>
+            </div>
+            <div class="alert-metric">${a.zscore > 0 ? 'Z=' + a.zscore.toFixed(1) : 'N/A'}</div>
+            <div class="alert-time">${a.time}</div>
+        </div>
+    `).join('');
+    document.getElementById('alertBadgeCount').textContent = alerts.length + ' active';
+}
+
+// ── Timestamp ───────────────────────────────────────────────────────
+function updateTimestamp() {
+    const now = new Date();
+    document.getElementById('lastUpdated').textContent =
+        now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+}
+
+// ── Service Breakdown Scores ────────────────────────────────────────
+function renderServiceBreakdown() {
+    const redisInsts = allInstances.filter(i => i.type === 'redis');
+    const rdsInsts = allInstances.filter(i => i.type === 'rds');
+    const redisAvg = (redisInsts.reduce((a, i) => a + i.score, 0) / redisInsts.length).toFixed(1);
+    const rdsAvg = (rdsInsts.reduce((a, i) => a + i.score, 0) / rdsInsts.length).toFixed(1);
+    document.getElementById('redisAvgScore').textContent = 'Avg: ' + redisAvg;
+    document.getElementById('rdsAvgScore').textContent = 'Avg: ' + rdsAvg;
+}
+
+// ── Keyboard shortcuts ──────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        document.getElementById('searchInput').focus();
+    }
+    if (e.key === 'Escape') {
+        document.getElementById('searchInput').value = '';
+        filterInstances();
+        document.getElementById('searchInput').blur();
+    }
+});
+
+// ── Initialize ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    populateGrids();
+    animateCounters();
+    animateGauge();
+    renderHistogram();
+    renderCoverageDots();
+    renderBottom10();
+    renderAlerts();
+    renderServiceBreakdown();
+    updateTimestamp();
+    setInterval(updateTimestamp, 60000);
+});
+</script>
+</body>
+</html>

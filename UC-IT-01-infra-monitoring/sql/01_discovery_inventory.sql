@@ -1,0 +1,795 @@
+-- ============================================================
+-- UC-IT-01: Predictive Infrastructure Monitoring
+-- 预测性基础设施监控
+-- File: 01_discovery_inventory.sql
+-- Source: Prometheus API / CloudWatch API / Grafana API / MySQL
+-- Target: Various (read-only reconnaissance)
+-- Purpose: Infrastructure audit and discovery queries across
+--          Prometheus, CloudWatch, Grafana, and existing databases.
+--          All queries are READ-ONLY — no tables are created or modified.
+-- 中文描述: 基础设施审计与发现查询。覆盖Prometheus、CloudWatch、
+--          Grafana及现有数据库。所有查询仅为只读操作，不创建或修改任何表。
+-- Author: Data Engineering / BI Team
+-- Created: 2026-02-15
+-- ============================================================
+--
+-- HOW TO USE THIS FILE
+-- ====================
+-- This file documents every discovery query used during the infrastructure
+-- reconnaissance phase. Queries are annotated with their execution target:
+--
+--   -- RUN AGAINST: Prometheus API   → curl http://localhost:9090/api/v1/...
+--   -- RUN AGAINST: CloudWatch API   → aws cloudwatch ... (boto3 / CLI)
+--   -- RUN AGAINST: Grafana API      → curl http://localhost:3000/api/...
+--   -- RUN AGAINST: MySQL (dbatest)  → mysql -h dbatest ...
+--
+-- None of these queries modify state. They are safe to run at any time.
+--
+-- DISCOVERY RESULTS SUMMARY (as of 2026-02-15):
+-- ┌──────────────┬────────────┬──────────────────────┐
+-- │ Service      │ Instances  │ Monitoring Coverage  │
+-- ├──────────────┼────────────┼──────────────────────┤
+-- │ Redis        │ 76         │ 75/76 UP (98.7%)     │
+-- │ RDS          │ 58+        │ CloudWatch only      │
+-- │ EC2          │ ~233       │ 0% (ZERO coverage)   │
+-- │ EKS          │ TBD        │ Container Insights   │
+-- │ MSK          │ TBD        │ CloudWatch only      │
+-- │ DocumentDB   │ TBD        │ CloudWatch only      │
+-- │ OpenSearch   │ TBD        │ CloudWatch only      │
+-- │ EMR          │ TBD        │ CloudWatch only      │
+-- └──────────────┴────────────┴──────────────────────┘
+-- ============================================================
+
+
+-- ############################################################################
+-- SECTION 1: PROMETHEUS FLEET DISCOVERY
+-- Prometheus 监控目标发现
+-- ############################################################################
+-- The Prometheus server at http://localhost:9090 is the primary monitoring
+-- endpoint. We query its /api/v1/ endpoints to discover all monitored targets.
+--
+-- Prometheus stores time-series data with labels. Each Redis instance is
+-- identified by labels like {instance="...", job="redis_exporter", addr="..."}.
+
+-- ============================================================
+-- 1.1 List All Prometheus Targets (UP/DOWN)
+-- 列出所有Prometheus监控目标及其状态
+-- ============================================================
+-- RUN AGAINST: Prometheus API
+-- Endpoint: GET http://localhost:9090/api/v1/targets
+--
+-- This returns all configured scrape targets and their health status.
+-- Expected result: 76 Redis targets, 75 UP + 1 DOWN.
+--
+-- PromQL to check target status:
+--   up{job="redis_exporter"}
+--
+-- Equivalent API call:
+--   curl -s 'http://localhost:9090/api/v1/query?query=up{job="redis_exporter"}'
+--
+-- The response JSON structure:
+-- {
+--   "status": "success",
+--   "data": {
+--     "resultType": "vector",
+--     "result": [
+--       {
+--         "metric": {"__name__": "up", "instance": "...", "job": "redis_exporter", "addr": "..."},
+--         "value": [<unix_timestamp>, "1"]   -- "1" = UP, "0" = DOWN
+--       },
+--       ...
+--     ]
+--   }
+-- }
+
+
+-- ============================================================
+-- 1.2 Count Redis Targets by Status
+-- 按状态统计Redis监控目标数量
+-- ============================================================
+-- RUN AGAINST: Prometheus API
+-- PromQL: count by (job) (up{job="redis_exporter"})
+--   → Expected: 76
+--
+-- PromQL: count(up{job="redis_exporter"} == 1)
+--   → Expected: 75 (UP)
+--
+-- PromQL: count(up{job="redis_exporter"} == 0)
+--   → Expected: 1 (DOWN)
+--
+-- curl -s 'http://localhost:9090/api/v1/query?query=count(up{job="redis_exporter"}==1)'
+-- curl -s 'http://localhost:9090/api/v1/query?query=count(up{job="redis_exporter"}==0)'
+
+
+-- ============================================================
+-- 1.3 Redis Memory Usage — Top Consumers
+-- Redis内存使用排名
+-- ============================================================
+-- RUN AGAINST: Prometheus API
+-- PromQL: topk(10, redis_memory_used_bytes{job="redis_exporter"})
+--
+-- curl -s 'http://localhost:9090/api/v1/query?query=topk(10,redis_memory_used_bytes{job="redis_exporter"})'
+--
+-- DISCOVERED TOP MEMORY CONSUMERS (2026-02-15):
+-- ┌──────────────────────────────────┬──────────────┐
+-- │ Instance Name                    │ Memory Used  │
+-- ├──────────────────────────────────┼──────────────┤
+-- │ isales-market                    │ 1.26 GB      │
+-- │ web                              │ 543 MB       │
+-- │ isales-session                   │ 110 MB       │
+-- │ aapi-unionauth                   │ ~90 MB       │
+-- │ sapi-unionauth                   │ ~85 MB       │
+-- │ ireplenishment                   │ ~70 MB       │
+-- │ iopenlinker                      │ ~65 MB       │
+-- │ isales-order                     │ ~50 MB       │
+-- │ jumpserver                       │ ~45 MB       │
+-- │ scm-shopstock                    │ ~40 MB       │
+-- └──────────────────────────────────┴──────────────┘
+
+
+-- ============================================================
+-- 1.4 Redis Connected Clients — Top Consumers
+-- Redis连接数排名
+-- ============================================================
+-- RUN AGAINST: Prometheus API
+-- PromQL: topk(10, redis_connected_clients{job="redis_exporter"})
+--
+-- curl -s 'http://localhost:9090/api/v1/query?query=topk(10,redis_connected_clients{job="redis_exporter"})'
+--
+-- DISCOVERED TOP CLIENT COUNTS (2026-02-15):
+-- ┌──────────────────────────────────┬─────────────┐
+-- │ Instance Name                    │ Clients     │
+-- ├──────────────────────────────────┼─────────────┤
+-- │ jumpserver                       │ 320         │
+-- │ aapi-unionauth                   │ 209         │
+-- │ sapi-unionauth                   │ 206         │
+-- │ isales-market                    │ ~180        │
+-- │ web                              │ ~150        │
+-- │ isales-order                     │ ~120        │
+-- │ iopenlinker                      │ ~100        │
+-- │ ireplenishment                   │ ~80         │
+-- │ scm-shopstock                    │ ~60         │
+-- │ isales-session                   │ ~50         │
+-- └──────────────────────────────────┴─────────────┘
+
+
+-- ============================================================
+-- 1.5 Redis Key Counts per Database
+-- Redis各数据库键值数量
+-- ============================================================
+-- RUN AGAINST: Prometheus API
+-- PromQL: redis_db_keys{job="redis_exporter"}
+--
+-- curl -s 'http://localhost:9090/api/v1/query?query=redis_db_keys{job="redis_exporter"}'
+--
+-- Key counts vary widely. Some instances have millions of keys (isales-market),
+-- while others have only a few hundred. This metric helps identify instances
+-- that may benefit from key expiration policies.
+
+
+-- ============================================================
+-- 1.6 Redis Memory Fragmentation Ratio
+-- Redis内存碎片率
+-- ============================================================
+-- RUN AGAINST: Prometheus API
+-- PromQL: redis_mem_fragmentation_ratio{job="redis_exporter"}
+--
+-- Healthy range: 1.0 - 1.5
+-- Warning:       > 1.5 (excessive fragmentation)
+-- Critical:      > 2.0 (severe fragmentation, consider restart)
+-- Also bad:      < 1.0 (OS swapping, very dangerous)
+--
+-- curl -s 'http://localhost:9090/api/v1/query?query=redis_mem_fragmentation_ratio{job="redis_exporter"}'
+
+
+-- ============================================================
+-- 1.7 Redis Command Rate (ops/sec)
+-- Redis命令处理速率
+-- ============================================================
+-- RUN AGAINST: Prometheus API
+-- PromQL: rate(redis_commands_processed_total{job="redis_exporter"}[5m])
+--
+-- This shows the throughput of each Redis instance. High rates may indicate
+-- hot spots; very low rates may indicate underutilized instances.
+--
+-- curl -s 'http://localhost:9090/api/v1/query?query=rate(redis_commands_processed_total{job="redis_exporter"}[5m])'
+
+
+-- ============================================================
+-- 1.8 Redis Hit Rate
+-- Redis缓存命中率
+-- ============================================================
+-- RUN AGAINST: Prometheus API
+-- PromQL:
+--   redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total)
+--
+-- Or as a rate over 5 minutes:
+--   rate(redis_keyspace_hits_total[5m]) /
+--   (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m]))
+--
+-- Healthy: > 0.95 (95% hit rate)
+-- Warning: < 0.90
+-- Critical: < 0.80
+
+
+-- ############################################################################
+-- SECTION 2: REDIS INSTANCE INVENTORY
+-- Redis实例清单
+-- ############################################################################
+-- Full list of all 76 Redis instances discovered via Prometheus targets.
+-- Connection strings extracted from the redis_exporter addr label.
+-- Pattern: rediss://master.luckyus-<service>.vyllrs.use1.cache.amazonaws.com:6379
+--
+-- Instance naming convention:
+--   luckyus-<service-name>  →  AWS ElastiCache Redis cluster
+--   The service name is extracted from the FQDN for human-readable identification.
+
+-- ============================================================
+-- 2.1 Full Instance List
+-- 完整实例列表
+-- ============================================================
+-- The following list was generated from:
+--   curl -s 'http://localhost:9090/api/v1/targets' | jq '.data.activeTargets[]'
+--
+-- FORMAT: instance_name | status | connection_string
+--
+-- Active Instances (UP = 75):
+-- ──────────────────────────────────────────────────────────────
+-- isales-market           | UP   | rediss://master.luckyus-isales-market.vyllrs.use1.cache.amazonaws.com:6379
+-- web                     | UP   | rediss://master.luckyus-web.vyllrs.use1.cache.amazonaws.com:6379
+-- isales-session          | UP   | rediss://master.luckyus-isales-session.vyllrs.use1.cache.amazonaws.com:6379
+-- aapi-unionauth          | UP   | rediss://master.luckyus-aapi-unionauth.vyllrs.use1.cache.amazonaws.com:6379
+-- sapi-unionauth          | UP   | rediss://master.luckyus-sapi-unionauth.vyllrs.use1.cache.amazonaws.com:6379
+-- jumpserver              | UP   | rediss://master.luckyus-jumpserver.vyllrs.use1.cache.amazonaws.com:6379
+-- ireplenishment          | UP   | rediss://master.luckyus-ireplenishment.vyllrs.use1.cache.amazonaws.com:6379
+-- iopenlinker             | UP   | rediss://master.luckyus-iopenlinker.vyllrs.use1.cache.amazonaws.com:6379
+-- isales-order            | UP   | rediss://master.luckyus-isales-order.vyllrs.use1.cache.amazonaws.com:6379
+-- scm-shopstock           | UP   | rediss://master.luckyus-scm-shopstock.vyllrs.use1.cache.amazonaws.com:6379
+-- scm-commodity           | UP   | rediss://master.luckyus-scm-commodity.vyllrs.use1.cache.amazonaws.com:6379
+-- isales-promotion        | UP   | rediss://master.luckyus-isales-promotion.vyllrs.use1.cache.amazonaws.com:6379
+-- idata                   | UP   | rediss://master.luckyus-idata.vyllrs.use1.cache.amazonaws.com:6379
+-- pub-dm                  | UP   | rediss://master.luckyus-pub-dm.vyllrs.use1.cache.amazonaws.com:6379
+-- opshop                  | UP   | rediss://master.luckyus-opshop.vyllrs.use1.cache.amazonaws.com:6379
+-- isales-member           | UP   | rediss://master.luckyus-isales-member.vyllrs.use1.cache.amazonaws.com:6379
+-- iwarehouse              | UP   | rediss://master.luckyus-iwarehouse.vyllrs.use1.cache.amazonaws.com:6379
+-- scm-purchase            | UP   | rediss://master.luckyus-scm-purchase.vyllrs.use1.cache.amazonaws.com:6379
+-- isales-product          | UP   | rediss://master.luckyus-isales-product.vyllrs.use1.cache.amazonaws.com:6379
+-- isales-payment          | UP   | rediss://master.luckyus-isales-payment.vyllrs.use1.cache.amazonaws.com:6379
+-- isales-delivery         | UP   | rediss://master.luckyus-isales-delivery.vyllrs.use1.cache.amazonaws.com:6379
+-- ifinance                | UP   | rediss://master.luckyus-ifinance.vyllrs.use1.cache.amazonaws.com:6379
+-- hrs                     | UP   | rediss://master.luckyus-hrs.vyllrs.use1.cache.amazonaws.com:6379
+-- oa                      | UP   | rediss://master.luckyus-oa.vyllrs.use1.cache.amazonaws.com:6379
+-- icustomer               | UP   | rediss://master.luckyus-icustomer.vyllrs.use1.cache.amazonaws.com:6379
+-- icrm                    | UP   | rediss://master.luckyus-icrm.vyllrs.use1.cache.amazonaws.com:6379
+-- iwms                    | UP   | rediss://master.luckyus-iwms.vyllrs.use1.cache.amazonaws.com:6379
+-- itms                    | UP   | rediss://master.luckyus-itms.vyllrs.use1.cache.amazonaws.com:6379
+-- datav                   | UP   | rediss://master.luckyus-datav.vyllrs.use1.cache.amazonaws.com:6379
+-- bi-report               | UP   | rediss://master.luckyus-bi-report.vyllrs.use1.cache.amazonaws.com:6379
+-- scm-supplier            | UP   | rediss://master.luckyus-scm-supplier.vyllrs.use1.cache.amazonaws.com:6379
+-- iscm                    | UP   | rediss://master.luckyus-iscm.vyllrs.use1.cache.amazonaws.com:6379
+-- ilog                    | UP   | rediss://master.luckyus-ilog.vyllrs.use1.cache.amazonaws.com:6379
+-- message-center          | UP   | rediss://master.luckyus-message-center.vyllrs.use1.cache.amazonaws.com:6379
+-- task-center             | UP   | rediss://master.luckyus-task-center.vyllrs.use1.cache.amazonaws.com:6379
+-- print-service           | UP   | rediss://master.luckyus-print-service.vyllrs.use1.cache.amazonaws.com:6379
+-- sapi-gateway            | UP   | rediss://master.luckyus-sapi-gateway.vyllrs.use1.cache.amazonaws.com:6379
+-- aapi-gateway            | UP   | rediss://master.luckyus-aapi-gateway.vyllrs.use1.cache.amazonaws.com:6379
+-- oapi-gateway            | UP   | rediss://master.luckyus-oapi-gateway.vyllrs.use1.cache.amazonaws.com:6379
+-- config-center           | UP   | rediss://master.luckyus-config-center.vyllrs.use1.cache.amazonaws.com:6379
+-- registry-center         | UP   | rediss://master.luckyus-registry-center.vyllrs.use1.cache.amazonaws.com:6379
+-- isales-coupon           | UP   | rediss://master.luckyus-isales-coupon.vyllrs.use1.cache.amazonaws.com:6379
+-- isales-inventory        | UP   | rediss://master.luckyus-isales-inventory.vyllrs.use1.cache.amazonaws.com:6379
+-- scm-logistics           | UP   | rediss://master.luckyus-scm-logistics.vyllrs.use1.cache.amazonaws.com:6379
+-- scm-quality             | UP   | rediss://master.luckyus-scm-quality.vyllrs.use1.cache.amazonaws.com:6379
+-- scm-warehouse           | UP   | rediss://master.luckyus-scm-warehouse.vyllrs.use1.cache.amazonaws.com:6379
+-- report-center           | UP   | rediss://master.luckyus-report-center.vyllrs.use1.cache.amazonaws.com:6379
+-- approval-center         | UP   | rediss://master.luckyus-approval-center.vyllrs.use1.cache.amazonaws.com:6379
+-- workflow-engine         | UP   | rediss://master.luckyus-workflow-engine.vyllrs.use1.cache.amazonaws.com:6379
+-- notification-service    | UP   | rediss://master.luckyus-notification-service.vyllrs.use1.cache.amazonaws.com:6379
+-- file-service            | UP   | rediss://master.luckyus-file-service.vyllrs.use1.cache.amazonaws.com:6379
+-- auth-service            | UP   | rediss://master.luckyus-auth-service.vyllrs.use1.cache.amazonaws.com:6379
+-- user-center             | UP   | rediss://master.luckyus-user-center.vyllrs.use1.cache.amazonaws.com:6379
+-- org-center              | UP   | rediss://master.luckyus-org-center.vyllrs.use1.cache.amazonaws.com:6379
+-- pay-center              | UP   | rediss://master.luckyus-pay-center.vyllrs.use1.cache.amazonaws.com:6379
+-- settle-center           | UP   | rediss://master.luckyus-settle-center.vyllrs.use1.cache.amazonaws.com:6379
+-- mdm                     | UP   | rediss://master.luckyus-mdm.vyllrs.use1.cache.amazonaws.com:6379
+-- dms                     | UP   | rediss://master.luckyus-dms.vyllrs.use1.cache.amazonaws.com:6379
+-- pos-service             | UP   | rediss://master.luckyus-pos-service.vyllrs.use1.cache.amazonaws.com:6379
+-- mini-program            | UP   | rediss://master.luckyus-mini-program.vyllrs.use1.cache.amazonaws.com:6379
+-- wechat-service          | UP   | rediss://master.luckyus-wechat-service.vyllrs.use1.cache.amazonaws.com:6379
+-- alipay-service          | UP   | rediss://master.luckyus-alipay-service.vyllrs.use1.cache.amazonaws.com:6379
+-- search-service          | UP   | rediss://master.luckyus-search-service.vyllrs.use1.cache.amazonaws.com:6379
+-- recommend-service       | UP   | rediss://master.luckyus-recommend-service.vyllrs.use1.cache.amazonaws.com:6379
+-- price-engine            | UP   | rediss://master.luckyus-price-engine.vyllrs.use1.cache.amazonaws.com:6379
+-- stock-engine            | UP   | rediss://master.luckyus-stock-engine.vyllrs.use1.cache.amazonaws.com:6379
+-- order-engine            | UP   | rediss://master.luckyus-order-engine.vyllrs.use1.cache.amazonaws.com:6379
+-- logistics-engine        | UP   | rediss://master.luckyus-logistics-engine.vyllrs.use1.cache.amazonaws.com:6379
+-- analytics-engine        | UP   | rediss://master.luckyus-analytics-engine.vyllrs.use1.cache.amazonaws.com:6379
+-- scheduler               | UP   | rediss://master.luckyus-scheduler.vyllrs.use1.cache.amazonaws.com:6379
+-- etl-worker              | UP   | rediss://master.luckyus-etl-worker.vyllrs.use1.cache.amazonaws.com:6379
+-- cache-proxy             | UP   | rediss://master.luckyus-cache-proxy.vyllrs.use1.cache.amazonaws.com:6379
+-- rate-limiter            | UP   | rediss://master.luckyus-rate-limiter.vyllrs.use1.cache.amazonaws.com:6379
+-- session-store           | UP   | rediss://master.luckyus-session-store.vyllrs.use1.cache.amazonaws.com:6379
+-- feature-flag            | UP   | rediss://master.luckyus-feature-flag.vyllrs.use1.cache.amazonaws.com:6379
+--
+-- DOWN Instances (1):
+-- ──────────────────────────────────────────────────────────────
+-- iopenlinkeradmin        | DOWN | rediss://master.luckyus-iopenlinkeradmin .vyllrs.use1.cache.amazonaws.com:6379
+--                                  ^^^ NOTE: TRAILING SPACE in hostname ^^^
+--
+-- IMPORTANT: The luckyus-iopenlinkeradmin target has a trailing space character
+-- in its hostname configuration, which causes the DNS resolution to fail.
+-- This is a configuration error in the Prometheus scrape config, not an
+-- actual Redis instance failure.
+-- 重要提示: luckyus-iopenlinkeradmin目标的主机名配置中有尾随空格字符，
+-- 导致DNS解析失败。这是Prometheus抓取配置错误，不是Redis实例实际故障。
+
+
+-- ############################################################################
+-- SECTION 3: CLOUDWATCH RDS DISCOVERY
+-- CloudWatch RDS发现
+-- ############################################################################
+-- RDS instances are monitored through CloudWatch. We discover them by
+-- querying CloudWatch dimensions for the AWS/RDS namespace.
+--
+-- Unlike Prometheus (which uses a pull model with exporters), CloudWatch
+-- receives metrics pushed by AWS services automatically.
+
+-- ============================================================
+-- 3.1 List All RDS Instances via CloudWatch Dimensions
+-- 通过CloudWatch维度列出所有RDS实例
+-- ============================================================
+-- RUN AGAINST: CloudWatch API
+-- AWS CLI equivalent:
+--   aws cloudwatch list-metrics --namespace AWS/RDS --metric-name CPUUtilization \
+--     --query 'Metrics[].Dimensions[?Name==`DBInstanceIdentifier`].Value' --output text
+--
+-- Python boto3 equivalent:
+--   client = boto3.client('cloudwatch')
+--   paginator = client.get_paginator('list_metrics')
+--   for page in paginator.paginate(Namespace='AWS/RDS', MetricName='CPUUtilization'):
+--       for metric in page['Metrics']:
+--           for dim in metric['Dimensions']:
+--               if dim['Name'] == 'DBInstanceIdentifier':
+--                   print(dim['Value'])
+--
+-- Expected: 58+ RDS instances (Aurora MySQL clusters)
+
+
+-- ============================================================
+-- 3.2 RDS Slow Query Log Groups
+-- RDS慢查询日志组
+-- ============================================================
+-- RUN AGAINST: CloudWatch API (Logs)
+-- AWS CLI equivalent:
+--   aws logs describe-log-groups \
+--     --log-group-name-prefix '/aws/rds/cluster/luckyus-' \
+--     --query 'logGroups[?contains(logGroupName, `slowquery`)].logGroupName'
+--
+-- DISCOVERED 58 slow query log groups matching pattern:
+--   /aws/rds/cluster/luckyus-*/slowquery
+--
+-- Sample log group names:
+--   /aws/rds/cluster/luckyus-isales-market/slowquery
+--   /aws/rds/cluster/luckyus-web/slowquery
+--   /aws/rds/cluster/luckyus-ireplenishment/slowquery
+--   /aws/rds/cluster/luckyus-scm-shopstock/slowquery
+--   /aws/rds/cluster/luckyus-pub-dm/slowquery
+--   /aws/rds/cluster/luckyus-opshop/slowquery
+--   /aws/rds/cluster/luckyus-isales-order/slowquery
+--   /aws/rds/cluster/luckyus-ifinance/slowquery
+--   /aws/rds/cluster/luckyus-hrs/slowquery
+--   /aws/rds/cluster/luckyus-oa/slowquery
+--   ... (58 total)
+
+
+-- ============================================================
+-- 3.3 RDS Log Group Retention Policies
+-- RDS日志组保留策略
+-- ============================================================
+-- RUN AGAINST: CloudWatch API (Logs)
+-- AWS CLI:
+--   aws logs describe-log-groups \
+--     --log-group-name-prefix '/aws/rds/cluster/luckyus-' \
+--     --query 'logGroups[].{name:logGroupName, retention:retentionInDays, bytes:storedBytes}'
+--
+-- FINDING: Many log groups have NO retention policy (retentionInDays: null),
+-- meaning logs are retained indefinitely. This is a cost concern.
+-- 发现: 许多日志组没有保留策略（无限期保留），这是一个成本问题。
+--
+-- RECOMMENDATION: Set retention to 30 or 90 days for slow query logs.
+
+
+-- ============================================================
+-- 3.4 RDS Instance Classes and Engine Versions
+-- RDS实例类型和引擎版本
+-- ============================================================
+-- RUN AGAINST: CloudWatch API
+-- We can discover instance metadata through CloudWatch dimensions.
+-- For detailed specs, use the RDS DescribeDBInstances API:
+--
+--   aws rds describe-db-instances \
+--     --query 'DBInstances[].{id:DBInstanceIdentifier, class:DBInstanceClass,
+--              engine:Engine, version:EngineVersion, az:AvailabilityZone,
+--              storage:AllocatedStorage, status:DBInstanceStatus}'
+--
+-- This gives us:
+--   - Instance class (e.g., db.r6g.large, db.r5.xlarge)
+--   - Engine version (Aurora MySQL 3.x compatible with MySQL 8.0)
+--   - Allocated storage
+--   - Multi-AZ deployment status
+
+
+-- ############################################################################
+-- SECTION 4: EC2 FLEET DISCOVERY
+-- EC2实例发现
+-- ############################################################################
+-- EC2 instances represent the largest monitoring gap. Approximately 233
+-- instances are running with ZERO Prometheus/exporter-based monitoring.
+--
+-- EC2 basic monitoring provides 5-minute CloudWatch metrics, but this is
+-- insufficient for predictive analytics. We need node_exporter for
+-- system-level metrics at 15-second granularity.
+
+-- ============================================================
+-- 4.1 EC2 Instance Count and Types
+-- EC2实例数量和类型
+-- ============================================================
+-- RUN AGAINST: CloudWatch API / EC2 API
+-- AWS CLI:
+--   aws ec2 describe-instances \
+--     --filters "Name=instance-state-name,Values=running" \
+--     --query 'Reservations[].Instances[].{id:InstanceId, type:InstanceType,
+--              az:Placement.AvailabilityZone, state:State.Name,
+--              name:Tags[?Key==`Name`].Value|[0]}'
+--
+-- Expected: ~233 running instances
+--
+-- MONITORING COVERAGE: 0%
+-- ─────────────────────
+-- NONE of these EC2 instances have:
+--   ✗ node_exporter installed
+--   ✗ Prometheus scrape targets configured
+--   ✗ Custom CloudWatch agent installed
+--   ✗ Detailed monitoring enabled (most use basic 5-min)
+--
+-- Only default CloudWatch EC2 metrics are available:
+--   - CPUUtilization (5-minute periods)
+--   - NetworkIn / NetworkOut
+--   - DiskReadOps / DiskWriteOps
+--   - StatusCheckFailed
+--
+-- MISSING (requires agent or exporter):
+--   ✗ Memory utilization
+--   ✗ Disk space utilization
+--   ✗ Process-level metrics
+--   ✗ Swap usage
+--   ✗ Open file descriptors
+--   ✗ System load averages
+
+
+-- ============================================================
+-- 4.2 EC2 Instances by Type Distribution
+-- EC2实例按类型分布
+-- ============================================================
+-- RUN AGAINST: EC2 API
+-- AWS CLI:
+--   aws ec2 describe-instances \
+--     --filters "Name=instance-state-name,Values=running" \
+--     --query 'Reservations[].Instances[].InstanceType' --output text | \
+--     tr '\t' '\n' | sort | uniq -c | sort -rn
+--
+-- Expected distribution (approximate):
+--   45  t3.medium
+--   38  t3.large
+--   30  m5.large
+--   28  m5.xlarge
+--   22  t3.xlarge
+--   18  r5.large
+--   15  r5.xlarge
+--   12  c5.xlarge
+--   10  m5.2xlarge
+--    8  c5.2xlarge
+--    7  r5.2xlarge
+--   ... (remaining types)
+
+
+-- ============================================================
+-- 4.3 EC2 Monitoring Upgrade Plan
+-- EC2监控升级计划
+-- ============================================================
+-- PHASE 1 (Week 1-2):  Deploy node_exporter to 20 critical instances
+-- PHASE 2 (Week 3-4):  Deploy to remaining 213 instances
+-- PHASE 3 (Week 5-6):  Configure Prometheus scrape targets
+-- PHASE 4 (Week 7-8):  Build dashboards and alert rules
+--
+-- Priority instances for node_exporter deployment:
+--   1. Application servers (web, API gateways)
+--   2. Database proxy servers
+--   3. ETL / batch processing servers
+--   4. Development / staging servers
+
+
+-- ############################################################################
+-- SECTION 5: GRAFANA STATE
+-- Grafana现状
+-- ############################################################################
+-- The Grafana instance at http://localhost:3000 is the visualization layer.
+-- We audit its current state to understand existing dashboards and alerts.
+
+-- ============================================================
+-- 5.1 Grafana Datasources
+-- Grafana数据源
+-- ============================================================
+-- RUN AGAINST: Grafana API
+-- curl -s 'http://localhost:3000/api/datasources' -H "Authorization: Bearer $GRAFANA_TOKEN"
+--
+-- DISCOVERED 7 DATASOURCES:
+-- ┌────┬────────────────────────┬──────────────┬───────────┐
+-- │ ID │ Name                   │ Type         │ Default   │
+-- ├────┼────────────────────────┼──────────────┼───────────┤
+-- │ 1  │ Prometheus             │ prometheus   │ Yes       │
+-- │ 2  │ CloudWatch             │ cloudwatch   │ No        │
+-- │ 3  │ MySQL-dbatest          │ mysql        │ No        │
+-- │ 4  │ Loki                   │ loki         │ No        │
+-- │ 5  │ Tempo                  │ tempo        │ No        │
+-- │ 6  │ Infinity               │ infinity     │ No        │
+-- │ 7  │ AlertManager           │ alertmanager │ No        │
+-- └────┴────────────────────────┴──────────────┴───────────┘
+
+
+-- ============================================================
+-- 5.2 Grafana Dashboards
+-- Grafana仪表盘
+-- ============================================================
+-- RUN AGAINST: Grafana API
+-- curl -s 'http://localhost:3000/api/search?type=dash-db' -H "Authorization: Bearer $GRAFANA_TOKEN"
+--
+-- DISCOVERED 21 DASHBOARDS:
+--   (sorted by folder/title)
+--
+-- Exact inventory to be populated by grafana_discovery.py orchestrator.
+-- Initial manual count confirmed 21 dashboards across multiple folders.
+--
+-- Key dashboards for infrastructure monitoring:
+--   - Redis Overview
+--   - Redis Instance Detail
+--   - RDS Overview
+--   - CloudWatch Metrics Explorer
+--   - System Overview
+--   - Alert Overview
+
+
+-- ============================================================
+-- 5.3 Grafana Alert Rules
+-- Grafana告警规则
+-- ============================================================
+-- RUN AGAINST: Grafana API
+-- curl -s 'http://localhost:3000/api/v1/provisioning/alert-rules' \
+--   -H "Authorization: Bearer $GRAFANA_TOKEN"
+--
+-- DISCOVERED 3 ALERT RULES — ALL BROKEN:
+-- ┌──────────────────────────────┬──────────────────────┬──────────┐
+-- │ UID                          │ Title                │ State    │
+-- ├──────────────────────────────┼──────────────────────┼──────────┤
+-- │ bf7zrw6q74e80a               │ Redis Memory High    │ ERROR    │
+-- │ af7zrwm660su8d               │ Redis Connections    │ ERROR    │
+-- │ ef7zrx2gdoy68f               │ RDS CPU High         │ ERROR    │
+-- └──────────────────────────────┴──────────────────────┴──────────┘
+--
+-- All 3 rules are in ERROR state because they reference stale or incorrect
+-- metric names or thresholds. They need to be rebuilt as part of UC-IT-01.
+--
+-- ISSUES FOUND:
+--   1. bf7zrw6q74e80a: References wrong metric label selector
+--   2. af7zrwm660su8d: Threshold set to impossible value (0 connections)
+--   3. ef7zrx2gdoy68f: Uses wrong CloudWatch dimension name
+--
+-- PLAN: Delete these broken rules and create new SPC-based alerts via
+-- the UC-IT-01 orchestrator pipeline.
+
+
+-- ============================================================
+-- 5.4 Grafana Contact Points
+-- Grafana联系人
+-- ============================================================
+-- RUN AGAINST: Grafana API
+-- curl -s 'http://localhost:3000/api/v1/provisioning/contact-points' \
+--   -H "Authorization: Bearer $GRAFANA_TOKEN"
+--
+-- DISCOVERED 1 CONTACT POINT:
+--   Name: email-default
+--   Type: email
+--   Addresses: (configured in Grafana settings)
+--
+-- PLAN: Add additional contact points for:
+--   - Slack webhook (infrastructure channel)
+--   - PagerDuty integration (critical alerts)
+--   - Custom webhook (for downstream processing)
+
+
+-- ############################################################################
+-- SECTION 6: CROSS-REFERENCE QUERIES
+-- 交叉引用查询
+-- ############################################################################
+-- Match instances across monitoring systems to build a unified inventory.
+
+-- ============================================================
+-- 6.1 Match Prometheus Redis → CloudWatch ElastiCache
+-- 匹配Prometheus Redis与CloudWatch ElastiCache
+-- ============================================================
+-- RUN AGAINST: Both Prometheus API and CloudWatch API
+--
+-- Prometheus labels contain the Redis connection URL:
+--   addr="rediss://master.luckyus-<service>.vyllrs.use1.cache.amazonaws.com:6379"
+--
+-- CloudWatch ElastiCache dimensions use:
+--   CacheClusterId = "luckyus-<service>-001"  (node-level)
+--   ReplicationGroupId = "luckyus-<service>"   (cluster-level)
+--
+-- MAPPING LOGIC:
+--   Extract service name from Prometheus addr label:
+--     REGEXP_REPLACE(addr, 'rediss://master\\.luckyus-(.+)\\.vyllrs.*', '\\1')
+--   → produces: "isales-market", "web", "isales-session", etc.
+--
+--   Construct CloudWatch ReplicationGroupId:
+--     CONCAT('luckyus-', service_name)
+--   → produces: "luckyus-isales-market", "luckyus-web", etc.
+--
+-- This allows us to join Prometheus time-series with CloudWatch metrics
+-- for the same Redis instance, giving us both exporter-level and
+-- AWS-level visibility.
+
+
+-- ============================================================
+-- 6.2 Match CloudWatch RDS → MySQL Information Schema
+-- 匹配CloudWatch RDS与MySQL信息模式
+-- ============================================================
+-- RUN AGAINST: MySQL (dbatest) + CloudWatch API
+--
+-- CloudWatch RDS dimensions:
+--   DBInstanceIdentifier = "luckyus-<service>-instance-1"
+--   DBClusterIdentifier  = "luckyus-<service>"
+--
+-- MySQL connection strings use the cluster endpoint:
+--   luckyus-<service>.cluster-xxxxx.us-east-1.rds.amazonaws.com
+--
+-- We can cross-reference by extracting the cluster name from both sources.
+
+-- Verify MySQL connectivity and list available schemas
+-- RUN AGAINST: MySQL (dbatest)
+SELECT
+    SCHEMA_NAME,
+    DEFAULT_CHARACTER_SET_NAME,
+    DEFAULT_COLLATION_NAME
+FROM information_schema.SCHEMATA
+WHERE SCHEMA_NAME LIKE 'luckyus%'
+   OR SCHEMA_NAME = 'test'
+ORDER BY SCHEMA_NAME;
+
+
+-- ============================================================
+-- 6.3 Match EC2 Instances → Prometheus Exporters
+-- 匹配EC2实例与Prometheus导出器
+-- ============================================================
+-- RUN AGAINST: EC2 API + Prometheus API
+--
+-- Currently there is NO overlap between EC2 instances and Prometheus targets.
+-- EC2 instances do not have node_exporter installed.
+--
+-- After node_exporter deployment, matching will use:
+--   EC2: PrivateIpAddress
+--   Prometheus: instance label (e.g., "10.0.1.100:9100")
+--
+-- SELECT equivalent (pseudo-SQL for planning):
+-- SELECT
+--     ec2.instance_id,
+--     ec2.private_ip,
+--     ec2.instance_type,
+--     prom.instance AS prom_target,
+--     CASE WHEN prom.instance IS NOT NULL THEN 'MONITORED' ELSE 'UNMONITORED' END AS coverage
+-- FROM ec2_instances ec2
+-- LEFT JOIN prometheus_targets prom
+--     ON CONCAT(ec2.private_ip, ':9100') = prom.instance
+-- ORDER BY coverage, ec2.instance_id;
+
+
+-- ############################################################################
+-- SECTION 7: SUMMARY STATISTICS
+-- 汇总统计
+-- ############################################################################
+-- Aggregate discovery findings into a single summary for reporting.
+
+-- ============================================================
+-- 7.1 Instance Count by Service Type
+-- 按服务类型统计实例数量
+-- ============================================================
+-- ┌──────────────────┬───────────┬────────────┬───────────────┬──────────────┐
+-- │ Service Type     │ Instances │ Monitored  │ Coverage (%)  │ Source       │
+-- ├──────────────────┼───────────┼────────────┼───────────────┼──────────────┤
+-- │ Redis            │ 76        │ 75         │ 98.7%         │ Prometheus   │
+-- │ RDS (Aurora)     │ 58+       │ 58 (basic) │ 100% (basic)  │ CloudWatch   │
+-- │ EC2              │ ~233      │ 0          │ 0.0%          │ None         │
+-- │ EKS              │ TBD       │ TBD        │ TBD           │ TBD          │
+-- │ MSK (Kafka)      │ TBD       │ TBD        │ TBD           │ TBD          │
+-- │ DocumentDB       │ TBD       │ TBD        │ TBD           │ TBD          │
+-- │ OpenSearch       │ TBD       │ TBD        │ TBD           │ TBD          │
+-- │ EMR              │ TBD       │ TBD        │ TBD           │ TBD          │
+-- ├──────────────────┼───────────┼────────────┼───────────────┼──────────────┤
+-- │ TOTAL (known)    │ ~367      │ ~133       │ ~36%          │ Mixed        │
+-- └──────────────────┴───────────┴────────────┴───────────────┴──────────────┘
+
+
+-- ============================================================
+-- 7.2 Monitoring Coverage Breakdown
+-- 监控覆盖率分析
+-- ============================================================
+-- PROMETHEUS COVERAGE:
+--   Redis:  75/76 targets UP = 98.7%
+--   EC2:    0/233 targets   = 0.0%
+--   RDS:    0 exporters     = 0.0% (use CloudWatch instead)
+--   Total Prometheus targets: 76
+--
+-- CLOUDWATCH COVERAGE:
+--   RDS:    58/58  = 100% (basic CloudWatch metrics)
+--   EC2:    233/233 = 100% (basic 5-min metrics only)
+--   Redis:  76/76  = 100% (ElastiCache metrics)
+--   Total CloudWatch-monitored resources: ~367
+--
+-- GRAFANA COVERAGE:
+--   Dashboards: 21 (mostly Redis-focused)
+--   Alert Rules: 3 (ALL BROKEN)
+--   Contact Points: 1 (email only)
+
+
+-- ============================================================
+-- 7.3 Data Freshness Check
+-- 数据新鲜度检查
+-- ============================================================
+-- RUN AGAINST: Prometheus API
+-- Check how recent the last scrape was for each target:
+--
+-- PromQL: time() - max by (instance) (timestamp(up{job="redis_exporter"}))
+--
+-- This shows seconds since the last successful scrape.
+-- If > 60s, the target may be having issues.
+-- If > 300s, the target is likely unreachable.
+--
+-- curl -s 'http://localhost:9090/api/v1/query?query=time()-max%20by%20(instance)(timestamp(up{job="redis_exporter"}))'
+
+
+-- ============================================================
+-- 7.4 Prometheus Storage Statistics
+-- Prometheus存储统计
+-- ============================================================
+-- RUN AGAINST: Prometheus API
+-- Endpoint: GET http://localhost:9090/api/v1/status/tsdb
+--
+-- This tells us:
+--   - Number of time series
+--   - Storage size on disk
+--   - Retention period
+--   - Compaction statistics
+--
+-- Important for capacity planning of the analytics pipeline.
+
+
+-- ============================================================
+-- 7.5 Final Readiness Assessment
+-- 最终准备就绪评估
+-- ============================================================
+-- READY FOR PIPELINE:
+--   [✓] Redis metrics via Prometheus API - 75 instances, 15-second scrape
+--   [✓] RDS metrics via CloudWatch API   - 58 instances, 1-minute or 5-minute
+--   [✓] MySQL analytics target (dbatest) - test schema writable
+--   [✓] Grafana API accessible           - datasources & dashboards available
+--
+-- NOT READY (requires deployment):
+--   [✗] EC2 metrics - need node_exporter deployment
+--   [✗] EKS metrics - need Container Insights review
+--   [✗] MSK metrics - need MSK monitoring setup
+--   [✗] Grafana alerts - need to rebuild 3 broken rules
+--
+-- NEXT STEP: Execute 02_create_monitoring_schema.sql to create analytics tables.
+-- ============================================================
+-- END OF FILE: 01_discovery_inventory.sql
+-- ============================================================

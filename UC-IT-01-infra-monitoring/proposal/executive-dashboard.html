@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UC-IT-01 | Predictive Infrastructure Monitoring - Executive Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* ===== CSS DESIGN SYSTEM ===== */
+        :root {
+            --bg-primary: #0f1419;
+            --bg-secondary: #1a2332;
+            --bg-card: #1e2d3d;
+            --bg-card-hover: #243647;
+            --bg-input: #162029;
+            --text-primary: #e8edf2;
+            --text-secondary: #8899a6;
+            --text-muted: #657786;
+            --border-color: #2d4050;
+            --border-light: rgba(255,255,255,0.08);
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+            --luckin-blue: #00529B;
+            --luckin-light: #1a8cff;
+            --luckin-dark: #002F5D;
+            --critical: #ff4444;
+            --critical-bg: rgba(255,68,68,0.12);
+            --warning: #ff9800;
+            --warning-bg: rgba(255,152,0,0.12);
+            --success: #4caf50;
+            --success-bg: rgba(76,175,80,0.12);
+            --info: #2196f3;
+            --info-bg: rgba(33,150,243,0.12);
+            --sidebar-width: 260px;
+            --radius: 10px;
+            --radius-sm: 6px;
+        }
+
+        /* ===== RESET & BASE ===== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .app-layout { display: flex; min-height: 100vh; }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            position: fixed; top: 0; left: 0; height: 100vh;
+            display: flex; flex-direction: column;
+            z-index: 100; overflow-y: auto;
+        }
+
+        .sidebar-brand { padding: 24px 20px 16px; border-bottom: 1px solid var(--border-color); }
+        .brand-row { display: flex; align-items: center; gap: 12px; }
+        .brand-logo {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, var(--luckin-blue), var(--luckin-light));
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Fira Code', monospace; font-weight: 700; font-size: 18px; color: #fff; flex-shrink: 0;
+        }
+        .brand-text { display: flex; flex-direction: column; }
+        .brand-name { font-weight: 700; font-size: 15px; color: var(--text-primary); line-height: 1.2; }
+        .brand-sub { font-size: 11px; color: var(--text-muted); font-weight: 400; }
+
+        .project-badge {
+            margin-top: 14px; display: inline-flex; align-items: center; gap: 6px;
+            background: linear-gradient(135deg, var(--luckin-dark), var(--luckin-blue));
+            color: #fff; padding: 5px 12px; border-radius: 20px;
+            font-size: 11px; font-weight: 600; font-family: 'Fira Code', monospace; letter-spacing: 0.5px;
+        }
+        .project-badge::before {
+            content: ''; width: 6px; height: 6px; background: var(--success);
+            border-radius: 50%; animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .sidebar-nav { flex: 1; padding: 12px 0; }
+        .nav-section-label {
+            padding: 12px 20px 6px; font-size: 10px; text-transform: uppercase;
+            letter-spacing: 1.2px; color: var(--text-muted); font-weight: 600;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 20px; cursor: pointer; color: var(--text-secondary);
+            font-size: 13px; font-weight: 500; transition: all 0.2s ease;
+            border-left: 3px solid transparent; text-decoration: none;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
+        .nav-item.active {
+            color: var(--luckin-light); border-left-color: var(--luckin-light);
+            background: rgba(26,140,255,0.08); font-weight: 600;
+        }
+        .nav-icon { font-size: 16px; width: 22px; text-align: center; }
+
+        .sidebar-footer {
+            padding: 16px 20px; border-top: 1px solid var(--border-color);
+            font-size: 10px; color: var(--text-muted); line-height: 1.5;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content { margin-left: var(--sidebar-width); flex: 1; padding: 32px 40px; }
+        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ===== TYPOGRAPHY ===== */
+        .section-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+        .section-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 28px; }
+        .mono { font-family: 'Fira Code', monospace; }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius); padding: 24px;
+            transition: all 0.2s ease;
+        }
+        .card:hover { border-color: rgba(26,140,255,0.3); }
+        .card-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
+
+        /* ===== KPI GRID ===== */
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+        .kpi-card {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius); padding: 20px; text-align: center;
+        }
+        .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
+        .kpi-value { font-size: 32px; font-weight: 800; font-family: 'Fira Code', monospace; line-height: 1.1; }
+        .kpi-sub { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+
+        /* ===== HERO ===== */
+        .hero-banner {
+            background: linear-gradient(135deg, rgba(255,68,68,0.15), rgba(0,82,155,0.2));
+            border: 1px solid rgba(255,68,68,0.3); border-radius: var(--radius);
+            padding: 40px; margin-bottom: 32px; position: relative; overflow: hidden;
+        }
+        .hero-banner::before {
+            content: ''; position: absolute; top: -50%; right: -10%; width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(255,68,68,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero-quote { font-size: 28px; font-weight: 300; color: var(--critical); line-height: 1.3; margin-bottom: 8px; }
+        .hero-answer { font-size: 22px; font-weight: 600; color: var(--success); margin-bottom: 16px; }
+        .hero-detail { font-size: 14px; color: var(--text-secondary); max-width: 700px; }
+
+        /* ===== TWO-COL LAYOUT ===== */
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+        .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+        /* ===== BADGES ===== */
+        .badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+        }
+        .badge-critical { background: var(--critical-bg); color: var(--critical); }
+        .badge-warning { background: var(--warning-bg); color: var(--warning); }
+        .badge-success { background: var(--success-bg); color: var(--success); }
+        .badge-info { background: var(--info-bg); color: var(--info); }
+
+        /* ===== TABLES ===== */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table th {
+            text-align: left; padding: 10px 14px; background: var(--bg-secondary);
+            color: var(--text-muted); font-size: 11px; text-transform: uppercase;
+            letter-spacing: 0.8px; font-weight: 600; border-bottom: 1px solid var(--border-color);
+        }
+        .data-table td {
+            padding: 10px 14px; border-bottom: 1px solid var(--border-light);
+            vertical-align: middle;
+        }
+        .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-bar {
+            width: 100%; height: 8px; background: var(--bg-input);
+            border-radius: 4px; overflow: hidden;
+        }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+
+        /* ===== FLEET CARDS ===== */
+        .fleet-card {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius); padding: 20px; transition: all 0.2s ease;
+        }
+        .fleet-card:hover { border-color: rgba(26,140,255,0.3); transform: translateY(-2px); }
+        .fleet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .fleet-service { font-size: 16px; font-weight: 700; }
+        .fleet-count { font-family: 'Fira Code', monospace; font-size: 24px; font-weight: 700; color: var(--luckin-light); }
+        .fleet-source { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+        .fleet-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+        .fleet-bar-seg { height: 100%; }
+        .fleet-legend { display: flex; gap: 12px; flex-wrap: wrap; }
+        .fleet-legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-secondary); }
+        .fleet-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+        /* ===== GAP ANALYSIS ===== */
+        .gap-col { padding: 24px; border-radius: var(--radius); }
+        .gap-before { background: rgba(255,68,68,0.06); border: 1px solid rgba(255,68,68,0.2); }
+        .gap-after { background: rgba(76,175,80,0.06); border: 1px solid rgba(76,175,80,0.2); }
+        .gap-heading { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .gap-item { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; color: var(--text-secondary); }
+        .gap-item:last-child { border-bottom: none; }
+        .gap-item strong { color: var(--text-primary); }
+
+        /* ===== SPC CHART ===== */
+        .spc-controls { display: flex; gap: 16px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+        .spc-select {
+            background: var(--bg-input); border: 1px solid var(--border-color);
+            color: var(--text-primary); padding: 8px 14px; border-radius: var(--radius-sm);
+            font-size: 13px; font-family: 'Inter', sans-serif; cursor: pointer; min-width: 200px;
+        }
+        .spc-select:focus { outline: none; border-color: var(--luckin-light); }
+        .chart-container {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius); padding: 24px; margin-bottom: 24px;
+        }
+        .chart-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: var(--text-primary); }
+
+        /* ===== TIMELINE ===== */
+        .timeline { position: relative; padding-left: 32px; }
+        .timeline::before {
+            content: ''; position: absolute; left: 12px; top: 0; bottom: 0;
+            width: 2px; background: var(--border-color);
+        }
+        .timeline-item { position: relative; margin-bottom: 24px; }
+        .timeline-dot {
+            position: absolute; left: -26px; top: 4px; width: 12px; height: 12px;
+            border-radius: 50%; border: 2px solid var(--bg-primary);
+        }
+        .timeline-time { font-family: 'Fira Code', monospace; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+        .timeline-label { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+        .timeline-desc { font-size: 13px; color: var(--text-secondary); }
+
+        /* ===== ROADMAP ===== */
+        .roadmap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+        .roadmap-phase {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius); padding: 20px; position: relative;
+        }
+        .roadmap-phase.completed { border-color: var(--success); }
+        .roadmap-num { font-family: 'Fira Code', monospace; font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+        .roadmap-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+        .roadmap-duration { font-size: 12px; color: var(--luckin-light); margin-bottom: 8px; }
+        .roadmap-cost { font-size: 12px; color: var(--text-muted); font-family: 'Fira Code', monospace; }
+        .roadmap-desc { font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.5; }
+
+        /* ===== ARCH DIAGRAM ===== */
+        .arch-box {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius); padding: 16px; text-align: center; font-size: 13px;
+        }
+        .arch-arrow { display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 20px; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1400px) {
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .roadmap { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 1100px) {
+            .two-col { grid-template-columns: 1fr; }
+            .three-col { grid-template-columns: 1fr; }
+        }
+
+        /* ===== CALLOUT ===== */
+        .callout {
+            border-radius: var(--radius); padding: 20px 24px; margin-bottom: 24px;
+            display: flex; gap: 16px; align-items: flex-start;
+        }
+        .callout-critical { background: var(--critical-bg); border-left: 4px solid var(--critical); }
+        .callout-success { background: var(--success-bg); border-left: 4px solid var(--success); }
+        .callout-warning { background: var(--warning-bg); border-left: 4px solid var(--warning); }
+        .callout-info { background: var(--info-bg); border-left: 4px solid var(--info); }
+        .callout-icon { font-size: 24px; flex-shrink: 0; }
+        .callout-text { flex: 1; }
+        .callout-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+        .callout-body { font-size: 13px; color: var(--text-secondary); }
+
+        /* ===== DETECTION TABLE ===== */
+        .detection-compare {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+            border: 1px solid var(--border-color); border-radius: var(--radius); overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .detect-col { padding: 24px; }
+        .detect-col.current { background: rgba(255,68,68,0.05); }
+        .detect-col.proposed { background: rgba(76,175,80,0.05); }
+        .detect-heading { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+
+        /* ===== SCENARIO TABLE ===== */
+        .scenario-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+        .scenario-card {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius); padding: 24px; text-align: center;
+        }
+        .scenario-card.recommended { border-color: var(--luckin-light); }
+        .scenario-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+        .scenario-price { font-family: 'Fira Code', monospace; font-size: 28px; font-weight: 700; color: var(--luckin-light); margin-bottom: 4px; }
+        .scenario-unit { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+        .scenario-features { text-align: left; list-style: none; }
+        .scenario-features li { padding: 6px 0; font-size: 13px; color: var(--text-secondary); border-bottom: 1px solid var(--border-light); }
+        .scenario-features li::before { content: ''; margin-right: 8px; }
+
+        .text-critical { color: var(--critical); }
+        .text-warning { color: var(--warning); }
+        .text-success { color: var(--success); }
+        .text-info { color: var(--info); }
+        .text-muted { color: var(--text-muted); }
+    </style>
+</head>
+<body>
+<div class="app-layout">
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-row">
+                <div class="brand-logo">IT</div>
+                <div class="brand-text">
+                    <span class="brand-name">Infra Monitoring</span>
+                    <span class="brand-sub">UC-IT-01 Predictive</span>
+                </div>
+            </div>
+            <div class="project-badge">DEMO &mdash; Phase 1</div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Analytics</div>
+            <a class="nav-item active" onclick="showView('view-summary')" data-view="view-summary">
+                <span class="nav-icon">&#x1F4CA;</span> Executive Summary
+            </a>
+            <a class="nav-item" onclick="showView('view-crash')" data-view="view-crash">
+                <span class="nav-icon">&#x1F4A5;</span> VM Crash Case Study
+            </a>
+            <a class="nav-item" onclick="showView('view-fleet')" data-view="view-fleet">
+                <span class="nav-icon">&#x1F5A5;</span> Infrastructure Fleet
+            </a>
+            <a class="nav-item" onclick="showView('view-gaps')" data-view="view-gaps">
+                <span class="nav-icon">&#x1F50D;</span> Monitoring Gap Analysis
+            </a>
+            <div class="nav-section-label">Technical</div>
+            <a class="nav-item" onclick="showView('view-spc')" data-view="view-spc">
+                <span class="nav-icon">&#x1F4C8;</span> SPC Control Charts
+            </a>
+            <a class="nav-item" onclick="showView('view-roi')" data-view="view-roi">
+                <span class="nav-icon">&#x1F4B0;</span> Implementation & ROI
+            </a>
+            <a class="nav-item" onclick="showView('view-arch')" data-view="view-arch">
+                <span class="nav-icon">&#x1F3D7;</span> Architecture
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            UC-IT-01 v1.0<br>
+            Luckin Coffee USA<br>
+            Generated: 2026-02-15<br>
+            <span style="color:var(--text-muted);">&#x7F51;&#x7EDC;&#x76D1;&#x63A7;&#x9884;&#x6D4B;&#x5206;&#x6790;</span>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+
+        <!-- ========== VIEW 1: EXECUTIVE SUMMARY ========== -->
+        <section id="view-summary" class="view-section active">
+            <h1 class="section-title">Executive Summary / &#x6267;&#x884C;&#x6458;&#x8981;</h1>
+            <p class="section-subtitle">Predictive Infrastructure Monitoring for Luckin Coffee USA &#x2014; &#x9884;&#x6D4B;&#x6027;&#x57FA;&#x7840;&#x8BBE;&#x65BD;&#x76D1;&#x63A7;</p>
+
+            <div class="hero-banner">
+                <div class="hero-quote">"A VM crashed. We didn't see it coming."</div>
+                <div class="hero-answer">With UC-IT-01, we would have known 3 hours earlier.</div>
+                <p class="hero-detail">
+                    In February 2026, production server <strong>luckyuam01-prod-usb</strong> experienced a catastrophic failure.
+                    AWS health checks detected it at T=0 &#x2014; after the crash. Our SPC-based anomaly detection engine would have
+                    flagged CPU degradation at T-180 min, memory exhaustion at T-120 min, and disk I/O saturation at T-35 min.
+                    <br><br><span style="color:var(--text-muted);">2026&#x5E74;2&#x6708;&#xFF0C;&#x751F;&#x4EA7;&#x670D;&#x52A1;&#x5668;&#x53D1;&#x751F;&#x6545;&#x969C;&#x3002;AWS&#x5728;T=0&#x65F6;&#x53D1;&#x73B0;&#xFF0C;&#x800C;&#x6211;&#x4EEC;&#x7684;SPC&#x5F02;&#x5E38;&#x68C0;&#x6D4B;&#x5F15;&#x64CE;&#x672C;&#x53EF;&#x63D0;&#x524D;3&#x5C0F;&#x65F6;&#x53D1;&#x51FA;&#x8B66;&#x62A5;&#x3002;</span>
+                </p>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">Fleet Health Score / &#x8239;&#x961F;&#x5065;&#x5EB7;&#x5206;</div>
+                    <div class="kpi-value text-success" id="kpi-health">84.7</div>
+                    <div class="kpi-sub">Grade B &#x2014; Good</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Monitored Instances / &#x76D1;&#x63A7;&#x5B9E;&#x4F8B;</div>
+                    <div class="kpi-value" style="color:var(--luckin-light);" id="kpi-instances">138</div>
+                    <div class="kpi-sub">76 Redis + 62 RDS</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Active Alerts / &#x6D3B;&#x52A8;&#x8B66;&#x62A5;</div>
+                    <div class="kpi-value text-warning" id="kpi-alerts">12</div>
+                    <div class="kpi-sub"><span class="text-critical">3</span> CRITICAL &bull; <span class="text-warning">5</span> WARNING &bull; <span class="text-info">4</span> INFO</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Detection Speed / &#x68C0;&#x6D4B;&#x901F;&#x5EA6;</div>
+                    <div class="kpi-value text-success" id="kpi-speed">15+</div>
+                    <div class="kpi-sub">minutes advance warning</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Blind Spots Fixed / &#x76F2;&#x70B9;&#x4FEE;&#x590D;</div>
+                    <div class="kpi-value text-success" id="kpi-blindspots">7/7</div>
+                    <div class="kpi-sub">all identified gaps addressed</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Monthly AWS Spend / &#x6708;&#x8D39;&#x7528;</div>
+                    <div class="kpi-value text-warning" id="kpi-spend">$49.6K</div>
+                    <div class="kpi-sub">38 services at risk</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Monitoring Coverage / &#x76D1;&#x63A7;&#x8986;&#x76D6;</div>
+                    <div class="kpi-value" id="kpi-coverage">18%</div>
+                    <div class="kpi-sub">
+                        <div class="progress-bar" style="margin-top:6px;">
+                            <div class="progress-fill" style="width:18%;background:var(--critical);" id="coverage-bar"></div>
+                        </div>
+                        <span style="font-size:11px;">Target: 80%+</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Uptime SLA Target / &#x53EF;&#x7528;&#x6027;</div>
+                    <div class="kpi-value" style="color:var(--text-muted);" id="kpi-sla">99.9%</div>
+                    <div class="kpi-sub">currently unmeasured</div>
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div class="gap-col gap-before">
+                    <div class="gap-heading"><span class="text-critical">&#x26A0;</span> Current State / &#x5F53;&#x524D;&#x72B6;&#x6001;</div>
+                    <div class="gap-item"><strong>Prometheus</strong>: Only monitors Redis (76 instances). 15-day retention. Outdated v2.43.0</div>
+                    <div class="gap-item"><strong>CloudWatch</strong>: ZERO active alarms across 38 services. Infinite log retention</div>
+                    <div class="gap-item"><strong>Grafana</strong>: All 3 alert rules broken (ERROR state). 1 contact point (email only)</div>
+                    <div class="gap-item"><strong>EC2</strong>: 233 instances with ZERO monitoring instrumentation</div>
+                    <div class="gap-item"><strong>RDS</strong>: 62 clusters, passive CloudWatch only &#x2014; no alarms configured</div>
+                    <div class="gap-item"><strong>Missing</strong>: No node_exporter, mysqld_exporter, mongodb_exporter</div>
+                    <div class="gap-item"><strong>Detection</strong>: Reactive only &#x2014; learn about problems from users, not monitors</div>
+                </div>
+                <div class="gap-col gap-after">
+                    <div class="gap-heading"><span class="text-success">&#x2705;</span> Proposed State / &#x63D0;&#x8BAE;&#x72B6;&#x6001;</div>
+                    <div class="gap-item"><strong>Prometheus</strong>: Redis + exporters for EC2, MySQL, MongoDB. 90-day retention</div>
+                    <div class="gap-item"><strong>CloudWatch</strong>: 14 alarm types across entire RDS fleet + auto-remediation</div>
+                    <div class="gap-item"><strong>Grafana</strong>: Fixed alerts + 5 new SPC anomaly rules + Slack/PagerDuty</div>
+                    <div class="gap-item"><strong>SPC Engine</strong>: Z-score + 5 Western Electric rules on all infra metrics</div>
+                    <div class="gap-item"><strong>Health Scores</strong>: Composite 0-100 score per instance (A/B/C/D/F grades)</div>
+                    <div class="gap-item"><strong>Predictive</strong>: Rate-of-change detection + breach prediction</div>
+                    <div class="gap-item"><strong>Detection</strong>: 15+ minute advance warning before failures</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== VIEW 2: VM CRASH CASE STUDY ========== -->
+        <section id="view-crash" class="view-section">
+            <h1 class="section-title">VM Crash Case Study / &#x865A;&#x62DF;&#x673A;&#x5D29;&#x6E83;&#x6848;&#x4F8B;</h1>
+            <p class="section-subtitle">February 2026 &#x2014; luckyuam01-prod-usb failure analysis with SPC overlay</p>
+
+            <div class="callout callout-critical">
+                <span class="callout-icon">&#x1F6A8;</span>
+                <div class="callout-text">
+                    <div class="callout-title">Incident: Production VM Crash &#x2014; February 2026</div>
+                    <div class="callout-body">Server luckyuam01-prod-usb experienced catastrophic failure. Detected by AWS health checks at T=0 (post-crash). No internal monitoring alerts were triggered. Service disruption affected multiple applications.</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">Metrics Timeline Leading to Crash / &#x5D29;&#x6E83;&#x524D;&#x6307;&#x6807;&#x65F6;&#x95F4;&#x7EBF;</div>
+                <svg id="crashTimeline" width="100%" height="380" viewBox="0 0 900 380" style="max-width:900px;">
+                    <!-- Background -->
+                    <defs>
+                        <linearGradient id="critZone" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#ff4444" stop-opacity="0.15"/>
+                            <stop offset="100%" stop-color="#ff4444" stop-opacity="0.02"/>
+                        </linearGradient>
+                        <linearGradient id="warnZone" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#ff9800" stop-opacity="0.1"/>
+                            <stop offset="100%" stop-color="#ff9800" stop-opacity="0.02"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- Axes -->
+                    <line x1="70" y1="20" x2="70" y2="330" stroke="#2d4050" stroke-width="1"/>
+                    <line x1="70" y1="330" x2="880" y2="330" stroke="#2d4050" stroke-width="1"/>
+                    <!-- 3-sigma zone -->
+                    <rect x="70" y="20" width="810" height="60" fill="url(#critZone)"/>
+                    <!-- 2-sigma zone -->
+                    <rect x="70" y="80" width="810" height="50" fill="url(#warnZone)"/>
+                    <!-- Control limits -->
+                    <line x1="70" y1="80" x2="880" y2="80" stroke="#ff4444" stroke-width="1" stroke-dasharray="6,4" opacity="0.6"/>
+                    <line x1="70" y1="130" x2="880" y2="130" stroke="#ff9800" stroke-width="1" stroke-dasharray="4,4" opacity="0.5"/>
+                    <line x1="70" y1="200" x2="880" y2="200" stroke="#657786" stroke-width="1" stroke-dasharray="2,4" opacity="0.4"/>
+                    <!-- Labels -->
+                    <text x="65" y="84" fill="#ff4444" font-size="10" text-anchor="end" font-family="Fira Code">3&#x3C3;</text>
+                    <text x="65" y="134" fill="#ff9800" font-size="10" text-anchor="end" font-family="Fira Code">2&#x3C3;</text>
+                    <text x="65" y="204" fill="#657786" font-size="10" text-anchor="end" font-family="Fira Code">&#x3BC;</text>
+                    <!-- CPU line (blue) -->
+                    <polyline points="100,210 150,205 200,215 250,200 300,195 350,190 400,175 450,160 500,140 550,120 600,100 650,85 700,70 750,50 800,35 840,25" fill="none" stroke="#1a8cff" stroke-width="2.5" opacity="0.9"/>
+                    <!-- Memory line (orange) -->
+                    <polyline points="100,230 150,225 200,220 250,218 300,210 350,205 400,195 450,180 500,165 550,145 600,130 650,115 700,95 750,75 800,55 840,40" fill="none" stroke="#ff9800" stroke-width="2" opacity="0.8"/>
+                    <!-- Disk I/O line (red) -->
+                    <polyline points="100,250 150,245 200,248 250,240 300,242 350,238 400,230 450,225 500,210 550,195 600,165 650,140 700,110 750,80 800,50 840,30" fill="none" stroke="#ff4444" stroke-width="2" opacity="0.8"/>
+                    <!-- Network line (green) -->
+                    <polyline points="100,260 150,258 200,255 250,250 300,248 350,245 400,240 450,238 500,230 550,225 600,215 650,210 700,200 750,195 800,180 840,170" fill="none" stroke="#4caf50" stroke-width="1.5" opacity="0.7"/>
+                    <!-- Detection markers -->
+                    <circle cx="500" cy="140" r="8" fill="none" stroke="#1a8cff" stroke-width="2"/>
+                    <text x="500" y="160" fill="#1a8cff" font-size="10" text-anchor="middle" font-family="Fira Code">T-180m</text>
+                    <circle cx="600" cy="100" r="8" fill="none" stroke="#ff9800" stroke-width="2"/>
+                    <text x="600" y="116" fill="#ff9800" font-size="10" text-anchor="middle" font-family="Fira Code">T-120m</text>
+                    <circle cx="750" cy="50" r="8" fill="none" stroke="#ff4444" stroke-width="2"/>
+                    <text x="750" y="45" fill="#ff4444" font-size="10" text-anchor="middle" font-family="Fira Code">T-35m</text>
+                    <!-- Crash marker -->
+                    <line x1="840" y1="20" x2="840" y2="330" stroke="#ff4444" stroke-width="2" stroke-dasharray="4,3"/>
+                    <text x="840" y="348" fill="#ff4444" font-size="11" text-anchor="middle" font-weight="700" font-family="Fira Code">T=0 CRASH</text>
+                    <!-- Time axis labels -->
+                    <text x="100" y="355" fill="#657786" font-size="10" text-anchor="middle" font-family="Fira Code">T-4h</text>
+                    <text x="300" y="355" fill="#657786" font-size="10" text-anchor="middle" font-family="Fira Code">T-3h</text>
+                    <text x="500" y="355" fill="#657786" font-size="10" text-anchor="middle" font-family="Fira Code">T-2h</text>
+                    <text x="700" y="355" fill="#657786" font-size="10" text-anchor="middle" font-family="Fira Code">T-1h</text>
+                    <!-- Legend -->
+                    <rect x="100" y="370" width="12" height="3" fill="#1a8cff"/>
+                    <text x="116" y="374" fill="#8899a6" font-size="10">CPU</text>
+                    <rect x="160" y="370" width="12" height="3" fill="#ff9800"/>
+                    <text x="176" y="374" fill="#8899a6" font-size="10">Memory</text>
+                    <rect x="230" y="370" width="12" height="3" fill="#ff4444"/>
+                    <text x="246" y="374" fill="#8899a6" font-size="10">Disk I/O</text>
+                    <rect x="310" y="370" width="12" height="3" fill="#4caf50"/>
+                    <text x="326" y="374" fill="#8899a6" font-size="10">Network</text>
+                </svg>
+            </div>
+
+            <div class="callout callout-success">
+                <span class="callout-icon">&#x2705;</span>
+                <div class="callout-text">
+                    <div class="callout-title">With UC-IT-01: Alert at T-180 minutes (3 hours before crash)</div>
+                    <div class="callout-body">SPC engine would have detected CPU Z-score breach at 2&#x3C3; (WARNING) 3 hours before failure, escalating to 3&#x3C3; (CRITICAL) at T-120 minutes. DBA team would have had ample time to investigate and mitigate.</div>
+                </div>
+            </div>
+
+            <div class="detection-compare">
+                <div class="detect-col current">
+                    <div class="detect-heading text-critical">&#x274C; Current Detection</div>
+                    <table class="data-table">
+                        <tr><td>CPU spike</td><td class="text-critical">Not detected</td></tr>
+                        <tr><td>Memory exhaustion</td><td class="text-critical">Not detected</td></tr>
+                        <tr><td>Disk I/O saturation</td><td class="text-critical">Not detected</td></tr>
+                        <tr><td>Crash detected by</td><td>AWS health check (T=0)</td></tr>
+                        <tr><td>Advance warning</td><td class="mono text-critical">0 minutes</td></tr>
+                        <tr><td>Time to remediate</td><td>Reactive &#x2014; after impact</td></tr>
+                    </table>
+                </div>
+                <div class="detect-col proposed">
+                    <div class="detect-heading text-success">&#x2705; UC-IT-01 Detection</div>
+                    <table class="data-table">
+                        <tr><td>CPU spike</td><td class="text-warning">WARNING at T-180m (2&#x3C3;)</td></tr>
+                        <tr><td>Memory exhaustion</td><td class="text-critical">CRITICAL at T-120m (3&#x3C3;)</td></tr>
+                        <tr><td>Disk I/O saturation</td><td class="text-critical">CRITICAL at T-35m (3&#x3C3;)</td></tr>
+                        <tr><td>Crash detected by</td><td>SPC Engine (T-180m)</td></tr>
+                        <tr><td>Advance warning</td><td class="mono text-success">180 minutes</td></tr>
+                        <tr><td>Time to remediate</td><td>Proactive &#x2014; before impact</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <h3 style="margin:24px 0 16px;">Incident Timeline / &#x4E8B;&#x4EF6;&#x65F6;&#x95F4;&#x7EBF;</h3>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background:var(--info);"></div>
+                    <div class="timeline-time">T-240 min</div>
+                    <div class="timeline-label">Normal Operations</div>
+                    <div class="timeline-desc">All metrics within normal bounds. CPU 35%, Memory 62%, Disk I/O nominal.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background:var(--warning);"></div>
+                    <div class="timeline-time">T-180 min &#x2014; UC-IT-01 WARNING</div>
+                    <div class="timeline-label">CPU Z-Score Breaches 2&#x3C3;</div>
+                    <div class="timeline-desc">CPU utilization reaches 72%. Z-score = 2.31. Western Electric Rule 2 triggered (2 of 3 consecutive points beyond 2&#x3C3;).</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background:var(--critical);"></div>
+                    <div class="timeline-time">T-120 min &#x2014; UC-IT-01 CRITICAL</div>
+                    <div class="timeline-label">Memory Exhaustion Begins</div>
+                    <div class="timeline-desc">Memory usage surges to 89%. Z-score = 3.14. WE Rule 1 triggered (single point beyond 3&#x3C3;). Rate-of-change: +47% in 1 hour.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background:var(--critical);"></div>
+                    <div class="timeline-time">T-35 min &#x2014; UC-IT-01 EMERGENCY</div>
+                    <div class="timeline-label">Disk I/O Saturation</div>
+                    <div class="timeline-desc">Disk I/O reaches 98% capacity. Multiple metrics in CRITICAL. Predicted failure within 30 minutes based on rate-of-change extrapolation.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background:var(--critical);"></div>
+                    <div class="timeline-time">T=0 &#x2014; CRASH</div>
+                    <div class="timeline-label">VM Failure &#x2014; AWS Health Check Triggered</div>
+                    <div class="timeline-desc">Server becomes unresponsive. AWS detects failure. Service disruption begins. Manual intervention required for recovery.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== VIEW 3: INFRASTRUCTURE FLEET ========== -->
+        <section id="view-fleet" class="view-section">
+            <h1 class="section-title">Infrastructure Fleet / &#x57FA;&#x7840;&#x8BBE;&#x65BD;&#x8239;&#x961F;</h1>
+            <p class="section-subtitle">Service inventory across 38+ AWS services &#x2014; monitoring coverage status</p>
+
+            <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px;">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Services</div>
+                    <div class="kpi-value" style="color:var(--luckin-light);">38+</div>
+                    <div class="kpi-sub">AWS services in use</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Monitored</div>
+                    <div class="kpi-value text-success">138</div>
+                    <div class="kpi-sub">Redis (76) + RDS (62)</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Unmonitored</div>
+                    <div class="kpi-value text-critical">350+</div>
+                    <div class="kpi-sub">EC2, EKS, MSK, etc.</div>
+                </div>
+            </div>
+
+            <div id="fleetGrid" class="three-col"></div>
+
+            <h3 style="margin:24px 0 16px;">Top Redis Instances by Memory / &#x6309;&#x5185;&#x5B58;&#x6392;&#x5E8F;&#x7684;Redis&#x5B9E;&#x4F8B;</h3>
+            <div class="card" style="margin-bottom:24px;overflow-x:auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Instance</th><th>Memory Used</th><th>Clients</th><th>Ops/sec</th><th>Hit Rate</th><th>Health</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="mono">isales-market</td><td class="mono text-critical">1.26 GB</td><td class="mono">84</td><td class="mono">2,450</td><td class="mono text-success">98.4%</td><td><span class="badge badge-success">A</span></td></tr>
+                        <tr><td class="mono">web</td><td class="mono text-warning">543 MB</td><td class="mono">120</td><td class="mono">3,820</td><td class="mono text-success">97.1%</td><td><span class="badge badge-success">A</span></td></tr>
+                        <tr><td class="mono">isales-session</td><td class="mono">110 MB</td><td class="mono">45</td><td class="mono">890</td><td class="mono text-success">99.2%</td><td><span class="badge badge-success">A</span></td></tr>
+                        <tr><td class="mono">jumpserver</td><td class="mono">89 MB</td><td class="mono text-warning">320</td><td class="mono">1,240</td><td class="mono text-success">96.8%</td><td><span class="badge badge-info">B</span></td></tr>
+                        <tr><td class="mono">aapi-unionauth</td><td class="mono">67 MB</td><td class="mono text-warning">209</td><td class="mono">1,780</td><td class="mono text-success">95.3%</td><td><span class="badge badge-info">B</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========== VIEW 4: MONITORING GAP ANALYSIS ========== -->
+        <section id="view-gaps" class="view-section">
+            <h1 class="section-title">Monitoring Gap Analysis / &#x76D1;&#x63A7;&#x5DEE;&#x8DDD;&#x5206;&#x6790;</h1>
+            <p class="section-subtitle">7 critical blind spots identified &#x2014; current vs proposed monitoring coverage</p>
+
+            <div class="callout callout-warning" style="margin-bottom:24px;">
+                <span class="callout-icon">&#x26A0;&#xFE0F;</span>
+                <div class="callout-text">
+                    <div class="callout-title">7 Critical Blind Spots Identified</div>
+                    <div class="callout-body">Current monitoring covers only 18.2% of infrastructure. 233 EC2 instances, EKS clusters, MSK brokers, DocumentDB, and OpenSearch domains have ZERO active monitoring instrumentation.</div>
+                </div>
+            </div>
+
+            <div class="two-col" style="margin-bottom:32px;">
+                <div class="gap-col gap-before">
+                    <div class="gap-heading"><span class="text-critical">&#x274C;</span> Current Monitoring Gaps</div>
+                    <div class="gap-item"><strong>Blind Spot 1</strong>: Prometheus only monitors Redis. No node_exporter on any EC2 instance.</div>
+                    <div class="gap-item"><strong>Blind Spot 2</strong>: 15-day Prometheus retention. Cannot analyze seasonal patterns or long-term trends.</div>
+                    <div class="gap-item"><strong>Blind Spot 3</strong>: 1 Prometheus target DOWN (trailing space in hostname config).</div>
+                    <div class="gap-item"><strong>Blind Spot 4</strong>: ZERO CloudWatch alarms. 58 RDS slow query log groups with infinite retention.</div>
+                    <div class="gap-item"><strong>Blind Spot 5</strong>: All 3 Grafana alert rules in ERROR health state (broken queries).</div>
+                    <div class="gap-item"><strong>Blind Spot 6</strong>: Only 1 notification channel (email). No Slack, PagerDuty, or escalation.</div>
+                    <div class="gap-item"><strong>Blind Spot 7</strong>: No anomaly detection. Reactive incident response only.</div>
+                </div>
+                <div class="gap-col gap-after">
+                    <div class="gap-heading"><span class="text-success">&#x2705;</span> UC-IT-01 Solutions</div>
+                    <div class="gap-item"><strong>Fix 1</strong>: Deploy node_exporter, mysqld_exporter, mongodb_exporter across fleet.</div>
+                    <div class="gap-item"><strong>Fix 2</strong>: Increase retention to 90 days. Use CloudWatch for longer-term analysis.</div>
+                    <div class="gap-item"><strong>Fix 3</strong>: Corrected hostname in prometheus_fix.yml (immediate 1-line fix).</div>
+                    <div class="gap-item"><strong>Fix 4</strong>: 14 CloudWatch alarm types deployed across RDS fleet. 30-day log retention.</div>
+                    <div class="gap-item"><strong>Fix 5</strong>: Root cause diagnosed. Corrected alert rules in alert_rules.json.</div>
+                    <div class="gap-item"><strong>Fix 6</strong>: Add Slack webhook + PagerDuty integration. Configure escalation policies.</div>
+                    <div class="gap-item"><strong>Fix 7</strong>: SPC engine with Z-scores, Western Electric rules, and rate-of-change detection.</div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom:16px;">Unmonitored Infrastructure / &#x672A;&#x76D1;&#x63A7;&#x57FA;&#x7840;&#x8BBE;&#x65BD;</h3>
+            <div class="card" style="margin-bottom:24px;">
+                <svg width="100%" height="280" viewBox="0 0 700 280" style="max-width:700px;">
+                    <!-- Bars showing unmonitored instances -->
+                    <text x="120" y="35" fill="#e8edf2" font-size="13" text-anchor="end">EC2</text>
+                    <rect x="130" y="20" width="480" height="24" rx="4" fill="var(--critical-bg)"/>
+                    <rect x="130" y="20" width="480" height="24" rx="4" fill="#ff4444" opacity="0.6"/>
+                    <text x="620" y="37" fill="#ff4444" font-size="12" font-family="Fira Code">233 instances</text>
+
+                    <text x="120" y="75" fill="#e8edf2" font-size="13" text-anchor="end">RDS</text>
+                    <rect x="130" y="60" width="320" height="24" rx="4" fill="var(--warning-bg)"/>
+                    <rect x="130" y="60" width="160" height="24" rx="4" fill="#ff9800" opacity="0.5"/>
+                    <rect x="290" y="60" width="160" height="24" rx="4" fill="#4caf50" opacity="0.3"/>
+                    <text x="460" y="77" fill="#ff9800" font-size="12" font-family="Fira Code">62 clusters (passive CW)</text>
+
+                    <text x="120" y="115" fill="#e8edf2" font-size="13" text-anchor="end">EKS</text>
+                    <rect x="130" y="100" width="200" height="24" rx="4" fill="var(--critical-bg)"/>
+                    <rect x="130" y="100" width="200" height="24" rx="4" fill="#ff4444" opacity="0.5"/>
+                    <text x="340" y="117" fill="#ff4444" font-size="12" font-family="Fira Code">clusters (minimal)</text>
+
+                    <text x="120" y="155" fill="#e8edf2" font-size="13" text-anchor="end">MSK</text>
+                    <rect x="130" y="140" width="180" height="24" rx="4" fill="var(--critical-bg)"/>
+                    <rect x="130" y="140" width="180" height="24" rx="4" fill="#ff4444" opacity="0.4"/>
+                    <text x="320" y="157" fill="#ff4444" font-size="12" font-family="Fira Code">brokers (no alerting)</text>
+
+                    <text x="120" y="195" fill="#e8edf2" font-size="13" text-anchor="end">DocumentDB</text>
+                    <rect x="130" y="180" width="150" height="24" rx="4" fill="var(--critical-bg)"/>
+                    <rect x="130" y="180" width="150" height="24" rx="4" fill="#ff4444" opacity="0.4"/>
+                    <text x="290" y="197" fill="#ff4444" font-size="12" font-family="Fira Code">clusters (basic CW)</text>
+
+                    <text x="120" y="235" fill="#e8edf2" font-size="13" text-anchor="end">OpenSearch</text>
+                    <rect x="130" y="220" width="130" height="24" rx="4" fill="var(--critical-bg)"/>
+                    <rect x="130" y="220" width="130" height="24" rx="4" fill="#ff4444" opacity="0.35"/>
+                    <text x="270" y="237" fill="#ff4444" font-size="12" font-family="Fira Code">domains (no alerts)</text>
+
+                    <text x="120" y="275" fill="#e8edf2" font-size="13" text-anchor="end">EMR</text>
+                    <rect x="130" y="260" width="100" height="24" rx="4" fill="var(--critical-bg)"/>
+                    <rect x="130" y="260" width="100" height="24" rx="4" fill="#ff4444" opacity="0.3"/>
+                    <text x="240" y="277" fill="#ff4444" font-size="12" font-family="Fira Code">clusters (zero)</text>
+                </svg>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Broken Grafana Alert Rules (All 3 in ERROR State) / &#x635F;&#x574F;&#x7684;Grafana&#x8B66;&#x62A5;&#x89C4;&#x5219;</div>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>UID</th><th>Title</th><th>Severity</th><th>Health</th><th>State</th><th>Root Cause</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="mono">bf7zrw6q74e80a</td>
+                            <td>Slow Query Spike - High Rate</td>
+                            <td><span class="badge badge-warning">warning</span></td>
+                            <td class="text-critical">ERROR</td>
+                            <td>inactive</td>
+                            <td>Missing threshold condition "B"</td>
+                        </tr>
+                        <tr>
+                            <td class="mono">af7zrwm660su8d</td>
+                            <td>Slow Query Critical - Very High Rate</td>
+                            <td><span class="badge badge-critical">critical</span></td>
+                            <td class="text-critical">ERROR</td>
+                            <td>inactive</td>
+                            <td>Missing threshold condition "B"</td>
+                        </tr>
+                        <tr>
+                            <td class="mono">ef7zrx2gdoy68f</td>
+                            <td>Slow Query Weekly Increase - WoW Spike</td>
+                            <td><span class="badge badge-warning">warning</span></td>
+                            <td class="text-critical">ERROR</td>
+                            <td>inactive</td>
+                            <td>Missing threshold condition "B"</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========== VIEW 5: SPC CONTROL CHARTS ========== -->
+        <section id="view-spc" class="view-section">
+            <h1 class="section-title">SPC Control Charts / SPC&#x63A7;&#x5236;&#x56FE;</h1>
+            <p class="section-subtitle">Statistical Process Control with Z-scores and Western Electric rules</p>
+
+            <div class="spc-controls">
+                <label style="font-size:13px;color:var(--text-secondary);">Instance:</label>
+                <select class="spc-select" id="spcInstanceSelect" onchange="updateSPCChart()">
+                    <option value="isales-market">isales-market (1.26 GB)</option>
+                    <option value="web">web (543 MB)</option>
+                    <option value="isales-session">isales-session (110 MB)</option>
+                    <option value="jumpserver">jumpserver (89 MB)</option>
+                    <option value="aapi-unionauth">aapi-unionauth (67 MB)</option>
+                    <option value="sapi-unionauth">sapi-unionauth (52 MB)</option>
+                </select>
+                <label style="font-size:13px;color:var(--text-secondary);">Metric:</label>
+                <select class="spc-select" id="spcMetricSelect" onchange="updateSPCChart()">
+                    <option value="memory_used_bytes">Memory Used (bytes)</option>
+                    <option value="connected_clients">Connected Clients</option>
+                    <option value="commands_per_sec">Commands/sec (ops)</option>
+                    <option value="cpu_usage">CPU Usage (%)</option>
+                    <option value="hit_rate">Cache Hit Rate (%)</option>
+                    <option value="evicted_keys">Evicted Keys</option>
+                </select>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title" id="spcChartTitle">isales-market &#x2013; Memory Used (bytes) &#x2014; 30-Day SPC Control Chart</div>
+                <svg id="spcChart" width="100%" height="350" viewBox="0 0 900 350" style="max-width:900px;"></svg>
+            </div>
+
+            <div class="two-col">
+                <div class="card">
+                    <div class="card-title">SPC Parameters / SPC&#x53C2;&#x6570;</div>
+                    <table class="data-table">
+                        <tr><td>Rolling Window</td><td class="mono">14 days</td></tr>
+                        <tr><td>Z-Score Formula</td><td class="mono">z = (x - &#x3BC;) / &#x3C3;</td></tr>
+                        <tr><td>WARNING Threshold</td><td class="mono text-warning">|z| &gt; 2.0 (2&#x3C3;)</td></tr>
+                        <tr><td>CRITICAL Threshold</td><td class="mono text-critical">|z| &gt; 3.0 (3&#x3C3;)</td></tr>
+                        <tr><td>Rate-of-Change WARNING</td><td class="mono text-warning">&gt; 50% / day</td></tr>
+                        <tr><td>Rate-of-Change CRITICAL</td><td class="mono text-critical">&gt; 100% / day</td></tr>
+                    </table>
+                </div>
+                <div class="card">
+                    <div class="card-title">Western Electric Rules / &#x897F;&#x65B9;&#x7535;&#x6C14;&#x89C4;&#x5219;</div>
+                    <table class="data-table">
+                        <tr><td class="mono">WE-1</td><td>Single point beyond 3&#x3C3;</td><td><span class="badge badge-critical">CRITICAL</span></td></tr>
+                        <tr><td class="mono">WE-2</td><td>2 of 3 consecutive beyond 2&#x3C3;</td><td><span class="badge badge-warning">WARNING</span></td></tr>
+                        <tr><td class="mono">WE-3</td><td>4 of 5 consecutive beyond 1&#x3C3;</td><td><span class="badge badge-warning">WARNING</span></td></tr>
+                        <tr><td class="mono">WE-4</td><td>8 consecutive same side of center</td><td><span class="badge badge-warning">WARNING</span></td></tr>
+                        <tr><td class="mono">WE-5</td><td>6 consecutive trending same direction</td><td><span class="badge badge-info">INFO</span></td></tr>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== VIEW 6: IMPLEMENTATION & ROI ========== -->
+        <section id="view-roi" class="view-section">
+            <h1 class="section-title">Implementation & ROI / &#x5B9E;&#x65BD;&#x4E0E;&#x56DE;&#x62A5;</h1>
+            <p class="section-subtitle">4-phase roadmap from DEMO to full predictive monitoring</p>
+
+            <div class="roadmap">
+                <div class="roadmap-phase completed">
+                    <div class="roadmap-num">PHASE 1</div>
+                    <div class="roadmap-title">DEMO</div>
+                    <div class="roadmap-duration">2 weeks &#x2705;</div>
+                    <div class="roadmap-cost">$0</div>
+                    <div class="roadmap-desc">SPC engine on Redis + RDS passive data. Executive dashboard. VM crash case study. Gap analysis. Config fixes ready.</div>
+                </div>
+                <div class="roadmap-phase">
+                    <div class="roadmap-num">PHASE 2</div>
+                    <div class="roadmap-title">Quick Wins</div>
+                    <div class="roadmap-duration">1 day</div>
+                    <div class="roadmap-cost">$0</div>
+                    <div class="roadmap-desc">Fix Prometheus target typo. Fix 3 broken Grafana alerts. Deploy CloudWatch alarms. Set log retention policies.</div>
+                </div>
+                <div class="roadmap-phase">
+                    <div class="roadmap-num">PHASE 3</div>
+                    <div class="roadmap-title">Full Coverage</div>
+                    <div class="roadmap-duration">3 weeks</div>
+                    <div class="roadmap-cost">~$200/mo</div>
+                    <div class="roadmap-desc">Deploy node_exporter on EC2 fleet. mysqld/mongodb exporters. Upgrade Prometheus. Extend retention to 90 days.</div>
+                </div>
+                <div class="roadmap-phase">
+                    <div class="roadmap-num">PHASE 4</div>
+                    <div class="roadmap-title">ML Enhancement</div>
+                    <div class="roadmap-duration">6 weeks</div>
+                    <div class="roadmap-cost">~$500/mo</div>
+                    <div class="roadmap-desc">Time-series forecasting (Prophet/LSTM). Automated root cause analysis. Self-healing playbooks. Capacity planning.</div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom:16px;">Scenario Comparison / &#x65B9;&#x6848;&#x5BF9;&#x6BD4;</h3>
+            <div class="scenario-grid">
+                <div class="scenario-card">
+                    <div class="scenario-name">Basic</div>
+                    <div class="scenario-price">$0</div>
+                    <div class="scenario-unit">per month</div>
+                    <ul class="scenario-features">
+                        <li>SPC on existing Redis data</li>
+                        <li>CloudWatch passive RDS metrics</li>
+                        <li>Fix broken alerts</li>
+                        <li>Email notifications</li>
+                        <li>15-day analysis window</li>
+                    </ul>
+                </div>
+                <div class="scenario-card recommended">
+                    <div style="text-align:center;margin-bottom:8px;"><span class="badge badge-success">RECOMMENDED</span></div>
+                    <div class="scenario-name">Standard</div>
+                    <div class="scenario-price">$200</div>
+                    <div class="scenario-unit">per month</div>
+                    <ul class="scenario-features">
+                        <li>Everything in Basic +</li>
+                        <li>node_exporter on EC2 fleet</li>
+                        <li>MySQL/MongoDB exporters</li>
+                        <li>CloudWatch alarms (RDS)</li>
+                        <li>Slack + PagerDuty alerts</li>
+                        <li>90-day analysis window</li>
+                    </ul>
+                </div>
+                <div class="scenario-card">
+                    <div class="scenario-name">Premium</div>
+                    <div class="scenario-price">$500</div>
+                    <div class="scenario-unit">per month</div>
+                    <ul class="scenario-features">
+                        <li>Everything in Standard +</li>
+                        <li>ML-based forecasting</li>
+                        <li>Auto root cause analysis</li>
+                        <li>Self-healing playbooks</li>
+                        <li>Capacity planning engine</li>
+                        <li>365-day analysis window</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div class="card">
+                    <div class="card-title">Cost-Benefit Analysis / &#x6210;&#x672C;&#x6548;&#x76CA;&#x5206;&#x6790;</div>
+                    <table class="data-table">
+                        <tr><td>Monthly AWS spend at risk</td><td class="mono">$49,600</td></tr>
+                        <tr><td>Est. downtime cost per hour</td><td class="mono">$2,000 - $5,000</td></tr>
+                        <tr><td>Avg incidents per month (est.)</td><td class="mono">2-3</td></tr>
+                        <tr><td>Avg MTTR without monitoring</td><td class="mono">45 min</td></tr>
+                        <tr><td>Avg MTTR with UC-IT-01</td><td class="mono">10 min</td></tr>
+                        <tr><td>Monthly savings (Standard)</td><td class="mono text-success">$4,000 - $10,000</td></tr>
+                        <tr><td>Monthly cost (Standard)</td><td class="mono">$200</td></tr>
+                        <tr><td><strong>ROI</strong></td><td class="mono text-success"><strong>20x - 50x</strong></td></tr>
+                    </table>
+                </div>
+                <div class="card">
+                    <div class="card-title">Scalability Projection / &#x53EF;&#x6269;&#x5C55;&#x6027;&#x9884;&#x6D4B;</div>
+                    <table class="data-table">
+                        <tr><td>10 stores (current)</td><td class="mono">138 instances</td><td class="mono">~1,900 metrics/day</td></tr>
+                        <tr><td>25 stores</td><td class="mono">~350 instances</td><td class="mono">~5,000 metrics/day</td></tr>
+                        <tr><td>50 stores</td><td class="mono">~700 instances</td><td class="mono">~10,000 metrics/day</td></tr>
+                        <tr><td>100 stores</td><td class="mono">~1,400 instances</td><td class="mono">~20,000 metrics/day</td></tr>
+                    </table>
+                    <div style="margin-top:12px;font-size:12px;color:var(--text-muted);">
+                        MySQL analytics tables can handle 100K+ rows/day. Pipeline runtime scales linearly (~5-10 min at 50 stores).
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== VIEW 7: ARCHITECTURE ========== -->
+        <section id="view-arch" class="view-section">
+            <h1 class="section-title">Architecture / &#x67B6;&#x6784;</h1>
+            <p class="section-subtitle">Multi-source ETL pipeline with 14-step daily processing</p>
+
+            <div class="chart-container" style="overflow-x:auto;">
+                <div class="chart-title">Data Flow Architecture / &#x6570;&#x636E;&#x6D41;&#x67B6;&#x6784;</div>
+                <svg width="100%" height="520" viewBox="0 0 900 520" style="max-width:900px;">
+                    <!-- Source Layer -->
+                    <text x="450" y="25" fill="#e8edf2" font-size="14" text-anchor="middle" font-weight="700">SOURCE LAYER / &#x6570;&#x636E;&#x6E90;&#x5C42;</text>
+                    <rect x="20" y="40" width="160" height="60" rx="8" fill="var(--bg-card)" stroke="#1a8cff" stroke-width="1.5"/>
+                    <text x="100" y="65" fill="#1a8cff" font-size="12" text-anchor="middle" font-weight="600">Prometheus</text>
+                    <text x="100" y="82" fill="#657786" font-size="10" text-anchor="middle">Redis (76 instances)</text>
+
+                    <rect x="200" y="40" width="160" height="60" rx="8" fill="var(--bg-card)" stroke="#ff9800" stroke-width="1.5"/>
+                    <text x="280" y="65" fill="#ff9800" font-size="12" text-anchor="middle" font-weight="600">CloudWatch Metrics</text>
+                    <text x="280" y="82" fill="#657786" font-size="10" text-anchor="middle">RDS (62 clusters)</text>
+
+                    <rect x="380" y="40" width="160" height="60" rx="8" fill="var(--bg-card)" stroke="#ff9800" stroke-width="1.5"/>
+                    <text x="460" y="65" fill="#ff9800" font-size="12" text-anchor="middle" font-weight="600">CloudWatch Logs</text>
+                    <text x="460" y="82" fill="#657786" font-size="10" text-anchor="middle">58 slow query groups</text>
+
+                    <rect x="560" y="40" width="160" height="60" rx="8" fill="var(--bg-card)" stroke="#4caf50" stroke-width="1.5"/>
+                    <text x="640" y="65" fill="#4caf50" font-size="12" text-anchor="middle" font-weight="600">MCP DB Gateway</text>
+                    <text x="640" y="82" fill="#657786" font-size="10" text-anchor="middle">MySQL SHOW STATUS</text>
+
+                    <rect x="740" y="40" width="140" height="60" rx="8" fill="var(--bg-card)" stroke="#2196f3" stroke-width="1.5"/>
+                    <text x="810" y="65" fill="#2196f3" font-size="12" text-anchor="middle" font-weight="600">Cost Explorer</text>
+                    <text x="810" y="82" fill="#657786" font-size="10" text-anchor="middle">38 services</text>
+
+                    <!-- Arrows down -->
+                    <line x1="100" y1="100" x2="100" y2="140" stroke="#1a8cff" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+                    <line x1="280" y1="100" x2="280" y2="140" stroke="#ff9800" stroke-width="1.5"/>
+                    <line x1="460" y1="100" x2="460" y2="140" stroke="#ff9800" stroke-width="1.5"/>
+                    <line x1="640" y1="100" x2="640" y2="140" stroke="#4caf50" stroke-width="1.5"/>
+                    <line x1="810" y1="100" x2="810" y2="140" stroke="#2196f3" stroke-width="1.5"/>
+
+                    <!-- Collector Layer -->
+                    <text x="450" y="155" fill="#e8edf2" font-size="14" text-anchor="middle" font-weight="700">COLLECTOR LAYER / &#x91C7;&#x96C6;&#x5C42;</text>
+                    <rect x="50" y="165" width="200" height="50" rx="8" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1"/>
+                    <text x="150" y="190" fill="#e8edf2" font-size="11" text-anchor="middle" font-family="Fira Code">prometheus_collector.py</text>
+                    <text x="150" y="205" fill="#657786" font-size="10" text-anchor="middle">PromQL API &#x2192; MySQL</text>
+
+                    <rect x="280" y="165" width="200" height="50" rx="8" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1"/>
+                    <text x="380" y="190" fill="#e8edf2" font-size="11" text-anchor="middle" font-family="Fira Code">cloudwatch_collector.py</text>
+                    <text x="380" y="205" fill="#657786" font-size="10" text-anchor="middle">boto3 API &#x2192; MySQL</text>
+
+                    <rect x="510" y="165" width="200" height="50" rx="8" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1"/>
+                    <text x="610" y="190" fill="#e8edf2" font-size="11" text-anchor="middle" font-family="Fira Code">run_pipeline.py</text>
+                    <text x="610" y="205" fill="#657786" font-size="10" text-anchor="middle">14-step orchestrator</text>
+
+                    <!-- Arrows down -->
+                    <line x1="150" y1="215" x2="450" y2="260" stroke="#657786" stroke-width="1"/>
+                    <line x1="380" y1="215" x2="450" y2="260" stroke="#657786" stroke-width="1"/>
+                    <line x1="610" y1="215" x2="450" y2="260" stroke="#657786" stroke-width="1"/>
+
+                    <!-- Analytics Layer -->
+                    <text x="450" y="275" fill="#e8edf2" font-size="14" text-anchor="middle" font-weight="700">ANALYTICS LAYER / &#x5206;&#x6790;&#x5C42;</text>
+                    <rect x="150" y="285" width="600" height="100" rx="10" fill="var(--bg-card)" stroke="var(--luckin-blue)" stroke-width="2"/>
+                    <text x="450" y="305" fill="#e8edf2" font-size="13" text-anchor="middle" font-weight="600">MySQL Analytics (test schema @ dbatest)</text>
+
+                    <text x="220" y="330" fill="#1a8cff" font-size="10" text-anchor="middle" font-family="Fira Code">infra_metric_daily</text>
+                    <text x="350" y="330" fill="#ff9800" font-size="10" text-anchor="middle" font-family="Fira Code">infra_anomaly_scores</text>
+                    <text x="490" y="330" fill="#4caf50" font-size="10" text-anchor="middle" font-family="Fira Code">infra_health_scores</text>
+                    <text x="630" y="330" fill="#ff4444" font-size="10" text-anchor="middle" font-family="Fira Code">infra_anomaly_alerts</text>
+
+                    <text x="300" y="360" fill="#657786" font-size="10" text-anchor="middle" font-family="Fira Code">infra_fleet_inventory</text>
+                    <text x="530" y="360" fill="#657786" font-size="10" text-anchor="middle" font-family="Fira Code">infra_monitoring_pipeline_log</text>
+
+                    <!-- Arrows down -->
+                    <line x1="350" y1="385" x2="250" y2="420" stroke="#657786" stroke-width="1"/>
+                    <line x1="550" y1="385" x2="650" y2="420" stroke="#657786" stroke-width="1"/>
+
+                    <!-- Output Layer -->
+                    <text x="450" y="415" fill="#e8edf2" font-size="14" text-anchor="middle" font-weight="700">OUTPUT LAYER / &#x8F93;&#x51FA;&#x5C42;</text>
+                    <rect x="100" y="425" width="200" height="50" rx="8" fill="var(--bg-card)" stroke="#1a8cff" stroke-width="1.5"/>
+                    <text x="200" y="450" fill="#1a8cff" font-size="12" text-anchor="middle" font-weight="600">Grafana Dashboard</text>
+                    <text x="200" y="467" fill="#657786" font-size="10" text-anchor="middle">uc-it-01-infra-monitoring</text>
+
+                    <rect x="350" y="425" width="200" height="50" rx="8" fill="var(--bg-card)" stroke="#4caf50" stroke-width="1.5"/>
+                    <text x="450" y="450" fill="#4caf50" font-size="12" text-anchor="middle" font-weight="600">HTML Proposals</text>
+                    <text x="450" y="467" fill="#657786" font-size="10" text-anchor="middle">Executive + Health + Crash</text>
+
+                    <rect x="600" y="425" width="200" height="50" rx="8" fill="var(--bg-card)" stroke="#ff9800" stroke-width="1.5"/>
+                    <text x="700" y="450" fill="#ff9800" font-size="12" text-anchor="middle" font-weight="600">Alert Engine</text>
+                    <text x="700" y="467" fill="#657786" font-size="10" text-anchor="middle">Tiered notifications</text>
+
+                    <!-- Schedule -->
+                    <rect x="250" y="490" width="400" height="30" rx="6" fill="var(--bg-secondary)" stroke="var(--border-color)" stroke-width="1"/>
+                    <text x="450" y="510" fill="#8899a6" font-size="11" text-anchor="middle" font-family="Fira Code">Schedule: Daily 06:00 UTC | Runtime: ~5-10 min</text>
+                </svg>
+            </div>
+
+            <h3 style="margin:24px 0 16px;">14-Step Pipeline / 14&#x6B65;&#x6D41;&#x6C34;&#x7EBF;</h3>
+            <div class="card" style="overflow-x:auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Step</th><th>Source</th><th>Target</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="mono">1</td><td>Prometheus API</td><td>memory</td><td>Query <code>up</code> for fleet inventory discovery</td></tr>
+                        <tr><td class="mono">2</td><td>Prometheus API</td><td>infra_metric_daily</td><td>Redis memory, connections, ops/sec, CPU</td></tr>
+                        <tr><td class="mono">3</td><td>Prometheus API</td><td>infra_metric_daily</td><td>Redis keyspace, evictions, hit rate, replication</td></tr>
+                        <tr><td class="mono">4</td><td>CloudWatch API</td><td>infra_metric_daily</td><td>RDS CPUUtilization, FreeableMemory, Connections</td></tr>
+                        <tr><td class="mono">5</td><td>CloudWatch API</td><td>infra_metric_daily</td><td>RDS ReadLatency, WriteLatency, IOPS</td></tr>
+                        <tr><td class="mono">6</td><td>CloudWatch Logs</td><td>infra_metric_daily</td><td>Slow query counts from 58 RDS log groups</td></tr>
+                        <tr><td class="mono">7</td><td>MCP DB Gateway</td><td>infra_metric_daily</td><td>MySQL-specific metrics via SHOW STATUS</td></tr>
+                        <tr><td class="mono">8</td><td>infra_metric_daily</td><td>infra_fleet_inventory</td><td>Update fleet registry from collected data</td></tr>
+                        <tr><td class="mono">9</td><td>infra_metric_daily</td><td>infra_anomaly_scores</td><td>Compute 14-day rolling SPC + Z-scores</td></tr>
+                        <tr><td class="mono">10</td><td>infra_anomaly_scores</td><td>infra_anomaly_scores</td><td>Evaluate Western Electric rules 1-5</td></tr>
+                        <tr><td class="mono">11</td><td>infra_anomaly_scores</td><td>infra_anomaly_scores</td><td>Compute rate-of-change features (1d, 7d)</td></tr>
+                        <tr><td class="mono">12</td><td>multi-table</td><td>infra_health_scores</td><td>Composite health scores per instance (0-100)</td></tr>
+                        <tr><td class="mono">13</td><td>scores + health</td><td>infra_anomaly_alerts</td><td>Generate tiered alerts (EMERGENCY/CRITICAL/WARNING/INFO)</td></tr>
+                        <tr><td class="mono">14</td><td>all tables</td><td>pipeline_log</td><td>Execution logging + verification checks</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="two-col" style="margin-top:24px;">
+                <div class="card">
+                    <div class="card-title">Technology Stack / &#x6280;&#x672F;&#x6808;</div>
+                    <table class="data-table">
+                        <tr><td>Analytics DB</td><td class="mono">MySQL 8.0 (test schema @ dbatest)</td></tr>
+                        <tr><td>Metrics Source</td><td class="mono">Prometheus 2.43.0 (Redis)</td></tr>
+                        <tr><td>Cloud Metrics</td><td class="mono">AWS CloudWatch (RDS/EC2)</td></tr>
+                        <tr><td>Orchestrator</td><td class="mono">Python 3.11 (pymysql, boto3, requests)</td></tr>
+                        <tr><td>Visualization</td><td class="mono">Grafana 11.x + self-contained HTML</td></tr>
+                        <tr><td>Anomaly Detection</td><td class="mono">SPC (Z-score + Western Electric)</td></tr>
+                    </table>
+                </div>
+                <div class="card">
+                    <div class="card-title">Related Use Cases / &#x76F8;&#x5173;&#x7528;&#x4F8B;</div>
+                    <table class="data-table">
+                        <tr><td class="mono">UC-SC-01</td><td>Demand Forecast Accuracy Monitor</td><td><span class="badge badge-success">Live</span></td></tr>
+                        <tr><td class="mono">UC-OP-02</td><td>Store Performance Anomaly Detection</td><td><span class="badge badge-success">Live</span></td></tr>
+                        <tr><td class="mono">UC-IT-01</td><td>Predictive Infrastructure Monitoring</td><td><span class="badge badge-info">DEMO</span></td></tr>
+                    </table>
+                    <div style="margin-top:12px;font-size:12px;color:var(--text-muted);">
+                        All three use cases share the same MySQL analytics infrastructure, Grafana instance, and Python orchestration patterns.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script>
+    // ===== VIEW SWITCHING =====
+    function showView(viewId) {
+        document.querySelectorAll('.view-section').forEach(function(s) { s.classList.remove('active'); });
+        document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+        var target = document.getElementById(viewId);
+        if (target) target.classList.add('active');
+        var navItem = document.querySelector('[data-view="' + viewId + '"]');
+        if (navItem) navItem.classList.add('active');
+        if (viewId === 'view-spc') updateSPCChart();
+    }
+
+    // ===== FLEET GRID =====
+    var fleetData = [
+        { service: 'ElastiCache Redis', count: 76, source: 'Prometheus', up: 75, down: 1, health: { A: 52, B: 18, C: 4, D: 1, F: 0 }, color: '#1a8cff', monitored: true },
+        { service: 'RDS MySQL/PostgreSQL', count: 62, source: 'CloudWatch (passive)', up: 62, down: 0, health: { A: 40, B: 15, C: 5, D: 2, F: 0 }, color: '#ff9800', monitored: true },
+        { service: 'EC2 Instances', count: 233, source: 'NOT MONITORED', up: 0, down: 0, health: {}, color: '#ff4444', monitored: false },
+        { service: 'EKS Clusters', count: 4, source: 'Minimal CW', up: 4, down: 0, health: {}, color: '#ff4444', monitored: false },
+        { service: 'MSK Brokers', count: 6, source: 'No alerting', up: 0, down: 0, health: {}, color: '#ff4444', monitored: false },
+        { service: 'DocumentDB', count: 3, source: 'Basic CW', up: 3, down: 0, health: {}, color: '#ff9800', monitored: false },
+        { service: 'OpenSearch', count: 2, source: 'No alerts', up: 0, down: 0, health: {}, color: '#ff4444', monitored: false },
+        { service: 'EMR Clusters', count: 2, source: 'ZERO', up: 0, down: 0, health: {}, color: '#ff4444', monitored: false },
+        { service: 'Lambda Functions', count: 15, source: 'CW Logs only', up: 0, down: 0, health: {}, color: '#ff9800', monitored: false }
+    ];
+
+    function buildFleetGrid() {
+        var container = document.getElementById('fleetGrid');
+        if (!container) return;
+        var html = '';
+        fleetData.forEach(function(f) {
+            html += '<div class="fleet-card' + (f.monitored ? '' : ' style="opacity:0.6;"') + '">';
+            html += '<div class="fleet-header">';
+            html += '<span class="fleet-service">' + f.service + '</span>';
+            html += '<span class="fleet-count">' + f.count + '</span>';
+            html += '</div>';
+            html += '<div class="fleet-source" style="color:' + (f.monitored ? 'var(--success)' : 'var(--critical)') + ';">' + f.source + '</div>';
+            if (f.monitored && f.up > 0) {
+                var upPct = (f.up / f.count * 100).toFixed(0);
+                var downPct = (f.down / f.count * 100).toFixed(0);
+                html += '<div class="fleet-bar">';
+                html += '<div class="fleet-bar-seg" style="width:' + upPct + '%;background:var(--success);"></div>';
+                if (f.down > 0) html += '<div class="fleet-bar-seg" style="width:' + downPct + '%;background:var(--critical);"></div>';
+                html += '</div>';
+                html += '<div class="fleet-legend">';
+                html += '<span class="fleet-legend-item"><span class="fleet-legend-dot" style="background:var(--success);"></span>' + f.up + ' UP</span>';
+                if (f.down > 0) html += '<span class="fleet-legend-item"><span class="fleet-legend-dot" style="background:var(--critical);"></span>' + f.down + ' DOWN</span>';
+                html += '</div>';
+                if (Object.keys(f.health).length > 0) {
+                    html += '<div style="margin-top:8px;display:flex;gap:6px;">';
+                    ['A','B','C','D','F'].forEach(function(g) {
+                        if (f.health[g] > 0) {
+                            var gc = g === 'A' ? 'var(--success)' : g === 'B' ? 'var(--info)' : g === 'C' ? 'var(--warning)' : 'var(--critical)';
+                            html += '<span style="font-size:11px;color:' + gc + ';" class="mono">' + g + ':' + f.health[g] + '</span>';
+                        }
+                    });
+                    html += '</div>';
+                }
+            } else {
+                html += '<div style="padding:8px 0;font-size:12px;color:var(--critical);">No active monitoring instrumentation</div>';
+            }
+            html += '</div>';
+        });
+        container.innerHTML = html;
+    }
+
+    // ===== SPC CHART =====
+    function generateSPCData(instance, metric) {
+        var seed = 0;
+        for (var i = 0; i < instance.length; i++) seed += instance.charCodeAt(i);
+        for (var i = 0; i < metric.length; i++) seed += metric.charCodeAt(i) * 3;
+        function seededRandom() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+
+        var baseValues = {
+            'memory_used_bytes': { base: 500000000, amplitude: 100000000, noise: 30000000 },
+            'connected_clients': { base: 80, amplitude: 30, noise: 15 },
+            'commands_per_sec': { base: 2000, amplitude: 800, noise: 300 },
+            'cpu_usage': { base: 25, amplitude: 10, noise: 5 },
+            'hit_rate': { base: 97, amplitude: 2, noise: 1 },
+            'evicted_keys': { base: 0, amplitude: 5, noise: 3 }
+        };
+        var config = baseValues[metric] || baseValues['memory_used_bytes'];
+        var data = [];
+        for (var d = 0; d < 30; d++) {
+            var dayOfWeek = d % 7;
+            var weekendFactor = (dayOfWeek === 5 || dayOfWeek === 6) ? 0.7 : 1.0;
+            var value = config.base + config.amplitude * Math.sin(d * 0.2) * weekendFactor + (seededRandom() - 0.5) * config.noise * 2;
+            // Inject anomalies at day 12 and day 24
+            if (d === 12) value += config.amplitude * 2.5;
+            if (d === 24) value += config.amplitude * 3.2;
+            if (d === 25) value += config.amplitude * 2.0;
+            data.push(value);
+        }
+        return data;
+    }
+
+    function updateSPCChart() {
+        var instance = document.getElementById('spcInstanceSelect').value;
+        var metric = document.getElementById('spcMetricSelect').value;
+        var metricNames = {
+            'memory_used_bytes': 'Memory Used (bytes)',
+            'connected_clients': 'Connected Clients',
+            'commands_per_sec': 'Commands/sec',
+            'cpu_usage': 'CPU Usage (%)',
+            'hit_rate': 'Cache Hit Rate (%)',
+            'evicted_keys': 'Evicted Keys'
+        };
+        document.getElementById('spcChartTitle').textContent = instance + ' \u2013 ' + (metricNames[metric] || metric) + ' \u2014 30-Day SPC Control Chart';
+
+        var data = generateSPCData(instance, metric);
+        var svg = document.getElementById('spcChart');
+        var W = 900, H = 350, padL = 70, padR = 20, padT = 30, padB = 50;
+        var chartW = W - padL - padR, chartH = H - padT - padB;
+
+        // Compute stats (14-day rolling)
+        var allMean = 0; data.forEach(function(v) { allMean += v; }); allMean /= data.length;
+        var allStd = 0; data.forEach(function(v) { allStd += (v - allMean) * (v - allMean); }); allStd = Math.sqrt(allStd / data.length);
+
+        var ucl3 = allMean + 3 * allStd;
+        var ucl2 = allMean + 2 * allStd;
+        var lcl2 = allMean - 2 * allStd;
+        var lcl3 = allMean - 3 * allStd;
+        var dataMin = Math.min.apply(null, data.concat([lcl3]));
+        var dataMax = Math.max.apply(null, data.concat([ucl3]));
+        var range = dataMax - dataMin;
+        dataMin -= range * 0.1;
+        dataMax += range * 0.1;
+        range = dataMax - dataMin;
+
+        function xPos(i) { return padL + (i / 29) * chartW; }
+        function yPos(v) { return padT + chartH - ((v - dataMin) / range) * chartH; }
+
+        var html = '';
+        // Grid lines
+        for (var g = 0; g < 5; g++) {
+            var gy = padT + (g / 4) * chartH;
+            var gv = dataMax - (g / 4) * range;
+            html += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W-padR) + '" y2="' + gy + '" stroke="#1e2d3d" stroke-width="1"/>';
+        }
+
+        // Control limit bands
+        var y3u = yPos(ucl3), y2u = yPos(ucl2), ym = yPos(allMean), y2l = yPos(lcl2), y3l = yPos(lcl3);
+        // 3-sigma zone
+        html += '<rect x="' + padL + '" y="' + Math.min(y3u, padT) + '" width="' + chartW + '" height="' + Math.abs(y2u - y3u) + '" fill="rgba(255,68,68,0.08)"/>';
+        // 2-sigma zone
+        html += '<rect x="' + padL + '" y="' + y2u + '" width="' + chartW + '" height="' + Math.abs(ym - y2u) + '" fill="rgba(255,152,0,0.04)"/>';
+
+        // Control lines
+        html += '<line x1="' + padL + '" y1="' + y3u + '" x2="' + (W-padR) + '" y2="' + y3u + '" stroke="#ff4444" stroke-width="1" stroke-dasharray="6,4" opacity="0.7"/>';
+        html += '<line x1="' + padL + '" y1="' + y2u + '" x2="' + (W-padR) + '" y2="' + y2u + '" stroke="#ff9800" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>';
+        html += '<line x1="' + padL + '" y1="' + ym + '" x2="' + (W-padR) + '" y2="' + ym + '" stroke="#657786" stroke-width="1" stroke-dasharray="2,4" opacity="0.5"/>';
+        html += '<line x1="' + padL + '" y1="' + y2l + '" x2="' + (W-padR) + '" y2="' + y2l + '" stroke="#ff9800" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>';
+        html += '<line x1="' + padL + '" y1="' + y3l + '" x2="' + (W-padR) + '" y2="' + y3l + '" stroke="#ff4444" stroke-width="1" stroke-dasharray="6,4" opacity="0.7"/>';
+
+        // Labels
+        html += '<text x="' + (padL - 5) + '" y="' + (y3u + 4) + '" fill="#ff4444" font-size="9" text-anchor="end" font-family="Fira Code">3\u03C3</text>';
+        html += '<text x="' + (padL - 5) + '" y="' + (y2u + 4) + '" fill="#ff9800" font-size="9" text-anchor="end" font-family="Fira Code">2\u03C3</text>';
+        html += '<text x="' + (padL - 5) + '" y="' + (ym + 4) + '" fill="#657786" font-size="9" text-anchor="end" font-family="Fira Code">\u03BC</text>';
+        html += '<text x="' + (padL - 5) + '" y="' + (y2l + 4) + '" fill="#ff9800" font-size="9" text-anchor="end" font-family="Fira Code">-2\u03C3</text>';
+        html += '<text x="' + (padL - 5) + '" y="' + (y3l + 4) + '" fill="#ff4444" font-size="9" text-anchor="end" font-family="Fira Code">-3\u03C3</text>';
+
+        // Data line
+        var points = '';
+        for (var i = 0; i < data.length; i++) {
+            points += xPos(i) + ',' + yPos(data[i]) + ' ';
+        }
+        html += '<polyline points="' + points.trim() + '" fill="none" stroke="#1a8cff" stroke-width="2.5" opacity="0.9"/>';
+
+        // Data points + anomaly markers
+        for (var i = 0; i < data.length; i++) {
+            var zScore = (data[i] - allMean) / allStd;
+            var px = xPos(i), py = yPos(data[i]);
+            var color = '#1a8cff';
+            var r = 3;
+            if (Math.abs(zScore) > 3) { color = '#ff4444'; r = 6; }
+            else if (Math.abs(zScore) > 2) { color = '#ff9800'; r = 5; }
+            html += '<circle cx="' + px + '" cy="' + py + '" r="' + r + '" fill="' + color + '" stroke="' + (r > 3 ? '#0f1419' : 'none') + '" stroke-width="' + (r > 3 ? 2 : 0) + '"/>';
+            // WE rule markers
+            if (Math.abs(zScore) > 3) {
+                html += '<text x="' + px + '" y="' + (py - 12) + '" fill="#ff4444" font-size="9" text-anchor="middle" font-family="Fira Code">WE-1</text>';
+            }
+        }
+
+        // X-axis labels
+        for (var d = 0; d < 30; d += 5) {
+            var lx = xPos(d);
+            html += '<text x="' + lx + '" y="' + (H - 15) + '" fill="#657786" font-size="10" text-anchor="middle" font-family="Fira Code">Day ' + (d + 1) + '</text>';
+        }
+
+        // Axes
+        html += '<line x1="' + padL + '" y1="' + padT + '" x2="' + padL + '" y2="' + (H - padB) + '" stroke="#2d4050" stroke-width="1"/>';
+        html += '<line x1="' + padL + '" y1="' + (H - padB) + '" x2="' + (W - padR) + '" y2="' + (H - padB) + '" stroke="#2d4050" stroke-width="1"/>';
+
+        // Legend
+        html += '<circle cx="' + (padL + 20) + '" cy="' + (H - 8) + '" r="3" fill="#1a8cff"/>';
+        html += '<text x="' + (padL + 28) + '" y="' + (H - 4) + '" fill="#8899a6" font-size="10">Normal</text>';
+        html += '<circle cx="' + (padL + 100) + '" cy="' + (H - 8) + '" r="4" fill="#ff9800"/>';
+        html += '<text x="' + (padL + 110) + '" y="' + (H - 4) + '" fill="#8899a6" font-size="10">Warning (2\u03C3)</text>';
+        html += '<circle cx="' + (padL + 220) + '" cy="' + (H - 8) + '" r="5" fill="#ff4444"/>';
+        html += '<text x="' + (padL + 230) + '" y="' + (H - 4) + '" fill="#8899a6" font-size="10">Critical (3\u03C3)</text>';
+
+        svg.innerHTML = html;
+    }
+
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', function() {
+        buildFleetGrid();
+        updateSPCChart();
+        showView('view-summary');
+    });
+</script>
+
+<!-- Footer -->
+<div style="position:fixed;bottom:0;left:var(--sidebar-width);right:0;background:var(--bg-secondary);border-top:1px solid var(--border-color);padding:8px 40px;font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;z-index:50;">
+    <span>UC-IT-01: Predictive Infrastructure Monitoring | Luckin Coffee USA | Generated: 2026-02-15</span>
+    <span>&#x9884;&#x6D4B;&#x6027;&#x57FA;&#x7840;&#x8BBE;&#x65BD;&#x76D1;&#x63A7; | &#x745E;&#x5E78;&#x5496;&#x5561;&#x7F8E;&#x56FD;</span>
+</div>
+
+</body>
+</html>

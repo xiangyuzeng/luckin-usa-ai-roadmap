@@ -1,0 +1,296 @@
+{
+  "_metadata": {
+    "project": "UC-IT-01: Predictive Infrastructure Monitoring",
+    "project_cn": "预测性基础设施监控",
+    "description": "Recommended CloudWatch alarms for RDS fleet — currently ZERO alarms exist",
+    "description_cn": "RDS 集群推荐的 CloudWatch 告警 — 当前告警数量为零",
+    "author": "Data Engineering / BI Team",
+    "created": "2026-02-15",
+    "note": "These alarms should be created via AWS Console, CLI, or CloudFormation. Replace ACCOUNT_ID and ${InstanceId} with actual values."
+  },
+  "alarms": [
+    {
+      "alarm_name": "RDS-CPU-Warning-${InstanceId}",
+      "description": "RDS CPU utilization exceeds 80% / RDS CPU 使用率超过 80%",
+      "namespace": "AWS/RDS",
+      "metric_name": "CPUUtilization",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 3,
+      "threshold": 80,
+      "comparison_operator": "GreaterThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-warnings"],
+      "severity": "WARNING",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}]
+    },
+    {
+      "alarm_name": "RDS-CPU-Critical-${InstanceId}",
+      "description": "RDS CPU utilization exceeds 95% / RDS CPU 使用率超过 95%",
+      "namespace": "AWS/RDS",
+      "metric_name": "CPUUtilization",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 2,
+      "threshold": 95,
+      "comparison_operator": "GreaterThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-critical"],
+      "severity": "CRITICAL",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}]
+    },
+    {
+      "alarm_name": "RDS-FreeableMemory-Warning-${InstanceId}",
+      "description": "RDS freeable memory below 500MB / RDS 可用内存低于 500MB",
+      "namespace": "AWS/RDS",
+      "metric_name": "FreeableMemory",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 3,
+      "threshold": 536870912,
+      "comparison_operator": "LessThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-warnings"],
+      "severity": "WARNING",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}]
+    },
+    {
+      "alarm_name": "RDS-FreeableMemory-Critical-${InstanceId}",
+      "description": "RDS freeable memory below 100MB / RDS 可用内存低于 100MB",
+      "namespace": "AWS/RDS",
+      "metric_name": "FreeableMemory",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 2,
+      "threshold": 104857600,
+      "comparison_operator": "LessThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-critical"],
+      "severity": "CRITICAL",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}]
+    },
+    {
+      "alarm_name": "RDS-FreeStorageSpace-Warning-${InstanceId}",
+      "description": "RDS free storage space below 5GB / RDS 可用存储空间低于 5GB",
+      "namespace": "AWS/RDS",
+      "metric_name": "FreeStorageSpace",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 3,
+      "threshold": 5368709120,
+      "comparison_operator": "LessThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-warnings"],
+      "severity": "WARNING",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}]
+    },
+    {
+      "alarm_name": "RDS-FreeStorageSpace-Critical-${InstanceId}",
+      "description": "RDS free storage space below 1GB / RDS 可用存储空间低于 1GB",
+      "namespace": "AWS/RDS",
+      "metric_name": "FreeStorageSpace",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 2,
+      "threshold": 1073741824,
+      "comparison_operator": "LessThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-critical"],
+      "severity": "CRITICAL",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}]
+    },
+    {
+      "alarm_name": "RDS-DatabaseConnections-Warning-${InstanceId}",
+      "description": "RDS database connections exceed 80% of max (~800) / RDS 数据库连接数超过最大值的 80%",
+      "namespace": "AWS/RDS",
+      "metric_name": "DatabaseConnections",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 3,
+      "threshold": 800,
+      "comparison_operator": "GreaterThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-warnings"],
+      "severity": "WARNING",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}],
+      "note": "Adjust threshold based on instance class max_connections parameter"
+    },
+    {
+      "alarm_name": "RDS-DatabaseConnections-Critical-${InstanceId}",
+      "description": "RDS database connections exceed 95% of max (~950) / RDS 数据库连接数超过最大值的 95%",
+      "namespace": "AWS/RDS",
+      "metric_name": "DatabaseConnections",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 2,
+      "threshold": 950,
+      "comparison_operator": "GreaterThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-critical"],
+      "severity": "CRITICAL",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}],
+      "note": "Adjust threshold based on instance class max_connections parameter"
+    },
+    {
+      "alarm_name": "RDS-ReplicaLag-Warning-${InstanceId}",
+      "description": "RDS replica lag exceeds 30 seconds / RDS 副本延迟超过 30 秒",
+      "namespace": "AWS/RDS",
+      "metric_name": "ReplicaLag",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 3,
+      "threshold": 30,
+      "comparison_operator": "GreaterThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-warnings"],
+      "severity": "WARNING",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}],
+      "note": "Only applicable to read replica instances"
+    },
+    {
+      "alarm_name": "RDS-ReplicaLag-Critical-${InstanceId}",
+      "description": "RDS replica lag exceeds 120 seconds / RDS 副本延迟超过 120 秒",
+      "namespace": "AWS/RDS",
+      "metric_name": "ReplicaLag",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 2,
+      "threshold": 120,
+      "comparison_operator": "GreaterThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-critical"],
+      "severity": "CRITICAL",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}],
+      "note": "Only applicable to read replica instances"
+    },
+    {
+      "alarm_name": "RDS-ReadLatency-Warning-${InstanceId}",
+      "description": "RDS read latency exceeds 20ms / RDS 读延迟超过 20ms",
+      "namespace": "AWS/RDS",
+      "metric_name": "ReadLatency",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 3,
+      "threshold": 0.020,
+      "comparison_operator": "GreaterThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-warnings"],
+      "severity": "WARNING",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}],
+      "note": "Threshold in seconds (0.020 = 20ms)"
+    },
+    {
+      "alarm_name": "RDS-ReadLatency-Critical-${InstanceId}",
+      "description": "RDS read latency exceeds 50ms / RDS 读延迟超过 50ms",
+      "namespace": "AWS/RDS",
+      "metric_name": "ReadLatency",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 2,
+      "threshold": 0.050,
+      "comparison_operator": "GreaterThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-critical"],
+      "severity": "CRITICAL",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}],
+      "note": "Threshold in seconds (0.050 = 50ms)"
+    },
+    {
+      "alarm_name": "RDS-WriteLatency-Warning-${InstanceId}",
+      "description": "RDS write latency exceeds 25ms / RDS 写延迟超过 25ms",
+      "namespace": "AWS/RDS",
+      "metric_name": "WriteLatency",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 3,
+      "threshold": 0.025,
+      "comparison_operator": "GreaterThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-warnings"],
+      "severity": "WARNING",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}],
+      "note": "Threshold in seconds (0.025 = 25ms)"
+    },
+    {
+      "alarm_name": "RDS-WriteLatency-Critical-${InstanceId}",
+      "description": "RDS write latency exceeds 100ms / RDS 写延迟超过 100ms",
+      "namespace": "AWS/RDS",
+      "metric_name": "WriteLatency",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 2,
+      "threshold": 0.100,
+      "comparison_operator": "GreaterThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-critical"],
+      "severity": "CRITICAL",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}],
+      "note": "Threshold in seconds (0.100 = 100ms)"
+    },
+    {
+      "alarm_name": "RDS-DiskQueueDepth-Warning-${InstanceId}",
+      "description": "RDS disk queue depth exceeds 10 / RDS 磁盘队列深度超过 10",
+      "namespace": "AWS/RDS",
+      "metric_name": "DiskQueueDepth",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 3,
+      "threshold": 10,
+      "comparison_operator": "GreaterThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-warnings"],
+      "severity": "WARNING",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}]
+    },
+    {
+      "alarm_name": "RDS-DiskQueueDepth-Critical-${InstanceId}",
+      "description": "RDS disk queue depth exceeds 50 / RDS 磁盘队列深度超过 50",
+      "namespace": "AWS/RDS",
+      "metric_name": "DiskQueueDepth",
+      "statistic": "Average",
+      "period": 300,
+      "evaluation_periods": 2,
+      "threshold": 50,
+      "comparison_operator": "GreaterThanThreshold",
+      "alarm_actions": ["arn:aws:sns:us-east-1:ACCOUNT_ID:infra-critical"],
+      "severity": "CRITICAL",
+      "dimensions": [{"Name": "DBInstanceIdentifier", "Value": "${InstanceId}"}]
+    }
+  ],
+  "log_retention_policies": {
+    "description": "Recommended retention policies for 58 RDS slow query log groups (currently ALL infinite)",
+    "description_cn": "58 个 RDS 慢查询日志组的推荐保留策略(当前全部为无限保留)",
+    "current_state": {
+      "total_log_groups": 58,
+      "retention_set": 0,
+      "retention_infinite": 58,
+      "largest_log_group": "aws-luckyus-icyberdata-rw",
+      "largest_log_group_size_gb": 4.25
+    },
+    "recommendation": {
+      "production_logs": {
+        "retention_days": 30,
+        "reason": "Sufficient for incident investigation and performance trend analysis"
+      },
+      "staging_logs": {
+        "retention_days": 14,
+        "reason": "Testing environments need shorter retention"
+      },
+      "development_logs": {
+        "retention_days": 7,
+        "reason": "Development logs rarely needed beyond one week"
+      }
+    },
+    "aws_cli_commands": [
+      "# Set 30-day retention for production slow query logs:",
+      "aws logs put-retention-policy --log-group-name /aws/rds/cluster/CLUSTER_NAME/slowquery --retention-in-days 30",
+      "",
+      "# Bulk update all RDS slow query log groups to 30 days:",
+      "for lg in $(aws logs describe-log-groups --log-group-name-prefix /aws/rds --query 'logGroups[?retentionInDays==null].logGroupName' --output text); do",
+      "  echo \"Setting 30-day retention for: $lg\"",
+      "  aws logs put-retention-policy --log-group-name \"$lg\" --retention-in-days 30",
+      "done"
+    ],
+    "estimated_storage_savings": "Significant - largest log group (aws-luckyus-icyberdata-rw) is 4.25 GB with infinite retention. Setting 30-day retention across all 58 log groups will reduce storage costs substantially."
+  },
+  "deployment_notes": {
+    "sns_topics_required": [
+      {
+        "topic_name": "infra-warnings",
+        "purpose": "WARNING-level alerts / 警告级别告警",
+        "subscribers": "Slack #infra-alerts channel + on-call email"
+      },
+      {
+        "topic_name": "infra-critical",
+        "purpose": "CRITICAL-level alerts / 严重级别告警",
+        "subscribers": "PagerDuty + Slack #infra-critical + on-call phone"
+      }
+    ],
+    "deployment_script": "# Create alarms for all RDS instances:\n# for instance in $(aws rds describe-db-instances --query 'DBInstances[].DBInstanceIdentifier' --output text); do\n#   # CPU Warning\n#   aws cloudwatch put-metric-alarm \\\n#     --alarm-name \"RDS-CPU-Warning-${instance}\" \\\n#     --namespace AWS/RDS \\\n#     --metric-name CPUUtilization \\\n#     --statistic Average \\\n#     --period 300 \\\n#     --evaluation-periods 3 \\\n#     --threshold 80 \\\n#     --comparison-operator GreaterThanThreshold \\\n#     --dimensions Name=DBInstanceIdentifier,Value=${instance} \\\n#     --alarm-actions arn:aws:sns:us-east-1:ACCOUNT_ID:infra-warnings\n#   # ... repeat for each alarm type\n# done"
+  }
+}

@@ -1,0 +1,354 @@
+{
+  "_metadata": {
+    "project": "UC-IT-01: Predictive Infrastructure Monitoring",
+    "project_cn": "预测性基础设施监控",
+    "description": "Fixed Grafana alert rules (3 broken) + new infrastructure anomaly alerts",
+    "description_cn": "修复的 Grafana 告警规则(3 条损坏)+ 新的基础设施异常告警",
+    "author": "Data Engineering / BI Team",
+    "created": "2026-02-15",
+    "grafana_folder_uid": "cfd9mzwx2zp4wc",
+    "datasource_mysql_uid": "ef5ay9lchfg1sa",
+    "datasource_expr_uid": "__expr__"
+  },
+  "diagnosis": {
+    "root_cause": "All 3 existing alert rules reference a condition 'B' (math expression or threshold) that is either missing or misconfigured. The rules use datasource variables like $datasource which may not resolve in alerting context. Additionally, the Prometheus query may be targeting metrics that don't exist in the current scrape configuration.",
+    "root_cause_cn": "所有 3 条现有告警规则引用了条件 'B'(数学表达式或阈值),该条件可能缺失或配置错误。规则使用 $datasource 等数据源变量,在告警上下文中可能无法解析。此外,Prometheus 查询可能针对当前抓取配置中不存在的指标。",
+    "affected_rules": [
+      {
+        "uid": "bf7zrw6q74e80a",
+        "title": "Slow Query Spike - High Rate",
+        "severity": "warning",
+        "issue": "Condition B references a threshold expression that is missing or uses unresolvable datasource variable"
+      },
+      {
+        "uid": "af7zrwm660su8d",
+        "title": "Slow Query Critical - Very High Rate",
+        "severity": "critical",
+        "issue": "Condition B references a threshold expression that is missing or uses unresolvable datasource variable"
+      },
+      {
+        "uid": "ef7zrx2gdoy68f",
+        "title": "Slow Query Weekly Increase - WoW Spike",
+        "severity": "warning",
+        "issue": "Condition B references a math/reduce expression that is missing or uses unresolvable datasource variable"
+      }
+    ],
+    "fix_strategy": "Replace $datasource variable references with hardcoded MySQL datasource UID (ef5ay9lchfg1sa). Ensure condition B is properly defined as a threshold expression using __expr__ datasource. Query infra_anomaly_alerts table directly for reliable alerting."
+  },
+  "fixed_rules": [
+    {
+      "uid": "bf7zrw6q74e80a",
+      "title": "Slow Query Spike - High Rate",
+      "ruleGroup": "slow-query-alerts",
+      "folderUID": "cfd9mzwx2zp4wc",
+      "condition": "B",
+      "for": "5m",
+      "noDataState": "OK",
+      "execErrState": "Alerting",
+      "orgID": 1,
+      "labels": {
+        "severity": "warning",
+        "team": "infrastructure",
+        "project": "UC-IT-01"
+      },
+      "annotations": {
+        "summary": "High rate of slow queries detected / 检测到慢查询高频率",
+        "description": "Slow query rate has exceeded the warning threshold. Current value: {{ $values.A }}",
+        "runbook_url": ""
+      },
+      "data": [
+        {
+          "refId": "A",
+          "relativeTimeRange": {"from": 3600, "to": 0},
+          "datasourceUid": "ef5ay9lchfg1sa",
+          "model": {
+            "rawSql": "SELECT\n  UNIX_TIMESTAMP() as time_sec,\n  COUNT(*) as value\nFROM test.infra_anomaly_alerts\nWHERE alert_type = 'slow_query_spike'\n  AND severity IN ('WARNING', 'CRITICAL')\n  AND alert_date >= DATE_SUB(NOW(), INTERVAL 1 HOUR)\n  AND acknowledged = FALSE",
+            "format": "table",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "B",
+          "relativeTimeRange": {"from": 0, "to": 0},
+          "datasourceUid": "__expr__",
+          "model": {
+            "type": "threshold",
+            "expression": "A",
+            "conditions": [
+              {
+                "evaluator": {
+                  "type": "gt",
+                  "params": [5]
+                },
+                "operator": {"type": "and"},
+                "reducer": {"type": "last"}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "af7zrwm660su8d",
+      "title": "Slow Query Critical - Very High Rate",
+      "ruleGroup": "slow-query-alerts",
+      "folderUID": "cfd9mzwx2zp4wc",
+      "condition": "B",
+      "for": "2m",
+      "noDataState": "OK",
+      "execErrState": "Alerting",
+      "orgID": 1,
+      "labels": {
+        "severity": "critical",
+        "team": "infrastructure",
+        "project": "UC-IT-01"
+      },
+      "annotations": {
+        "summary": "Critical slow query rate detected / 检测到慢查询严重高频率",
+        "description": "Slow query rate has exceeded the critical threshold. Immediate investigation required. Current value: {{ $values.A }}",
+        "runbook_url": ""
+      },
+      "data": [
+        {
+          "refId": "A",
+          "relativeTimeRange": {"from": 3600, "to": 0},
+          "datasourceUid": "ef5ay9lchfg1sa",
+          "model": {
+            "rawSql": "SELECT\n  UNIX_TIMESTAMP() as time_sec,\n  COUNT(*) as value\nFROM test.infra_anomaly_alerts\nWHERE alert_type = 'slow_query_spike'\n  AND severity = 'CRITICAL'\n  AND alert_date >= DATE_SUB(NOW(), INTERVAL 1 HOUR)\n  AND acknowledged = FALSE",
+            "format": "table",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "B",
+          "relativeTimeRange": {"from": 0, "to": 0},
+          "datasourceUid": "__expr__",
+          "model": {
+            "type": "threshold",
+            "expression": "A",
+            "conditions": [
+              {
+                "evaluator": {
+                  "type": "gt",
+                  "params": [0]
+                },
+                "operator": {"type": "and"},
+                "reducer": {"type": "last"}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "ef7zrx2gdoy68f",
+      "title": "Slow Query Weekly Increase - WoW Spike",
+      "ruleGroup": "slow-query-alerts",
+      "folderUID": "cfd9mzwx2zp4wc",
+      "condition": "B",
+      "for": "10m",
+      "noDataState": "OK",
+      "execErrState": "Alerting",
+      "orgID": 1,
+      "labels": {
+        "severity": "warning",
+        "team": "infrastructure",
+        "project": "UC-IT-01"
+      },
+      "annotations": {
+        "summary": "Week-over-week slow query increase detected / 检测到慢查询周环比增加",
+        "description": "Slow query count has increased significantly compared to last week. Current WoW ratio: {{ $values.A }}",
+        "runbook_url": ""
+      },
+      "data": [
+        {
+          "refId": "A",
+          "relativeTimeRange": {"from": 604800, "to": 0},
+          "datasourceUid": "ef5ay9lchfg1sa",
+          "model": {
+            "rawSql": "SELECT\n  UNIX_TIMESTAMP() as time_sec,\n  COALESCE(\n    (SELECT COUNT(*) FROM test.infra_anomaly_alerts\n     WHERE alert_type = 'slow_query_spike'\n       AND alert_date >= DATE_SUB(NOW(), INTERVAL 1 DAY)) /\n    NULLIF(\n      (SELECT COUNT(*) FROM test.infra_anomaly_alerts\n       WHERE alert_type = 'slow_query_spike'\n         AND alert_date >= DATE_SUB(NOW(), INTERVAL 8 DAY)\n         AND alert_date < DATE_SUB(NOW(), INTERVAL 7 DAY)),\n    0),\n  0) as value",
+            "format": "table",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "B",
+          "relativeTimeRange": {"from": 0, "to": 0},
+          "datasourceUid": "__expr__",
+          "model": {
+            "type": "threshold",
+            "expression": "A",
+            "conditions": [
+              {
+                "evaluator": {
+                  "type": "gt",
+                  "params": [2.0]
+                },
+                "operator": {"type": "and"},
+                "reducer": {"type": "last"}
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "new_rules": [
+    {
+      "title": "Infrastructure Anomaly - Critical Alert",
+      "ruleGroup": "infra-anomaly-detection",
+      "folderUID": "cfd9mzwx2zp4wc",
+      "condition": "B",
+      "for": "5m",
+      "noDataState": "OK",
+      "execErrState": "Alerting",
+      "orgID": 1,
+      "labels": {
+        "severity": "critical",
+        "team": "infrastructure",
+        "project": "UC-IT-01"
+      },
+      "annotations": {
+        "summary": "Critical infrastructure anomaly detected / 检测到严重基础设施异常",
+        "description": "{{ $labels.instance_id }} has {{ $values.A }} active CRITICAL anomalies that require immediate attention."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "relativeTimeRange": {"from": 86400, "to": 0},
+          "datasourceUid": "ef5ay9lchfg1sa",
+          "model": {
+            "rawSql": "SELECT\n  UNIX_TIMESTAMP() as time_sec,\n  COUNT(*) as value\nFROM test.infra_anomaly_alerts\nWHERE severity = 'CRITICAL'\n  AND acknowledged = FALSE\n  AND alert_date >= DATE_SUB(NOW(), INTERVAL 1 DAY)",
+            "format": "table",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "B",
+          "relativeTimeRange": {"from": 0, "to": 0},
+          "datasourceUid": "__expr__",
+          "model": {
+            "type": "threshold",
+            "expression": "A",
+            "conditions": [
+              {
+                "evaluator": {
+                  "type": "gt",
+                  "params": [0]
+                },
+                "operator": {"type": "and"},
+                "reducer": {"type": "last"}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Infrastructure Anomaly - Warning Alert",
+      "ruleGroup": "infra-anomaly-detection",
+      "folderUID": "cfd9mzwx2zp4wc",
+      "condition": "B",
+      "for": "10m",
+      "noDataState": "OK",
+      "execErrState": "OK",
+      "orgID": 1,
+      "labels": {
+        "severity": "warning",
+        "team": "infrastructure",
+        "project": "UC-IT-01"
+      },
+      "annotations": {
+        "summary": "Infrastructure anomaly warning detected / 检测到基础设施异常警告",
+        "description": "{{ $values.A }} active WARNING-level anomalies detected across infrastructure. Review recommended."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "relativeTimeRange": {"from": 86400, "to": 0},
+          "datasourceUid": "ef5ay9lchfg1sa",
+          "model": {
+            "rawSql": "SELECT\n  UNIX_TIMESTAMP() as time_sec,\n  COUNT(*) as value\nFROM test.infra_anomaly_alerts\nWHERE severity = 'WARNING'\n  AND acknowledged = FALSE\n  AND alert_date >= DATE_SUB(NOW(), INTERVAL 1 DAY)",
+            "format": "table",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "B",
+          "relativeTimeRange": {"from": 0, "to": 0},
+          "datasourceUid": "__expr__",
+          "model": {
+            "type": "threshold",
+            "expression": "A",
+            "conditions": [
+              {
+                "evaluator": {
+                  "type": "gt",
+                  "params": [3]
+                },
+                "operator": {"type": "and"},
+                "reducer": {"type": "last"}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Infrastructure Health Score Degradation",
+      "ruleGroup": "infra-anomaly-detection",
+      "folderUID": "cfd9mzwx2zp4wc",
+      "condition": "B",
+      "for": "15m",
+      "noDataState": "OK",
+      "execErrState": "Alerting",
+      "orgID": 1,
+      "labels": {
+        "severity": "warning",
+        "team": "infrastructure",
+        "project": "UC-IT-01"
+      },
+      "annotations": {
+        "summary": "Infrastructure health score has degraded / 基础设施健康评分下降",
+        "description": "Overall infrastructure health score has dropped below acceptable threshold. Current score: {{ $values.A }}. Multiple anomalies may be compounding."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "relativeTimeRange": {"from": 86400, "to": 0},
+          "datasourceUid": "ef5ay9lchfg1sa",
+          "model": {
+            "rawSql": "SELECT\n  UNIX_TIMESTAMP() as time_sec,\n  ROUND(\n    100 - (\n      (SELECT COUNT(*) FROM test.infra_anomaly_alerts\n       WHERE severity = 'CRITICAL'\n         AND acknowledged = FALSE\n         AND alert_date >= DATE_SUB(NOW(), INTERVAL 1 DAY)) * 15\n      +\n      (SELECT COUNT(*) FROM test.infra_anomaly_alerts\n       WHERE severity = 'WARNING'\n         AND acknowledged = FALSE\n         AND alert_date >= DATE_SUB(NOW(), INTERVAL 1 DAY)) * 5\n    ), 1\n  ) as value",
+            "format": "table",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "B",
+          "relativeTimeRange": {"from": 0, "to": 0},
+          "datasourceUid": "__expr__",
+          "model": {
+            "type": "threshold",
+            "expression": "A",
+            "conditions": [
+              {
+                "evaluator": {
+                  "type": "lt",
+                  "params": [70]
+                },
+                "operator": {"type": "and"},
+                "reducer": {"type": "last"}
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

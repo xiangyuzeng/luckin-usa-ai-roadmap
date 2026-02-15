@@ -1,0 +1,1419 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_MYSQL_LDAS",
+      "label": "MySQL-Ldas",
+      "description": "MySQL datasource for infrastructure monitoring data",
+      "type": "datasource",
+      "pluginId": "mysql",
+      "pluginName": "MySQL"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "mysql",
+      "name": "MySQL",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "barchart",
+      "name": "Bar chart",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "gauge",
+      "name": "Gauge",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "UC-IT-01: Predictive Infrastructure Monitoring using SPC-based anomaly detection. Monitors Redis, RDS, and ECS fleet health scores, z-score anomalies, and capacity trends across all instances.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "panels": [],
+      "title": "Fleet Overview / \u8bbe\u65bd\u603b\u89c8",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Total number of active infrastructure instances across all service types",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT CONCAT(service_type, ':', instance_id)) as value \nFROM test.infra_fleet_inventory \nWHERE status = 'ACTIVE'",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Total Instances / \u5b9e\u4f8b\u603b\u6570",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Average composite health score across all instances on the latest date",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "red", "value": 0 },
+              { "color": "yellow", "value": 60 },
+              { "color": "green", "value": 80 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(AVG(composite_score), 1) as value \nFROM test.infra_health_scores \nWHERE metric_date = (SELECT MAX(metric_date) FROM test.infra_health_scores)",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Fleet Health Score / \u8bbe\u65bd\u5065\u5eb7\u8bc4\u5206",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Number of unacknowledged anomaly alerts in the past 7 days",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 10 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) as value \nFROM test.infra_anomaly_alerts \nWHERE acknowledged = FALSE \nAND alert_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Active Alerts / \u6d3b\u8dc3\u544a\u8b66",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Number of distinct service types being actively monitored",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT service_type) as value \nFROM test.infra_fleet_inventory \nWHERE status = 'ACTIVE'",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Services Monitored / \u76d1\u63a7\u670d\u52a1\u6570",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Percentage of instances with active monitoring sources configured",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "red", "value": 0 },
+              { "color": "yellow", "value": 50 },
+              { "color": "green", "value": 80 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(\n    COUNT(DISTINCT CASE WHEN monitoring_source IS NOT NULL THEN instance_id END) * 100.0 \n    / NULLIF(COUNT(DISTINCT instance_id), 0)\n, 1) as value\nFROM test.infra_fleet_inventory",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Coverage % / \u8986\u76d6\u7387",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Average absolute z-score across all metrics on the latest date. Values above 2 indicate widespread anomalies.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 2 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "id": 6,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(AVG(ABS(z_score)), 2) as value \nFROM test.infra_anomaly_scores \nWHERE metric_date = (SELECT MAX(metric_date) FROM test.infra_anomaly_scores)",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Avg Z-Score / \u5e73\u5747Z\u5206\u6570",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 101,
+      "panels": [],
+      "title": "Service Health / \u670d\u52a1\u5065\u5eb7",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Health score heatmap showing individual dimension scores for each instance. Sorted by lowest composite score first.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "red", "value": 0 },
+              { "color": "yellow", "value": 60 },
+              { "color": "green", "value": 80 }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Instance" },
+            "properties": [
+              { "id": "custom.width", "value": 220 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Grade" },
+            "properties": [
+              { "id": "custom.width", "value": 60 },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byRegexp", "options": "Avail|Perf|Cap|Error|Latency|Overall" },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              { "id": "decimals", "value": 0 }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          { "desc": false, "displayName": "Overall" }
+        ]
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n    CONCAT(h.service_type, ' / ', h.instance_name) as \"Instance\",\n    h.availability_score as \"Avail\",\n    h.performance_score as \"Perf\",\n    h.capacity_score as \"Cap\",\n    h.error_rate_score as \"Error\",\n    h.latency_score as \"Latency\",\n    h.composite_score as \"Overall\",\n    h.health_grade as \"Grade\"\nFROM test.infra_health_scores h\nWHERE h.metric_date = (SELECT MAX(metric_date) FROM test.infra_health_scores)\n    AND h.service_type IN ($service_type)\nORDER BY h.composite_score ASC\nLIMIT 20",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Health Heatmap / \u5065\u5eb7\u70ed\u529b\u56fe",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Average composite health score trend by service type over the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Health Score",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "dashed" }
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "green", "value": 80 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 8,
+      "options": {
+        "legend": { "calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT \n    h.metric_date as time,\n    h.service_type as metric,\n    ROUND(AVG(h.composite_score), 1) as value\nFROM test.infra_health_scores h\nWHERE h.metric_date >= DATE_SUB(CURDATE(), INTERVAL $timerange DAY)\n    AND h.service_type IN ($service_type)\nGROUP BY h.metric_date, h.service_type\nORDER BY h.metric_date",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Service Health Trends / \u670d\u52a1\u5065\u5eb7\u8d8b\u52bf",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 102,
+      "panels": [],
+      "title": "Redis Fleet / Redis\u96c6\u7fa4",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Top 10 Redis instances by memory usage in GB",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "GB",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineWidth": 1,
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "decgbytes"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 15 },
+      "id": 9,
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.7,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": false },
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n    m.instance_name as metric,\n    ROUND(m.metric_value / 1073741824, 2) as value\nFROM test.infra_metric_daily m\nWHERE m.service_type = 'REDIS'\n    AND m.metric_name = 'memory_used_bytes'\n    AND m.metric_date = (SELECT MAX(metric_date) FROM test.infra_metric_daily WHERE service_type = 'REDIS')\nORDER BY m.metric_value DESC\nLIMIT 10",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Redis Memory Usage Top 10 / \u5185\u5b58\u4f7f\u7528\u524d10",
+      "type": "barchart"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Top 10 Redis instances by connected client count",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Connections",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineWidth": 1,
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 15 },
+      "id": 10,
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.7,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": false },
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n    m.instance_name as metric,\n    m.metric_value as value\nFROM test.infra_metric_daily m\nWHERE m.service_type = 'REDIS'\n    AND m.metric_name = 'connected_clients'\n    AND m.metric_date = (SELECT MAX(metric_date) FROM test.infra_metric_daily WHERE service_type = 'REDIS')\nORDER BY m.metric_value DESC\nLIMIT 10",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Redis Connection Counts Top 10 / \u8fde\u63a5\u6570\u524d10",
+      "type": "barchart"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Bottom 10 Redis instances by cache hit rate percentage. Lower hit rate may indicate inefficient caching.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Hit Rate %",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineWidth": 1,
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 80 },
+              { "color": "green", "value": 95 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 15 },
+      "id": 11,
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.7,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": false },
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n    m.instance_name as metric,\n    ROUND(m.metric_value * 100, 1) as value\nFROM test.infra_metric_daily m\nWHERE m.service_type = 'REDIS'\n    AND m.metric_name = 'hit_rate'\n    AND m.metric_date = (SELECT MAX(metric_date) FROM test.infra_metric_daily WHERE service_type = 'REDIS')\nORDER BY m.metric_value ASC\nLIMIT 10",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Redis Hit Rate Bottom 10 / \u547d\u4e2d\u7387\u540e10",
+      "type": "barchart"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "id": 103,
+      "panels": [],
+      "title": "RDS Fleet / RDS\u96c6\u7fa4",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Top 10 RDS instances by CPU utilization percentage",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "CPU %",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineWidth": 1,
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+      "id": 12,
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.7,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": false },
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n    m.instance_name as metric,\n    ROUND(m.metric_value, 1) as value\nFROM test.infra_metric_daily m\nWHERE m.service_type = 'RDS'\n    AND m.metric_name = 'cpu_utilization'\n    AND m.metric_date = (SELECT MAX(metric_date) FROM test.infra_metric_daily WHERE service_type = 'RDS')\nORDER BY m.metric_value DESC\nLIMIT 10",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "RDS CPU Utilization Top 10 / CPU\u4f7f\u7528\u7387\u524d10",
+      "type": "barchart"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Bottom 10 RDS instances by freeable memory in GB. Low free memory may indicate capacity issues.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Free Memory (GB)",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineWidth": 1,
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "green", "value": 4 }
+            ]
+          },
+          "unit": "decgbytes"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
+      "id": 13,
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.7,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": false },
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n    m.instance_name as metric,\n    ROUND(m.metric_value / 1073741824, 2) as value\nFROM test.infra_metric_daily m\nWHERE m.service_type = 'RDS'\n    AND m.metric_name = 'free_memory'\n    AND m.metric_date = (SELECT MAX(metric_date) FROM test.infra_metric_daily WHERE service_type = 'RDS')\nORDER BY m.metric_value ASC\nLIMIT 10",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "RDS Free Memory Bottom 10 / \u53ef\u7528\u5185\u5b58\u540e10",
+      "type": "barchart"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Read and write latency trends for RDS instances over the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Latency (ms)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".*read.*" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byRegexp", "options": ".*write.*" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
+      "id": 14,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT \n    m.metric_date as time,\n    CONCAT(m.instance_name, ' - ', m.metric_name) as metric,\n    ROUND(m.metric_value * 1000, 2) as value\nFROM test.infra_metric_daily m\nWHERE m.service_type = 'RDS'\n    AND m.metric_name IN ('read_latency', 'write_latency')\n    AND m.metric_date >= DATE_SUB(CURDATE(), INTERVAL $timerange DAY)\n    AND m.instance_name IN ($instance)\nORDER BY m.metric_date",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "RDS Latency Trends / RDS\u5ef6\u8fdf\u8d8b\u52bf",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "id": 104,
+      "panels": [],
+      "title": "Anomalies / \u5f02\u5e38\u68c0\u6d4b",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Active anomaly alerts across all infrastructure services, sorted by severity and date",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Severity" },
+            "properties": [
+              { "id": "custom.width", "value": 100 },
+              {
+                "id": "custom.cellOptions",
+                "value": { "type": "color-text" }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  { "options": { "EMERGENCY": { "color": "dark-red", "index": 0, "text": "EMERGENCY" } }, "type": "value" },
+                  { "options": { "CRITICAL": { "color": "red", "index": 1, "text": "CRITICAL" } }, "type": "value" },
+                  { "options": { "WARNING": { "color": "orange", "index": 2, "text": "WARNING" } }, "type": "value" },
+                  { "options": { "INFO": { "color": "blue", "index": 3, "text": "INFO" } }, "type": "value" }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Z-Score" },
+            "properties": [
+              { "id": "custom.width", "value": 80 },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "green", "value": null },
+                    { "color": "yellow", "value": 2 },
+                    { "color": "red", "value": 3 }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": { "mode": "gradient", "type": "color-background" }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Description" },
+            "properties": [
+              { "id": "custom.width", "value": 300 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Ack" },
+            "properties": [
+              { "id": "custom.width", "value": 50 }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 33 },
+      "id": 15,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          { "desc": true, "displayName": "Date" }
+        ]
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n    a.alert_date as \"Date\",\n    a.severity as \"Severity\",\n    a.service_type as \"Service\",\n    a.instance_id as \"Instance\",\n    a.metric_name as \"Metric\",\n    ROUND(a.current_value, 2) as \"Value\",\n    ROUND(a.z_score, 2) as \"Z-Score\",\n    a.description_en as \"Description\",\n    CASE WHEN a.acknowledged THEN '\u2713' ELSE '\u2717' END as \"Ack\"\nFROM test.infra_anomaly_alerts a\nWHERE a.alert_date >= DATE_SUB(CURDATE(), INTERVAL $timerange DAY)\n    AND a.service_type IN ($service_type)\nORDER BY \n    FIELD(a.severity, 'EMERGENCY', 'CRITICAL', 'WARNING', 'INFO'),\n    a.alert_date DESC\nLIMIT 50",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Active Anomaly Alerts / \u6d3b\u8dc3\u5f02\u5e38\u544a\u8b66",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Daily count of anomaly alerts grouped by severity level over the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Alert Count",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "normal" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "EMERGENCY" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "dark-red", "mode": "fixed" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "CRITICAL" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "WARNING" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "INFO" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 33 },
+      "id": 16,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT \n    a.alert_date as time,\n    a.severity as metric,\n    COUNT(*) as value\nFROM test.infra_anomaly_alerts a\nWHERE a.alert_date >= DATE_SUB(CURDATE(), INTERVAL $timerange DAY)\nGROUP BY a.alert_date, a.severity\nORDER BY a.alert_date",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Alert Trend by Severity / \u544a\u8b66\u8d8b\u52bf",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 41 },
+      "id": 105,
+      "panels": [],
+      "title": "Pipeline Status / \u7ba1\u9053\u72b6\u6001",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Recent pipeline execution history showing status, duration, and record counts",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Status" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  { "options": { "SUCCESS": { "color": "green", "index": 0, "text": "SUCCESS" } }, "type": "value" },
+                  { "options": { "FAILED": { "color": "red", "index": 1, "text": "FAILED" } }, "type": "value" },
+                  { "options": { "RUNNING": { "color": "blue", "index": 2, "text": "RUNNING" } }, "type": "value" },
+                  { "options": { "PARTIAL": { "color": "yellow", "index": 3, "text": "PARTIAL" } }, "type": "value" }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": { "type": "color-text" }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Duration" },
+            "properties": [
+              { "id": "unit", "value": "s" }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 42 },
+      "id": 17,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          { "desc": true, "displayName": "Run Date" }
+        ]
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n    p.run_date as \"Run Date\",\n    p.pipeline_name as \"Pipeline\",\n    p.status as \"Status\",\n    p.duration_seconds as \"Duration\",\n    p.records_processed as \"Records\",\n    p.error_message as \"Error\"\nFROM test.infra_pipeline_log p\nWHERE p.run_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)\nORDER BY p.run_date DESC, p.pipeline_name\nLIMIT 30",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Pipeline Execution Status / \u7ba1\u9053\u6267\u884c\u72b6\u6001",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Time since last successful data collection for each monitoring source",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 24 },
+              { "color": "red", "value": 48 }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 42 },
+      "id": 18,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": true
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n    f.monitoring_source as metric,\n    ROUND(TIMESTAMPDIFF(HOUR, MAX(m.metric_date), CURDATE()), 1) as value\nFROM test.infra_fleet_inventory f\nJOIN test.infra_metric_daily m ON f.instance_id = m.instance_id AND f.service_type = m.service_type\nWHERE f.monitoring_source IS NOT NULL\nGROUP BY f.monitoring_source\nORDER BY value DESC",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Data Freshness by Source / \u6570\u636e\u65b0\u9c9c\u5ea6",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Percentage of active instances with at least one metric collected in the past 7 days",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 1,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "red", "value": 0 },
+              { "color": "yellow", "value": 70 },
+              { "color": "green", "value": 90 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 42 },
+      "id": 19,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(\n    COUNT(DISTINCT CASE WHEN m.metric_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN m.instance_id END) * 100.0\n    / NULLIF((SELECT COUNT(DISTINCT instance_id) FROM test.infra_fleet_inventory WHERE status = 'ACTIVE'), 0)\n, 1) as value\nFROM test.infra_metric_daily m\nJOIN test.infra_fleet_inventory f ON m.instance_id = f.instance_id AND m.service_type = f.service_type\nWHERE f.status = 'ACTIVE'",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Collection Coverage / \u91c7\u96c6\u8986\u76d6\u7387",
+      "type": "gauge"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "uc-it-01",
+    "infrastructure",
+    "anomaly-detection",
+    "spc"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+        "definition": "SELECT DISTINCT service_type FROM test.infra_fleet_inventory ORDER BY service_type",
+        "description": "Filter by infrastructure service type (Redis, RDS, ECS, etc.)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Service Type",
+        "multi": true,
+        "name": "service_type",
+        "options": [],
+        "query": "SELECT DISTINCT service_type FROM test.infra_fleet_inventory ORDER BY service_type",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+        "definition": "SELECT DISTINCT instance_name FROM test.infra_fleet_inventory WHERE service_type IN ($service_type) ORDER BY instance_name",
+        "description": "Filter by specific instance name, dependent on selected service type",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Instance",
+        "multi": true,
+        "name": "instance",
+        "options": [],
+        "query": "SELECT DISTINCT instance_name FROM test.infra_fleet_inventory WHERE service_type IN ($service_type) ORDER BY instance_name",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "memory_used_bytes",
+          "value": "memory_used_bytes"
+        },
+        "description": "Select a metric for SPC chart and anomaly analysis",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Metric",
+        "multi": false,
+        "name": "metric",
+        "options": [
+          { "selected": true, "text": "memory_used_bytes", "value": "memory_used_bytes" },
+          { "selected": false, "text": "connected_clients", "value": "connected_clients" },
+          { "selected": false, "text": "commands_per_sec", "value": "commands_per_sec" },
+          { "selected": false, "text": "cpu_utilization", "value": "cpu_utilization" },
+          { "selected": false, "text": "hit_rate", "value": "hit_rate" },
+          { "selected": false, "text": "free_memory", "value": "free_memory" },
+          { "selected": false, "text": "read_latency", "value": "read_latency" },
+          { "selected": false, "text": "write_latency", "value": "write_latency" }
+        ],
+        "query": "memory_used_bytes,connected_clients,commands_per_sec,cpu_utilization,hit_rate,free_memory,read_latency,write_latency",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "30",
+          "value": "30"
+        },
+        "description": "Number of days to look back for trend and alert data",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Days",
+        "multi": false,
+        "name": "timerange",
+        "options": [
+          { "selected": false, "text": "7", "value": "7" },
+          { "selected": false, "text": "14", "value": "14" },
+          { "selected": true, "text": "30", "value": "30" },
+          { "selected": false, "text": "60", "value": "60" },
+          { "selected": false, "text": "90", "value": "90" }
+        ],
+        "query": "7,14,30,60,90",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+    "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d", "90d"]
+  },
+  "timezone": "utc",
+  "title": "UC-IT-01: Infrastructure Health Monitor / \u57fa\u7840\u8bbe\u65bd\u5065\u5eb7\u76d1\u63a7",
+  "uid": "uc-it-01-infra-monitoring",
+  "version": 1,
+  "weekStart": ""
+}

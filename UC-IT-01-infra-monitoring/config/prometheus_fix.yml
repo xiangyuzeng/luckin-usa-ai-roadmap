@@ -1,0 +1,53 @@
+# ============================================================
+# UC-IT-01: Prometheus Target Configuration Fix
+# Predictive Infrastructure Monitoring / 预测性基础设施监控
+# Prometheus 目标配置修复
+#
+# Issue: The iopenlinkeradmin target has a trailing space in
+#        the hostname, causing scrape failures (target DOWN).
+# 问题: iopenlinkeradmin 目标的主机名末尾有多余空格,导致抓取失败
+#
+# Current (BROKEN):
+#   "rediss://master.luckyus-iopenlinkeradmin .vyllrs.use1.cache.amazonaws.com:6379"
+#                                            ^ trailing space
+#
+# Fixed:
+#   "rediss://master.luckyus-iopenlinkeradmin.vyllrs.use1.cache.amazonaws.com:6379"
+#
+# Action Required:
+#   1. SSH to Prometheus server (working dir: /data/prometheus-2.43.0.linux-amd64)
+#   2. Edit prometheus.yml and find the iopenlinkeradmin target
+#   3. Remove the trailing space from the hostname
+#   4. Reload config: curl -X POST http://localhost:9090/-/reload
+#      OR: kill -HUP $(pidof prometheus)
+#
+# Author: Data Engineering / BI Team
+# Created: 2026-02-15
+# ============================================================
+
+# Corrected scrape config snippet for the aws-redis-job
+# (shows only the relevant target - do NOT replace entire config)
+#
+# Look for this in your prometheus.yml under scrape_configs:
+#   - job_name: 'aws-redis-job'
+#     static_configs:
+#       - targets:
+#           # ... other targets ...
+#
+#           # BEFORE (BROKEN - has trailing space):
+#           # - "rediss://master.luckyus-iopenlinkeradmin .vyllrs.use1.cache.amazonaws.com:6379"
+#
+#           # AFTER (FIXED):
+#           - "rediss://master.luckyus-iopenlinkeradmin.vyllrs.use1.cache.amazonaws.com:6379"
+
+# Additional Recommendations:
+# 1. Upgrade Prometheus from 2.43.0 (March 2023) to latest 2.x or 3.x
+# 2. Increase retention from 15 days to at least 90 days:
+#    --storage.tsdb.retention.time=90d
+# 3. Add node_exporter targets for EC2 instances
+# 4. Add mysqld_exporter targets for RDS monitoring
+# 5. Consider adding alertmanager for alert routing
+
+# Verification after fix:
+#   curl -s http://localhost:9090/api/v1/targets | jq '.data.activeTargets[] | select(.health=="down")'
+#   # Should return empty (no DOWN targets)
