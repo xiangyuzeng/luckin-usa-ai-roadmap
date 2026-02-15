@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UC-OP-02 Store Health Monitor | Luckin Coffee USA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0f1419;
+  color: #e8edf2;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ── Typography ───────────────────────────────────────────── */
+.mono { font-family: 'Fira Code', monospace; }
+.text-muted { color: #657786; }
+.text-secondary { color: #8899a6; }
+.text-primary { color: #e8edf2; }
+
+/* ── Header ───────────────────────────────────────────────── */
+.header {
+  background: linear-gradient(135deg, #1a2332 0%, #0f1419 100%);
+  border-bottom: 1px solid #2d4050;
+  padding: 24px 40px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #e8edf2;
+  letter-spacing: -0.3px;
+}
+.header h1 span.cn { font-weight: 400; color: #8899a6; font-size: 16px; margin-left: 8px; }
+.badge-uc {
+  background: #00529B;
+  color: #fff;
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 14px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+.header-subtitle {
+  color: #8899a6;
+  font-size: 13px;
+  margin-top: 6px;
+}
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.live-dot {
+  width: 8px; height: 8px;
+  background: #4caf50;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(76,175,80,0.5); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(76,175,80,0); }
+}
+.timestamp { font-family: 'Fira Code', monospace; font-size: 12px; color: #657786; }
+
+/* ── Summary Stats Row ────────────────────────────────────── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 24px 40px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+.stat-card {
+  background: #1e2d3d;
+  border: 1px solid #2d4050;
+  border-radius: 10px;
+  padding: 20px 24px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.stat-card:hover { border-color: #00529B; transform: translateY(-2px); }
+.stat-card .stat-label { font-size: 12px; color: #8899a6; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+.stat-card .stat-value { font-family: 'Fira Code', monospace; font-size: 32px; font-weight: 700; line-height: 1.1; }
+.stat-card .stat-sub { font-size: 13px; color: #657786; margin-top: 4px; }
+.stat-value.grade-text { color: #ff9800; }
+.stat-value.healthy-text { color: #4caf50; }
+.stat-value.risk-text { color: #ff4444; }
+.stat-value.alert-text { color: #ff9800; }
+
+/* ── Store Grid ───────────────────────────────────────────── */
+.content { padding: 0 40px 40px; max-width: 1600px; margin: 0 auto; }
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #e8edf2;
+  margin: 32px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #2d4050;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title .cn { font-weight: 400; color: #657786; font-size: 13px; }
+.store-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* ── Store Card ───────────────────────────────────────────── */
+.store-card {
+  background: #1e2d3d;
+  border: 1px solid #2d4050;
+  border-radius: 10px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+.store-card:hover {
+  border-color: #00529B;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0,82,155,0.15);
+}
+.store-card.grade-a { border-left: 3px solid #4caf50; }
+.store-card.grade-b { border-left: 3px solid #4caf50; }
+.store-card.grade-c { border-left: 3px solid #ff9800; }
+.store-card.grade-d { border-left: 3px solid #ff6600; }
+.store-card.grade-f { border-left: 3px solid #ff4444; }
+.store-card.grade-na { border-left: 3px solid #657786; }
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.card-info { flex: 1; min-width: 0; }
+.store-name { font-size: 18px; font-weight: 600; color: #e8edf2; margin-bottom: 2px; }
+.store-number { font-family: 'Fira Code', monospace; font-size: 11px; color: #657786; margin-left: 8px; }
+.store-address { font-size: 12px; color: #8899a6; margin-bottom: 14px; }
+
+/* ── Risk Badge ───────────────────────────────────────────── */
+.badge-risk {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255,68,68,0.15);
+  color: #ff4444;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,68,68,0.3);
+  text-transform: uppercase;
+}
+.badge-notopen {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(101,119,134,0.15);
+  color: #657786;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(101,119,134,0.3);
+  text-transform: uppercase;
+}
+
+/* ── Health Score Circle ──────────────────────────────────── */
+.score-circle-wrap {
+  flex-shrink: 0;
+  width: 100px;
+  height: 100px;
+  position: relative;
+}
+.score-circle-svg {
+  width: 100px;
+  height: 100px;
+  transform: rotate(-90deg);
+}
+.score-circle-bg {
+  fill: none;
+  stroke: #2d4050;
+  stroke-width: 6;
+}
+.score-circle-fg {
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 264;
+  stroke-dashoffset: 264;
+  transition: stroke-dashoffset 1.5s ease-out;
+}
+.score-circle-fg.animated { /* set via JS */ }
+.score-circle-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.score-number {
+  font-family: 'Fira Code', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+.score-grade {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+}
+
+/* ── Dimension Bars ───────────────────────────────────────── */
+.dimensions { margin-top: 16px; }
+.dim-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.dim-label {
+  font-size: 11px;
+  color: #8899a6;
+  width: 80px;
+  flex-shrink: 0;
+  text-align: right;
+}
+.dim-bar-track {
+  flex: 1;
+  height: 8px;
+  background: #2d4050;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.dim-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  width: 0%;
+  transition: width 1.2s ease-out;
+}
+.dim-score {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  width: 32px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.dim-weight {
+  font-size: 9px;
+  color: #657786;
+  width: 28px;
+  flex-shrink: 0;
+}
+
+/* ── Trend Indicator ──────────────────────────────────────── */
+.trend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #2d4050;
+}
+.trend-arrow { font-size: 16px; }
+.trend-arrow.up { color: #4caf50; }
+.trend-arrow.down { color: #ff4444; }
+.trend-arrow.flat { color: #ff9800; }
+.trend-arrow.na { color: #657786; }
+.trend-text { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; }
+.trend-text.up { color: #4caf50; }
+.trend-text.down { color: #ff4444; }
+.trend-text.flat { color: #ff9800; }
+.trend-text.na { color: #657786; }
+
+/* ── Expanded Detail Panel ────────────────────────────────── */
+.detail-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.3s ease;
+  border-top: 0px solid transparent;
+  margin-top: 0;
+}
+.detail-panel.open {
+  max-height: 600px;
+  border-top: 1px solid #2d4050;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+}
+.detail-section h4 {
+  font-size: 12px;
+  color: #8899a6;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 10px;
+}
+.sparkline-svg {
+  width: 100%;
+  height: 80px;
+}
+.sparkline-line {
+  fill: none;
+  stroke: #2196f3;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sparkline-area {
+  fill: url(#sparkGrad);
+  opacity: 0.3;
+}
+.breakdown-table {
+  width: 100%;
+  font-size: 12px;
+}
+.breakdown-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid #2d4050;
+}
+.breakdown-table td:first-child { color: #8899a6; }
+.breakdown-table td:last-child { font-family: 'Fira Code', monospace; text-align: right; }
+.alert-item {
+  font-size: 12px;
+  padding: 6px 10px;
+  background: rgba(255,68,68,0.08);
+  border-left: 2px solid #ff4444;
+  border-radius: 0 4px 4px 0;
+  margin-bottom: 6px;
+  color: #e8edf2;
+}
+.alert-item.warning {
+  background: rgba(255,152,0,0.08);
+  border-left-color: #ff9800;
+}
+.alert-item .alert-time { font-family: 'Fira Code', monospace; font-size: 10px; color: #657786; }
+
+/* ── Ranking Table ────────────────────────────────────────── */
+.ranking-section { margin-top: 48px; }
+.ranking-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #2d4050;
+  border-radius: 10px;
+}
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.ranking-table thead th {
+  background: #1a2332;
+  color: #8899a6;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 12px 16px;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid #2d4050;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.ranking-table thead th:hover { color: #2196f3; }
+.ranking-table thead th.sorted { color: #2196f3; }
+.ranking-table thead th .sort-arrow { margin-left: 4px; font-size: 10px; }
+.ranking-table tbody tr {
+  border-bottom: 1px solid #2d4050;
+  transition: background 0.2s;
+}
+.ranking-table tbody tr:hover { background: rgba(0,82,155,0.08); }
+.ranking-table tbody tr:last-child { border-bottom: none; }
+.ranking-table tbody td {
+  padding: 12px 16px;
+  color: #e8edf2;
+}
+.ranking-table .col-rank { font-family: 'Fira Code', monospace; color: #657786; font-weight: 600; width: 50px; }
+.ranking-table .col-score { font-family: 'Fira Code', monospace; font-weight: 700; }
+.ranking-table .col-dim { font-family: 'Fira Code', monospace; font-size: 12px; }
+.grade-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Fira Code', monospace;
+}
+.grade-badge.a { background: rgba(76,175,80,0.15); color: #4caf50; }
+.grade-badge.b { background: rgba(76,175,80,0.1); color: #4caf50; }
+.grade-badge.c { background: rgba(255,152,0,0.15); color: #ff9800; }
+.grade-badge.d { background: rgba(255,102,0,0.15); color: #ff6600; }
+.grade-badge.f { background: rgba(255,68,68,0.15); color: #ff4444; }
+.grade-badge.na { background: rgba(101,119,134,0.15); color: #657786; }
+
+/* ── Footer ───────────────────────────────────────────────── */
+.footer {
+  text-align: center;
+  padding: 32px 40px;
+  font-size: 12px;
+  color: #657786;
+  border-top: 1px solid #2d4050;
+  margin-top: 48px;
+}
+.footer a { color: #00529B; text-decoration: none; }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .store-grid { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .header { padding: 16px 20px; }
+  .content { padding: 0 20px 20px; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .header h1 { font-size: 17px; }
+}
+
+/* ── Print ────────────────────────────────────────────────── */
+@media print {
+  body { background: #fff; color: #222; }
+  .header { background: #fff; border-bottom: 2px solid #ccc; position: static; }
+  .header h1, .store-name, .score-number { color: #222; }
+  .stat-card, .store-card { background: #f8f8f8; border: 1px solid #ccc; box-shadow: none; }
+  .store-card:hover { transform: none; box-shadow: none; }
+  .detail-panel.open { max-height: none; }
+  .dim-bar-track { background: #ddd; }
+  .score-circle-bg { stroke: #ddd; }
+  .ranking-table thead th { background: #eee; }
+  .ranking-table tbody tr:hover { background: transparent; }
+  .footer { border-top: 1px solid #ccc; }
+}
+
+/* ── Score Color Utility ──────────────────────────────────── */
+.clr-a { color: #4caf50; }
+.clr-b { color: #4caf50; }
+.clr-c { color: #ff9800; }
+.clr-d { color: #ff6600; }
+.clr-f { color: #ff4444; }
+.clr-na { color: #657786; }
+
+.expand-hint {
+  font-size: 10px;
+  color: #657786;
+  text-align: right;
+  margin-top: 8px;
+  letter-spacing: 0.5px;
+}
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ───────────────────────────────────────────── -->
+<header class="header">
+  <div class="header-row">
+    <div>
+      <h1>Luckin Coffee USA &mdash; Store Health Monitor <span class="cn">/ 门店健康监控</span></h1>
+      <div class="header-subtitle">Real-time composite health scores across 5 dimensions / 五维度实时综合健康评分</div>
+    </div>
+    <div class="header-meta">
+      <span class="live-dot"></span>
+      <span class="timestamp" id="headerTimestamp"></span>
+      <span class="badge-uc">UC-OP-02</span>
+    </div>
+  </div>
+</header>
+
+<!-- ─── SUMMARY STATS ────────────────────────────────────── -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-label">Portfolio Average</div>
+    <div class="stat-value grade-text">75.4</div>
+    <div class="stat-sub">Grade C+ &middot; 9 active stores</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Stores Healthy (A/B)</div>
+    <div class="stat-value healthy-text">5</div>
+    <div class="stat-sub">Score &ge; 80</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Stores At Risk (D/F)</div>
+    <div class="stat-value risk-text">2</div>
+    <div class="stat-sub">Score &lt; 65 &middot; Requires intervention</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Active Alerts</div>
+    <div class="stat-value alert-text">7</div>
+    <div class="stat-sub">3 critical &middot; 4 warning</div>
+  </div>
+</div>
+
+<!-- ─── STORE GRID ───────────────────────────────────────── -->
+<div class="content">
+  <div class="section-title">Store Health Cards <span class="cn">/ 门店健康卡片</span></div>
+  <div class="store-grid" id="storeGrid"></div>
+
+  <!-- ─── RANKING TABLE ──────────────────────────────────── -->
+  <div class="ranking-section">
+    <div class="section-title">Portfolio Ranking <span class="cn">/ 门店排名</span></div>
+    <div class="ranking-table-wrap">
+      <table class="ranking-table" id="rankingTable">
+        <thead>
+          <tr>
+            <th data-col="rank">Rank <span class="sort-arrow"></span></th>
+            <th data-col="store">Store <span class="sort-arrow"></span></th>
+            <th data-col="score">Score <span class="sort-arrow"></span></th>
+            <th data-col="grade">Grade <span class="sort-arrow"></span></th>
+            <th data-col="revenue">Revenue <span class="sort-arrow"></span></th>
+            <th data-col="ops">Ops <span class="sort-arrow"></span></th>
+            <th data-col="quality">Quality <span class="sort-arrow"></span></th>
+            <th data-col="staffing">Staffing <span class="sort-arrow"></span></th>
+            <th data-col="customer">Customer <span class="sort-arrow"></span></th>
+            <th data-col="trend">Trend <span class="sort-arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="rankingBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ─── FOOTER ───────────────────────────────────────────── -->
+<div class="footer">
+  UC-OP-02 Store Health Monitor &middot; Luckin Coffee USA Operations Intelligence &middot;
+  Data refreshes every 15 min &middot; <a href="#">Documentation</a>
+</div>
+
+<!-- ─── JAVASCRIPT ───────────────────────────────────────── -->
+<script>
+(function() {
+  'use strict';
+
+  /* ── Store Data ──────────────────────────────────────────── */
+  const stores = [
+    {
+      id: 'US00001', name: '8th & Broadway', address: '755 Broadway, NY 10003',
+      score: 42, grade: 'F', trend: 'DECLINING',
+      dims: { revenue: 28, ops: 55, quality: 60, staffing: 48, customer: 35 },
+      status: 1,
+      sparkline: [55,52,48,50,46,44,48,45,43,42,44,40,38,42,45,42,40,38,41,39,42,44,40,38,42,45,43,40,42,42],
+      alerts: [
+        { type: 'critical', text: 'Revenue below 30% threshold for 5 consecutive days', time: '2h ago' },
+        { type: 'critical', text: 'Customer satisfaction score dropped below 40', time: '6h ago' },
+        { type: 'warning', text: 'Staffing efficiency at 48% (target: 70%)', time: '1d ago' }
+      ]
+    },
+    {
+      id: 'US00002', name: '28th & 6th', address: '800 6th Ave, NY 10001',
+      score: 85, grade: 'B', trend: 'STABLE',
+      dims: { revenue: 88, ops: 82, quality: 85, staffing: 80, customer: 82 },
+      status: 1,
+      sparkline: [83,84,82,85,86,84,83,85,86,85,84,85,86,85,84,83,85,86,85,84,85,86,84,85,86,85,84,85,86,85],
+      alerts: [
+        { type: 'warning', text: 'Minor ops efficiency dip on weekends', time: '3d ago' }
+      ]
+    },
+    {
+      id: 'US00003', name: '100 Maiden Ln', address: '100 Maiden Ln, NY 10038',
+      score: 78, grade: 'C', trend: 'IMPROVING',
+      dims: { revenue: 75, ops: 80, quality: 78, staffing: 82, customer: 76 },
+      status: 1,
+      sparkline: [68,69,70,72,71,73,72,74,73,75,74,76,75,74,76,77,75,76,77,78,76,77,78,77,78,76,77,78,78,78],
+      alerts: []
+    },
+    {
+      id: 'US00004', name: '37th & Broadway', address: '1375 Broadway, NY 10018',
+      score: 91, grade: 'A', trend: 'IMPROVING',
+      dims: { revenue: 94, ops: 88, quality: 90, staffing: 85, customer: 92 },
+      status: 1,
+      sparkline: [82,83,84,85,86,85,87,86,88,87,88,89,88,89,90,89,90,91,90,89,90,91,90,91,90,91,90,91,91,91],
+      alerts: []
+    },
+    {
+      id: 'US00005', name: '54th & 8th', address: '901 8th Ave, NY 10019',
+      score: 82, grade: 'B', trend: 'STABLE',
+      dims: { revenue: 84, ops: 78, quality: 82, staffing: 80, customer: 85 },
+      status: 1,
+      sparkline: [80,81,82,81,83,82,81,82,83,82,81,82,83,82,81,82,83,82,81,82,83,82,81,82,83,82,81,82,82,82],
+      alerts: []
+    },
+    {
+      id: 'US00006', name: '102 Fulton', address: '102 Fulton St, NY 10038',
+      score: 74, grade: 'C', trend: 'DECLINING',
+      dims: { revenue: 70, ops: 76, quality: 75, staffing: 78, customer: 72 },
+      status: 1,
+      sparkline: [80,79,78,79,77,78,76,77,76,75,76,75,74,76,75,74,75,74,73,74,75,74,73,74,75,74,73,74,74,74],
+      alerts: [
+        { type: 'warning', text: 'Revenue trend declining 8% over 4 weeks', time: '12h ago' }
+      ]
+    },
+    {
+      id: 'US00008', name: '33rd & 10th', address: '410 10th Ave, NY 10001',
+      score: 88, grade: 'B', trend: 'IMPROVING',
+      dims: { revenue: 90, ops: 85, quality: 88, staffing: 86, customer: 90 },
+      status: 1,
+      sparkline: [78,79,80,81,82,81,83,82,84,83,84,85,84,85,86,85,86,87,86,87,88,87,86,87,88,87,88,87,88,88],
+      alerts: []
+    },
+    {
+      id: 'US00000', name: 'NJ Test Kitchen', address: '1 County Rd B9, Secaucus NJ',
+      score: 65, grade: 'D', trend: 'STABLE',
+      dims: { revenue: 60, ops: 68, quality: 70, staffing: 62, customer: 65 },
+      status: 1,
+      sparkline: [64,63,65,64,66,65,64,65,66,65,64,65,66,65,64,65,66,65,64,65,66,65,64,65,66,65,64,65,65,65],
+      alerts: [
+        { type: 'critical', text: 'Revenue consistently below D-grade threshold', time: '4h ago' },
+        { type: 'warning', text: 'Staffing efficiency at 62% (target: 70%)', time: '1d ago' }
+      ]
+    },
+    {
+      id: 'US00007', name: '108th & Broadway', address: '2799 Broadway, NY 10025',
+      score: null, grade: '\u2014', trend: 'NOT OPEN',
+      dims: { revenue: null, ops: null, quality: null, staffing: null, customer: null },
+      status: 2,
+      sparkline: [],
+      alerts: []
+    },
+    {
+      id: 'US99998', name: 'Shanghai Test Kitchen', address: '15 W 38th St, NY 10018',
+      score: 71, grade: 'C', trend: 'STABLE',
+      dims: { revenue: 68, ops: 72, quality: 74, staffing: 70, customer: 72 },
+      status: 1,
+      sparkline: [70,69,71,70,72,71,70,71,72,71,70,71,72,71,70,71,72,71,70,71,72,71,70,71,72,71,70,71,71,71],
+      alerts: [
+        { type: 'warning', text: 'Quality score approaching C/D boundary', time: '2d ago' }
+      ]
+    }
+  ];
+
+  const dimWeights = { revenue: '40%', ops: '20%', quality: '15%', staffing: '15%', customer: '10%' };
+  const dimLabels = { revenue: 'Revenue', ops: 'Operations', quality: 'Quality', staffing: 'Staffing', customer: 'Customer' };
+
+  /* ── Helpers ─────────────────────────────────────────────── */
+  function gradeClass(grade) {
+    const g = grade.toUpperCase();
+    if (g === 'A') return 'a';
+    if (g === 'B') return 'b';
+    if (g === 'C') return 'c';
+    if (g === 'D') return 'd';
+    if (g === 'F') return 'f';
+    return 'na';
+  }
+
+  function scoreColor(score) {
+    if (score === null) return '#657786';
+    if (score >= 80) return '#4caf50';
+    if (score >= 65) return '#ff9800';
+    if (score >= 50) return '#ff6600';
+    return '#ff4444';
+  }
+
+  function dimBarColor(val) {
+    if (val === null) return '#657786';
+    if (val >= 80) return '#4caf50';
+    if (val >= 65) return '#ff9800';
+    if (val >= 50) return '#ff6600';
+    return '#ff4444';
+  }
+
+  function trendArrow(trend) {
+    switch (trend) {
+      case 'IMPROVING': return { symbol: '\u25B2', cls: 'up' };
+      case 'DECLINING': return { symbol: '\u25BC', cls: 'down' };
+      case 'STABLE': return { symbol: '\u25C6', cls: 'flat' };
+      default: return { symbol: '\u2014', cls: 'na' };
+    }
+  }
+
+  function buildSparklineSVG(data, color) {
+    if (!data || data.length === 0) return '<div style="color:#657786;font-size:12px;padding:10px 0;">No data available</div>';
+    const w = 280, h = 70, pad = 4;
+    const min = Math.min(...data) - 5;
+    const max = Math.max(...data) + 5;
+    const range = max - min || 1;
+    const pts = data.map((v, i) => {
+      const x = pad + (i / (data.length - 1)) * (w - 2 * pad);
+      const y = h - pad - ((v - min) / range) * (h - 2 * pad);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    const linePoints = pts.join(' ');
+    const areaPoints = `${pad},${h - pad} ${linePoints} ${(w - pad).toFixed(1)},${h - pad}`;
+    return `<svg class="sparkline-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+      <defs><linearGradient id="sparkGrad_${color.replace('#','')}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${color}" stop-opacity="0.3"/>
+        <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+      </linearGradient></defs>
+      <polygon class="sparkline-area" points="${areaPoints}" fill="url(#sparkGrad_${color.replace('#','')})"/>
+      <polyline class="sparkline-line" points="${linePoints}" style="stroke:${color}"/>
+    </svg>`;
+  }
+
+  /* ── Render Store Cards ──────────────────────────────────── */
+  function renderStoreGrid() {
+    const grid = document.getElementById('storeGrid');
+    grid.innerHTML = '';
+    stores.forEach((s, idx) => {
+      const gc = gradeClass(s.grade);
+      const isAtRisk = (s.grade === 'D' || s.grade === 'F');
+      const isNA = s.status === 2;
+      const ta = trendArrow(s.trend);
+      const circumference = 2 * Math.PI * 42; // r=42
+      const scorePercent = s.score !== null ? s.score / 100 : 0;
+      const dashOffset = circumference * (1 - scorePercent);
+
+      let dimsHTML = '';
+      for (const key of ['revenue', 'ops', 'quality', 'staffing', 'customer']) {
+        const val = s.dims[key];
+        const displayVal = val !== null ? val : 'N/A';
+        const barWidth = val !== null ? val : 0;
+        const barColor = dimBarColor(val);
+        dimsHTML += `
+          <div class="dim-row">
+            <span class="dim-label">${dimLabels[key]}</span>
+            <div class="dim-bar-track">
+              <div class="dim-bar-fill" data-width="${barWidth}" style="background:${barColor};"></div>
+            </div>
+            <span class="dim-score" style="color:${barColor}">${displayVal}</span>
+            <span class="dim-weight">${dimWeights[key]}</span>
+          </div>`;
+      }
+
+      const alertsHTML = s.alerts.length > 0
+        ? s.alerts.map(a => `<div class="alert-item ${a.type === 'warning' ? 'warning' : ''}">
+            <span class="alert-time">${a.time}</span> &mdash; ${a.text}
+          </div>`).join('')
+        : '<div style="color:#657786;font-size:12px;">No active alerts</div>';
+
+      let breakdownHTML = '';
+      for (const key of ['revenue', 'ops', 'quality', 'staffing', 'customer']) {
+        const val = s.dims[key];
+        breakdownHTML += `<tr><td>${dimLabels[key]} (${dimWeights[key]})</td><td style="color:${dimBarColor(val)}">${val !== null ? val : 'N/A'}</td></tr>`;
+      }
+      breakdownHTML += `<tr><td style="font-weight:600;">Composite</td><td style="font-weight:700;color:${scoreColor(s.score)}">${s.score !== null ? s.score : 'N/A'}</td></tr>`;
+
+      const card = document.createElement('div');
+      card.className = `store-card grade-${gc}`;
+      card.setAttribute('data-idx', idx);
+      card.innerHTML = `
+        ${isAtRisk ? '<span class="badge-risk">AT RISK</span>' : ''}
+        ${isNA ? '<span class="badge-notopen">NOT OPEN</span>' : ''}
+        <div class="card-top">
+          <div class="card-info">
+            <div class="store-name">${s.name} <span class="store-number">${s.id}</span></div>
+            <div class="store-address">${s.address}</div>
+          </div>
+          <div class="score-circle-wrap">
+            <svg class="score-circle-svg" viewBox="0 0 100 100">
+              <circle class="score-circle-bg" cx="50" cy="50" r="42"/>
+              <circle class="score-circle-fg" cx="50" cy="50" r="42"
+                stroke="${scoreColor(s.score)}"
+                data-offset="${dashOffset.toFixed(1)}"
+                style="stroke-dasharray:${circumference.toFixed(1)};stroke-dashoffset:${circumference.toFixed(1)};"/>
+            </svg>
+            <div class="score-circle-text">
+              <span class="score-number clr-${gc}">${s.score !== null ? s.score : 'N/A'}</span>
+              <span class="score-grade clr-${gc}">${s.grade}</span>
+            </div>
+          </div>
+        </div>
+        <div class="dimensions">${dimsHTML}</div>
+        <div class="trend-row">
+          <span class="trend-arrow ${ta.cls}">${ta.symbol}</span>
+          <span class="trend-text ${ta.cls}">${s.trend}</span>
+        </div>
+        <div class="expand-hint">Click to expand details</div>
+        <div class="detail-panel" id="detail-${idx}">
+          <div class="detail-grid">
+            <div class="detail-section">
+              <h4>30-Day Score Trend</h4>
+              ${buildSparklineSVG(s.sparkline, scoreColor(s.score))}
+            </div>
+            <div class="detail-section">
+              <h4>Sub-Score Breakdown</h4>
+              <table class="breakdown-table">${breakdownHTML}</table>
+            </div>
+            <div class="detail-section">
+              <h4>Active Alerts (${s.alerts.length})</h4>
+              ${alertsHTML}
+            </div>
+          </div>
+        </div>`;
+
+      card.addEventListener('click', function(e) {
+        const panel = document.getElementById('detail-' + idx);
+        panel.classList.toggle('open');
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  /* ── Animate Circles & Bars ──────────────────────────────── */
+  function animateElements() {
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.score-circle-fg').forEach(el => {
+        const offset = el.getAttribute('data-offset');
+        el.style.strokeDashoffset = offset;
+      });
+      document.querySelectorAll('.dim-bar-fill').forEach(el => {
+        const w = el.getAttribute('data-width');
+        el.style.width = w + '%';
+      });
+    });
+  }
+
+  /* ── Ranking Table ───────────────────────────────────────── */
+  let sortCol = 'score';
+  let sortDir = -1; // -1 = desc
+
+  function gradeOrder(g) {
+    const map = { 'A': 5, 'B': 4, 'C': 3, 'D': 2, 'F': 1 };
+    return map[g] || 0;
+  }
+  function trendOrder(t) {
+    const map = { 'IMPROVING': 3, 'STABLE': 2, 'DECLINING': 1, 'NOT OPEN': 0 };
+    return map[t] || 0;
+  }
+
+  function renderRanking() {
+    const sorted = [...stores].sort((a, b) => {
+      let va, vb;
+      switch (sortCol) {
+        case 'rank':
+        case 'score':
+          va = a.score !== null ? a.score : -1;
+          vb = b.score !== null ? b.score : -1;
+          break;
+        case 'store':
+          va = a.name.toLowerCase();
+          vb = b.name.toLowerCase();
+          return sortDir * (va < vb ? -1 : va > vb ? 1 : 0);
+        case 'grade':
+          va = gradeOrder(a.grade);
+          vb = gradeOrder(b.grade);
+          break;
+        case 'revenue': va = a.dims.revenue || -1; vb = b.dims.revenue || -1; break;
+        case 'ops': va = a.dims.ops || -1; vb = b.dims.ops || -1; break;
+        case 'quality': va = a.dims.quality || -1; vb = b.dims.quality || -1; break;
+        case 'staffing': va = a.dims.staffing || -1; vb = b.dims.staffing || -1; break;
+        case 'customer': va = a.dims.customer || -1; vb = b.dims.customer || -1; break;
+        case 'trend':
+          va = trendOrder(a.trend);
+          vb = trendOrder(b.trend);
+          break;
+        default: va = 0; vb = 0;
+      }
+      return sortDir * (vb - va);
+    });
+
+    const tbody = document.getElementById('rankingBody');
+    tbody.innerHTML = '';
+    sorted.forEach((s, i) => {
+      const gc = gradeClass(s.grade);
+      const ta = trendArrow(s.trend);
+      const dimVal = (v) => v !== null ? v : '<span style="color:#657786">N/A</span>';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="col-rank">${i + 1}</td>
+        <td><strong>${s.name}</strong> <span class="text-muted" style="font-size:11px;">${s.id}</span></td>
+        <td class="col-score" style="color:${scoreColor(s.score)}">${s.score !== null ? s.score : 'N/A'}</td>
+        <td><span class="grade-badge ${gc}">${s.grade}</span></td>
+        <td class="col-dim" style="color:${dimBarColor(s.dims.revenue)}">${dimVal(s.dims.revenue)}</td>
+        <td class="col-dim" style="color:${dimBarColor(s.dims.ops)}">${dimVal(s.dims.ops)}</td>
+        <td class="col-dim" style="color:${dimBarColor(s.dims.quality)}">${dimVal(s.dims.quality)}</td>
+        <td class="col-dim" style="color:${dimBarColor(s.dims.staffing)}">${dimVal(s.dims.staffing)}</td>
+        <td class="col-dim" style="color:${dimBarColor(s.dims.customer)}">${dimVal(s.dims.customer)}</td>
+        <td><span class="trend-arrow ${ta.cls}">${ta.symbol}</span> <span class="trend-text ${ta.cls}" style="font-size:11px;">${s.trend}</span></td>`;
+      tbody.appendChild(tr);
+    });
+
+    // Update sort arrows
+    document.querySelectorAll('.ranking-table thead th').forEach(th => {
+      const col = th.getAttribute('data-col');
+      const arrow = th.querySelector('.sort-arrow');
+      th.classList.toggle('sorted', col === sortCol);
+      arrow.textContent = col === sortCol ? (sortDir === -1 ? ' \u25BC' : ' \u25B2') : '';
+    });
+  }
+
+  function initTableSort() {
+    document.querySelectorAll('.ranking-table thead th').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.getAttribute('data-col');
+        if (sortCol === col) {
+          sortDir *= -1;
+        } else {
+          sortCol = col;
+          sortDir = -1;
+        }
+        renderRanking();
+      });
+    });
+  }
+
+  /* ── Timestamp ───────────────────────────────────────────── */
+  function updateTimestamp() {
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    document.getElementById('headerTimestamp').textContent =
+      `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())} UTC`;
+  }
+
+  /* ── Init ────────────────────────────────────────────────── */
+  function init() {
+    updateTimestamp();
+    setInterval(updateTimestamp, 1000);
+    renderStoreGrid();
+    setTimeout(animateElements, 100);
+    renderRanking();
+    initTableSort();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Store Cannibalization Analysis | UC-OP-02</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #0f1419;
+    color: #e8edf2;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .mono { font-family: 'Fira Code', monospace; }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1a2332 0%, #0f1419 100%);
+    border-bottom: 1px solid #2d4050;
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-left h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #e8edf2;
+    margin-bottom: 4px;
+  }
+  .header-left h1 span { color: #8899a6; font-weight: 400; font-size: 18px; }
+  .header-left .subtitle { color: #8899a6; font-size: 13px; }
+  .badge {
+    background: #00529B;
+    color: #e8edf2;
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Sections */
+  .container { max-width: 1440px; margin: 0 auto; padding: 24px 40px 60px; }
+  .section { margin-bottom: 32px; }
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #e8edf2;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #2d4050;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title .num {
+    background: #00529B;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Cards */
+  .card {
+    background: #1e2d3d;
+    border: 1px solid #2d4050;
+    border-radius: 10px;
+    padding: 24px;
+    overflow: hidden;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e8edf2;
+    margin-bottom: 16px;
+  }
+
+  /* Grid layouts */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+  /* Map container */
+  .map-container { display: flex; justify-content: center; }
+  .map-container svg { max-width: 100%; }
+
+  /* SVG text defaults */
+  svg text { font-family: 'Inter', sans-serif; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th {
+    background: #1a2332;
+    color: #8899a6;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #2d4050;
+  }
+  td {
+    padding: 9px 12px;
+    border-bottom: 1px solid rgba(45,64,80,0.5);
+    color: #e8edf2;
+    font-family: 'Fira Code', monospace;
+    font-size: 11px;
+  }
+  tr:hover td { background: rgba(0,82,155,0.08); }
+
+  /* Risk badges */
+  .risk-high { background: rgba(255,68,68,0.15); color: #ff4444; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 10px; }
+  .risk-med  { background: rgba(255,152,0,0.15); color: #ff9800; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 10px; }
+  .risk-low  { background: rgba(76,175,80,0.15); color: #4caf50; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 10px; }
+
+  /* Distance matrix colors */
+  .dist-close { background: rgba(255,68,68,0.2); color: #ff6b6b; }
+  .dist-mid   { background: rgba(255,152,0,0.15); color: #ffb74d; }
+
+  /* Findings */
+  .findings-list { list-style: none; padding: 0; }
+  .findings-list li {
+    padding: 10px 0 10px 20px;
+    border-bottom: 1px solid rgba(45,64,80,0.4);
+    position: relative;
+    font-size: 13px;
+    color: #c8d6e0;
+    line-height: 1.7;
+  }
+  .findings-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 16px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ff9800;
+  }
+  .findings-list li.critical::before { background: #ff4444; }
+  .findings-list li.success::before { background: #4caf50; }
+
+  .rec-list { list-style: none; padding: 0; counter-reset: rec; }
+  .rec-list li {
+    padding: 10px 0 10px 32px;
+    border-bottom: 1px solid rgba(45,64,80,0.4);
+    position: relative;
+    font-size: 13px;
+    color: #c8d6e0;
+    line-height: 1.7;
+    counter-increment: rec;
+  }
+  .rec-list li::before {
+    content: counter(rec);
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #00529B;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  strong { color: #e8edf2; }
+  .text-red { color: #ff4444; }
+  .text-green { color: #4caf50; }
+  .text-orange { color: #ff9800; }
+  .text-blue { color: #5dade2; }
+  .text-muted { color: #8899a6; }
+
+  /* Tooltip */
+  .tooltip-box {
+    position: fixed;
+    background: #1a2332;
+    border: 1px solid #2d4050;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #e8edf2;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 999;
+    min-width: 200px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .tooltip-box.show { opacity: 1; }
+  .tooltip-box .tt-name { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+  .tooltip-box .tt-row { display: flex; justify-content: space-between; gap: 16px; color: #8899a6; font-size: 11px; margin-top: 2px; }
+  .tooltip-box .tt-row span:last-child { color: #e8edf2; font-family: 'Fira Code', monospace; }
+</style>
+</head>
+<body>
+
+<!-- Tooltip -->
+<div class="tooltip-box" id="tooltip"></div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <h1>Store Cannibalization Analysis <span>/ 门店蚕食效应分析</span></h1>
+    <div class="subtitle">Geographic proximity impact on 8th &amp; Broadway revenue decline &mdash; Luckin Coffee USA</div>
+  </div>
+  <div class="badge">UC-OP-02</div>
+</header>
+
+<div class="container">
+
+  <!-- ====== SECTION 1: Store Map ====== -->
+  <div class="section">
+    <div class="section-title"><span class="num">1</span> Store Location Map &mdash; Manhattan &amp; Surrounding</div>
+    <div class="card">
+      <div class="card-title">Geographic Distribution of Luckin Coffee USA Stores</div>
+      <div class="map-container">
+        <svg id="storeMap" width="720" height="520" viewBox="0 0 720 520">
+          <defs>
+            <radialGradient id="glow-red" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ff4444" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#ff4444" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="blur1"><feGaussianBlur stdDeviation="2"/></filter>
+          </defs>
+
+          <!-- Manhattan outline (simplified polygon) -->
+          <polygon points="200,480 180,420 160,340 155,260 165,180 180,120 210,60 260,30 310,20 360,30 400,60 420,100 430,160 435,240 430,320 420,400 400,460 370,490 300,500 240,495"
+                   fill="#141c24" stroke="#2d4050" stroke-width="1.5" opacity="0.8"/>
+          <text x="290" y="510" fill="#2d4050" font-size="10" text-anchor="middle" font-weight="600">MANHATTAN</text>
+
+          <!-- NJ landmass hint -->
+          <rect x="30" y="100" width="110" height="400" rx="8" fill="#111820" stroke="#2d4050" stroke-width="1" opacity="0.5"/>
+          <text x="85" y="310" fill="#2d4050" font-size="10" text-anchor="middle" font-weight="600">NEW JERSEY</text>
+
+          <!-- Hudson River -->
+          <rect x="140" y="10" width="22" height="510" fill="#0a1218" opacity="0.6" rx="4"/>
+          <text x="151" y="16" fill="#1e3040" font-size="7" text-anchor="middle">Hudson</text>
+
+          <!-- Radius circles around 8th & Broadway (store at cx=310, cy=330) -->
+          <!-- 1 km radius ~ 60px -->
+          <circle cx="310" cy="330" r="60" fill="none" stroke="#ff4444" stroke-width="1" stroke-dasharray="4,4" opacity="0.4"/>
+          <text x="375" y="310" fill="#ff4444" font-size="9" opacity="0.6">1 km</text>
+          <!-- 2 km radius ~ 120px -->
+          <circle cx="310" cy="330" r="120" fill="none" stroke="#ff9800" stroke-width="1" stroke-dasharray="4,4" opacity="0.3"/>
+          <text x="435" y="290" fill="#ff9800" font-size="9" opacity="0.5">2 km</text>
+          <!-- 3 km radius ~ 180px -->
+          <circle cx="310" cy="330" r="180" fill="none" stroke="#4caf50" stroke-width="1" stroke-dasharray="6,4" opacity="0.2"/>
+          <text x="495" y="265" fill="#4caf50" font-size="9" opacity="0.4">3 km</text>
+
+          <!-- Connection lines from 8th & Broadway to others -->
+          <!-- to US00002 28th & 6th: 1.7km -->
+          <line x1="310" y1="330" x2="340" y2="240" stroke="#5dade2" stroke-width="1" stroke-dasharray="3,3" opacity="0.4"/>
+          <text x="340" y="282" fill="#8899a6" font-size="8" text-anchor="middle">1.7 km</text>
+
+          <!-- to US00004 37th & Broadway: 2.5km -->
+          <line x1="310" y1="330" x2="330" y2="190" stroke="#4caf50" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.5"/>
+          <text x="335" y="258" fill="#8899a6" font-size="8" text-anchor="middle">2.5 km</text>
+
+          <!-- to US00008 33rd & 10th: 2.7km -->
+          <line x1="310" y1="330" x2="230" y2="200" stroke="#4caf50" stroke-width="1" stroke-dasharray="3,3" opacity="0.4"/>
+          <text x="258" y="270" fill="#8899a6" font-size="8" text-anchor="middle">2.7 km</text>
+
+          <!-- to US00005 54th & 8th: 3.8km -->
+          <line x1="310" y1="330" x2="310" y2="120" stroke="#5dade2" stroke-width="1" stroke-dasharray="3,3" opacity="0.3"/>
+          <text x="322" y="220" fill="#8899a6" font-size="8">3.8 km</text>
+
+          <!-- to US00003 100 Maiden Ln: 2.7km -->
+          <line x1="310" y1="330" x2="260" y2="450" stroke="#5dade2" stroke-width="1" stroke-dasharray="3,3" opacity="0.3"/>
+          <text x="275" y="395" fill="#8899a6" font-size="8">2.7 km</text>
+
+          <!-- to US00006 102 Fulton: 2.8km -->
+          <line x1="310" y1="330" x2="240" y2="440" stroke="#5dade2" stroke-width="1" stroke-dasharray="3,3" opacity="0.3"/>
+          <text x="260" y="390" fill="#8899a6" font-size="8">2.8 km</text>
+
+          <!-- Red glow around 8th & Broadway -->
+          <circle cx="310" cy="330" r="28" fill="url(#glow-red)"/>
+
+          <!-- Store dots -->
+          <!-- US00001: 8th & Broadway (DECLINING - RED) -->
+          <circle class="store-dot" cx="310" cy="330" r="10" fill="#ff4444" stroke="#ff6b6b" stroke-width="2" opacity="0.9"
+                  data-id="US00001" data-name="8th &amp; Broadway" data-status="Declining" data-rev="$51,837" data-dist="--" data-opened="Jun 2025"/>
+          <text x="310" y="355" fill="#ff4444" font-size="9" text-anchor="middle" font-weight="600">8th &amp; Broadway</text>
+          <text x="310" y="366" fill="#8899a6" font-size="7" text-anchor="middle">US00001 (target)</text>
+
+          <!-- US00002: 28th & 6th (STABLE - BLUE) -->
+          <circle class="store-dot" cx="340" cy="240" r="7" fill="#5dade2" stroke="#7ec8e3" stroke-width="1.5" opacity="0.85"
+                  data-id="US00002" data-name="28th &amp; 6th" data-status="Stable" data-rev="$74,200" data-dist="1.7 km" data-opened="Jun 2025"/>
+          <text x="370" y="238" fill="#5dade2" font-size="8" font-weight="500">28th &amp; 6th</text>
+          <text x="370" y="248" fill="#8899a6" font-size="7">US00002</text>
+
+          <!-- US00004: 37th & Broadway (NEW / GROWING - GREEN) -->
+          <circle class="store-dot" cx="330" cy="190" r="8" fill="#4caf50" stroke="#66bb6a" stroke-width="2" opacity="0.9"
+                  data-id="US00004" data-name="37th &amp; Broadway" data-status="Growing (NEW)" data-rev="$55,800" data-dist="2.5 km" data-opened="Nov 2025"/>
+          <text x="365" y="188" fill="#4caf50" font-size="8" font-weight="600">37th &amp; Broadway</text>
+          <text x="365" y="198" fill="#8899a6" font-size="7">US00004 (suspect #1)</text>
+
+          <!-- US00008: 33rd & 10th (NEW / GROWING - GREEN) -->
+          <circle class="store-dot" cx="230" cy="200" r="7" fill="#4caf50" stroke="#66bb6a" stroke-width="1.5" opacity="0.85"
+                  data-id="US00008" data-name="33rd &amp; 10th" data-status="Growing (NEW)" data-rev="$42,600" data-dist="2.7 km" data-opened="Dec 2025"/>
+          <text x="180" y="198" fill="#4caf50" font-size="8" text-anchor="end" font-weight="500">33rd &amp; 10th</text>
+          <text x="180" y="208" fill="#8899a6" font-size="7" text-anchor="end">US00008 (suspect #2)</text>
+
+          <!-- US00005: 54th & 8th (BLUE) -->
+          <circle class="store-dot" cx="310" cy="120" r="7" fill="#5dade2" stroke="#7ec8e3" stroke-width="1.5" opacity="0.8"
+                  data-id="US00005" data-name="54th &amp; 8th" data-status="Growing" data-rev="$60,300" data-dist="3.8 km" data-opened="Aug 2025"/>
+          <text x="340" y="118" fill="#5dade2" font-size="8" font-weight="500">54th &amp; 8th</text>
+          <text x="340" y="128" fill="#8899a6" font-size="7">US00005</text>
+
+          <!-- US00003: 100 Maiden Ln (BLUE) -->
+          <circle class="store-dot" cx="260" cy="450" r="7" fill="#5dade2" stroke="#7ec8e3" stroke-width="1.5" opacity="0.8"
+                  data-id="US00003" data-name="100 Maiden Ln" data-status="Growing" data-rev="$48,200" data-dist="2.7 km" data-opened="Sep 2025"/>
+          <text x="290" y="450" fill="#5dade2" font-size="8" font-weight="500">100 Maiden Ln</text>
+          <text x="290" y="460" fill="#8899a6" font-size="7">US00003</text>
+
+          <!-- US00006: 102 Fulton (BLUE) -->
+          <circle class="store-dot" cx="240" cy="440" r="6" fill="#5dade2" stroke="#7ec8e3" stroke-width="1.5" opacity="0.8"
+                  data-id="US00006" data-name="102 Fulton" data-status="Stable" data-rev="~$35,000" data-dist="2.8 km" data-opened="Sep 2025"/>
+          <text x="200" y="435" fill="#5dade2" font-size="8" text-anchor="end" font-weight="500">102 Fulton</text>
+          <text x="200" y="445" fill="#8899a6" font-size="7" text-anchor="end">US00006</text>
+
+          <!-- US00000: NJ Test Kitchen (GRAY) -->
+          <circle class="store-dot" cx="80" cy="130" r="5" fill="#555" stroke="#777" stroke-width="1" opacity="0.6"
+                  data-id="US00000" data-name="NJ Test Kitchen" data-status="Test" data-rev="N/A" data-dist="7.2 km" data-opened="Jun 2025"/>
+          <text x="80" y="148" fill="#555" font-size="7" text-anchor="middle">NJ Test Kitchen</text>
+          <text x="80" y="157" fill="#444" font-size="6" text-anchor="middle">US00000</text>
+
+          <!-- Legend -->
+          <rect x="530" y="20" width="175" height="130" rx="6" fill="#1a2332" stroke="#2d4050" stroke-width="1"/>
+          <text x="545" y="40" fill="#8899a6" font-size="10" font-weight="600">LEGEND</text>
+          <circle cx="550" cy="58" r="5" fill="#ff4444"/><text x="562" y="62" fill="#e8edf2" font-size="9">Declining store</text>
+          <circle cx="550" cy="78" r="5" fill="#4caf50"/><text x="562" y="82" fill="#e8edf2" font-size="9">New / Growing store</text>
+          <circle cx="550" cy="98" r="5" fill="#5dade2"/><text x="562" y="102" fill="#e8edf2" font-size="9">Established store</text>
+          <circle cx="550" cy="118" r="5" fill="#555"/><text x="562" y="122" fill="#e8edf2" font-size="9">Test location</text>
+          <line x1="540" y1="138" x2="560" y2="138" stroke="#ff9800" stroke-dasharray="4,3" stroke-width="1"/>
+          <text x="565" y="141" fill="#e8edf2" font-size="9">Radius ring</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== SECTION 2: Revenue Correlation Charts ====== -->
+  <div class="section">
+    <div class="section-title"><span class="num">2</span> Revenue Correlation Charts</div>
+    <div class="grid-2">
+
+      <!-- Chart A: Monthly Revenue All Stores -->
+      <div class="card">
+        <div class="card-title">A. Monthly Revenue by Store <span class="text-muted" style="font-weight:400;font-size:11px">Jul 2025 &ndash; Jan 2026</span></div>
+        <svg width="500" height="310" viewBox="0 0 500 310">
+          <!-- Axes -->
+          <line x1="60" y1="20" x2="60" y2="260" stroke="#2d4050" stroke-width="1"/>
+          <line x1="60" y1="260" x2="490" y2="260" stroke="#2d4050" stroke-width="1"/>
+
+          <!-- Y-axis labels -->
+          <text x="55" y="265" fill="#8899a6" font-size="8" text-anchor="end">$0</text>
+          <text x="55" y="217" fill="#8899a6" font-size="8" text-anchor="end">$25K</text>
+          <line x1="60" y1="214" x2="490" y2="214" stroke="#2d4050" stroke-width="0.5" stroke-dasharray="2,3"/>
+          <text x="55" y="169" fill="#8899a6" font-size="8" text-anchor="end">$50K</text>
+          <line x1="60" y1="166" x2="490" y2="166" stroke="#2d4050" stroke-width="0.5" stroke-dasharray="2,3"/>
+          <text x="55" y="121" fill="#8899a6" font-size="8" text-anchor="end">$75K</text>
+          <line x1="60" y1="118" x2="490" y2="118" stroke="#2d4050" stroke-width="0.5" stroke-dasharray="2,3"/>
+          <text x="55" y="73" fill="#8899a6" font-size="8" text-anchor="end">$100K</text>
+          <line x1="60" y1="70" x2="490" y2="70" stroke="#2d4050" stroke-width="0.5" stroke-dasharray="2,3"/>
+
+          <!-- Scale: 0=$0 at y=260, $110K at y=20  => 1K = 2.18px => factor: y = 260 - (val/1000)*2.18 -->
+          <!-- Month positions: Jul=95, Aug=155, Sep=215, Oct=275, Nov=335, Dec=395, Jan=455 (spacing=60) -->
+
+          <!-- US00001 8th & Broadway (RED bars) -->
+          <!-- Jul: 76.9K => y=260-167.7=92, h=167.7 -->
+          <rect x="76" y="92" width="12" height="168" fill="#ff4444" rx="1" opacity="0.85"/>
+          <!-- Aug: 86.7K => y=260-189=71, h=189 -->
+          <rect x="136" y="71" width="12" height="189" fill="#ff4444" rx="1" opacity="0.85"/>
+          <!-- Sep: 101.2K => y=260-220.6=39, h=220.6 -->
+          <rect x="196" y="39" width="12" height="221" fill="#ff4444" rx="1" opacity="0.85"/>
+          <!-- Oct: 106.4K => y=260-231.9=28, h=231.9 -->
+          <rect x="256" y="28" width="12" height="232" fill="#ff4444" rx="1" opacity="0.85"/>
+          <!-- Nov: 86.1K => y=260-187.7=72, h=187.7 -->
+          <rect x="316" y="72" width="12" height="188" fill="#ff4444" rx="1" opacity="0.85"/>
+          <!-- Dec: 68.5K => y=260-149.3=111, h=149.3 -->
+          <rect x="376" y="111" width="12" height="149" fill="#ff4444" rx="1" opacity="0.85"/>
+          <!-- Jan: 51.8K => y=260-112.9=147, h=112.9 -->
+          <rect x="436" y="147" width="12" height="113" fill="#ff4444" rx="1" opacity="0.85"/>
+
+          <!-- US00002 28th & 6th (BLUE bars) -->
+          <rect x="90" y="118" width="12" height="142" fill="#5dade2" rx="1" opacity="0.7"/>
+          <rect x="150" y="102" width="12" height="158" fill="#5dade2" rx="1" opacity="0.7"/>
+          <rect x="210" y="88" width="12" height="172" fill="#5dade2" rx="1" opacity="0.7"/>
+          <rect x="270" y="81" width="12" height="179" fill="#5dade2" rx="1" opacity="0.7"/>
+          <rect x="330" y="86" width="12" height="174" fill="#5dade2" rx="1" opacity="0.7"/>
+          <rect x="390" y="93" width="12" height="167" fill="#5dade2" rx="1" opacity="0.7"/>
+          <rect x="450" y="98" width="12" height="162" fill="#5dade2" rx="1" opacity="0.7"/>
+
+          <!-- US00004 37th & Broadway (GREEN bars, starts Nov) -->
+          <rect x="344" y="220" width="12" height="40" fill="#4caf50" rx="1" opacity="0.85"/>
+          <rect x="404" y="167" width="12" height="93" fill="#4caf50" rx="1" opacity="0.85"/>
+          <rect x="464" y="138" width="12" height="122" fill="#4caf50" rx="1" opacity="0.85"/>
+
+          <!-- US00005 54th & 8th (LIGHTER BLUE, starts Aug) -->
+          <rect x="164" y="198" width="10" height="62" fill="#3498db" rx="1" opacity="0.5"/>
+          <rect x="224" y="161" width="10" height="99" fill="#3498db" rx="1" opacity="0.5"/>
+          <rect x="284" y="145" width="10" height="115" fill="#3498db" rx="1" opacity="0.5"/>
+          <rect x="358" y="139" width="10" height="121" fill="#3498db" rx="1" opacity="0.5"/>
+          <rect x="418" y="133" width="10" height="127" fill="#3498db" rx="1" opacity="0.5"/>
+          <rect x="476" y="128" width="10" height="132" fill="#3498db" rx="1" opacity="0.5"/>
+
+          <!-- X-axis month labels -->
+          <text x="95"  y="278" fill="#8899a6" font-size="9" text-anchor="middle">Jul</text>
+          <text x="155" y="278" fill="#8899a6" font-size="9" text-anchor="middle">Aug</text>
+          <text x="215" y="278" fill="#8899a6" font-size="9" text-anchor="middle">Sep</text>
+          <text x="275" y="278" fill="#8899a6" font-size="9" text-anchor="middle">Oct</text>
+          <text x="335" y="278" fill="#ff9800" font-size="9" text-anchor="middle" font-weight="600">Nov</text>
+          <text x="395" y="278" fill="#ff9800" font-size="9" text-anchor="middle" font-weight="600">Dec</text>
+          <text x="455" y="278" fill="#8899a6" font-size="9" text-anchor="middle">Jan</text>
+
+          <!-- Opening markers -->
+          <line x1="335" y1="20" x2="335" y2="260" stroke="#4caf50" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+          <text x="335" y="15" fill="#4caf50" font-size="7" text-anchor="middle">US00004 opens</text>
+          <line x1="395" y1="20" x2="395" y2="260" stroke="#4caf50" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+          <text x="395" y="15" fill="#4caf50" font-size="7" text-anchor="middle">US00008 opens</text>
+
+          <!-- Legend -->
+          <rect x="65" y="290" width="8" height="8" fill="#ff4444" rx="1"/>
+          <text x="78" y="297" fill="#8899a6" font-size="8">US00001</text>
+          <rect x="130" y="290" width="8" height="8" fill="#5dade2" rx="1"/>
+          <text x="143" y="297" fill="#8899a6" font-size="8">US00002</text>
+          <rect x="195" y="290" width="8" height="8" fill="#4caf50" rx="1"/>
+          <text x="208" y="297" fill="#8899a6" font-size="8">US00004</text>
+          <rect x="260" y="290" width="8" height="8" fill="#3498db" rx="1"/>
+          <text x="273" y="297" fill="#8899a6" font-size="8">US00005</text>
+        </svg>
+      </div>
+
+      <!-- Chart B: 8th Ave vs New Store Openings Timeline -->
+      <div class="card">
+        <div class="card-title">B. 8th Ave Weekly Revenue vs New Store Openings</div>
+        <svg width="500" height="310" viewBox="0 0 500 310">
+          <!-- Grid -->
+          <line x1="60" y1="20" x2="60" y2="260" stroke="#2d4050" stroke-width="1"/>
+          <line x1="60" y1="260" x2="480" y2="260" stroke="#2d4050" stroke-width="1"/>
+          <!-- Y labels -->
+          <text x="55" y="265" fill="#8899a6" font-size="8" text-anchor="end">$0</text>
+          <text x="55" y="220" fill="#8899a6" font-size="8" text-anchor="end">$10K</text>
+          <line x1="60" y1="217" x2="480" y2="217" stroke="#2d4050" stroke-width="0.3" stroke-dasharray="2,3"/>
+          <text x="55" y="176" fill="#8899a6" font-size="8" text-anchor="end">$20K</text>
+          <line x1="60" y1="173" x2="480" y2="173" stroke="#2d4050" stroke-width="0.3" stroke-dasharray="2,3"/>
+          <text x="55" y="132" fill="#8899a6" font-size="8" text-anchor="end">$30K</text>
+          <line x1="60" y1="129" x2="480" y2="129" stroke="#2d4050" stroke-width="0.3" stroke-dasharray="2,3"/>
+
+          <!-- Shaded decline area after Nov opening -->
+          <polygon points="310,72 340,106 370,128 400,150 430,170 460,195 460,260 310,260"
+                   fill="#ff4444" opacity="0.06"/>
+          <!-- Shaded decline area after Dec opening -->
+          <polygon points="370,128 400,150 430,170 460,195 460,260 370,260"
+                   fill="#ff4444" opacity="0.08"/>
+
+          <!-- 8th Ave weekly revenue line (declining) -->
+          <!-- Scale: $30K at y=40, $0 at y=260 => $1K = 7.33px -->
+          <!-- Jul weeks: ~$19K -->
+          <polyline fill="none" stroke="#ff4444" stroke-width="2.5" stroke-linejoin="round"
+            points="75,120 90,112 105,105 120,100
+                    135,88 150,82 165,78 180,72
+                    195,55 210,48 225,42 240,38
+                    255,32 270,28 285,36 300,45
+                    310,72 325,85 340,106 355,118
+                    370,128 385,145 400,150 415,162
+                    430,170 445,182 460,195"/>
+          <!-- Dots on the line -->
+          <circle cx="75" cy="120" r="2.5" fill="#ff4444"/>
+          <circle cx="180" cy="72" r="2.5" fill="#ff4444"/>
+          <circle cx="255" cy="32" r="2.5" fill="#ff4444"/>
+          <circle cx="310" cy="72" r="2.5" fill="#ff4444"/>
+          <circle cx="370" cy="128" r="2.5" fill="#ff4444"/>
+          <circle cx="460" cy="195" r="2.5" fill="#ff4444"/>
+
+          <!-- Peak annotation -->
+          <text x="255" y="25" fill="#ff4444" font-size="8" text-anchor="middle" font-weight="600">Peak: ~$26.6K/wk</text>
+
+          <!-- Current annotation -->
+          <text x="460" y="210" fill="#ff4444" font-size="8" text-anchor="middle">~$12.9K/wk</text>
+
+          <!-- Vertical markers for openings -->
+          <!-- US00002 Jun 2025 -->
+          <line x1="70" y1="20" x2="70" y2="260" stroke="#5dade2" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.5"/>
+          <rect x="62" y="30" width="52" height="14" rx="3" fill="#1a2332" stroke="#5dade2" stroke-width="0.5"/>
+          <text x="88" y="40" fill="#5dade2" font-size="7" text-anchor="middle">28th&amp;6th</text>
+
+          <!-- US00005 Aug 2025 -->
+          <line x1="140" y1="20" x2="140" y2="260" stroke="#5dade2" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+          <rect x="125" y="40" width="52" height="14" rx="3" fill="#1a2332" stroke="#5dade2" stroke-width="0.5"/>
+          <text x="151" y="50" fill="#5dade2" font-size="7" text-anchor="middle">54th&amp;8th</text>
+
+          <!-- US00003 Sep 2025 -->
+          <line x1="200" y1="20" x2="200" y2="260" stroke="#5dade2" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+          <rect x="185" y="50" width="55" height="14" rx="3" fill="#1a2332" stroke="#5dade2" stroke-width="0.5"/>
+          <text x="212" y="60" fill="#5dade2" font-size="7" text-anchor="middle">Maiden Ln</text>
+
+          <!-- US00004 Nov 2025 (key) -->
+          <line x1="310" y1="20" x2="310" y2="260" stroke="#4caf50" stroke-width="2" opacity="0.7"/>
+          <rect x="283" y="20" width="76" height="16" rx="3" fill="#4caf50" opacity="0.15" stroke="#4caf50" stroke-width="0.5"/>
+          <text x="321" y="31" fill="#4caf50" font-size="8" text-anchor="middle" font-weight="600">37th&amp;Bway</text>
+
+          <!-- US00008 Dec 2025 (key) -->
+          <line x1="370" y1="20" x2="370" y2="260" stroke="#4caf50" stroke-width="2" opacity="0.7"/>
+          <rect x="348" y="36" width="68" height="16" rx="3" fill="#4caf50" opacity="0.15" stroke="#4caf50" stroke-width="0.5"/>
+          <text x="382" y="47" fill="#4caf50" font-size="8" text-anchor="middle" font-weight="600">33rd&amp;10th</text>
+
+          <!-- Decline arrow annotation -->
+          <text x="420" y="80" fill="#ff4444" font-size="9" font-weight="600">-51% since</text>
+          <text x="420" y="92" fill="#ff4444" font-size="9">Oct peak</text>
+
+          <!-- X-axis months -->
+          <text x="85"  y="278" fill="#8899a6" font-size="9" text-anchor="middle">Jul</text>
+          <text x="145" y="278" fill="#8899a6" font-size="9" text-anchor="middle">Aug</text>
+          <text x="205" y="278" fill="#8899a6" font-size="9" text-anchor="middle">Sep</text>
+          <text x="265" y="278" fill="#8899a6" font-size="9" text-anchor="middle">Oct</text>
+          <text x="325" y="278" fill="#ff9800" font-size="9" text-anchor="middle" font-weight="600">Nov</text>
+          <text x="385" y="278" fill="#ff9800" font-size="9" text-anchor="middle" font-weight="600">Dec</text>
+          <text x="455" y="278" fill="#8899a6" font-size="9" text-anchor="middle">Jan</text>
+
+          <!-- Legend -->
+          <line x1="65" y1="296" x2="82" y2="296" stroke="#ff4444" stroke-width="2"/>
+          <text x="88" y="299" fill="#8899a6" font-size="8">8th Ave weekly revenue</text>
+          <line x1="220" y1="296" x2="237" y2="296" stroke="#4caf50" stroke-width="2"/>
+          <text x="243" y="299" fill="#8899a6" font-size="8">New store opening</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== SECTION 3: Distance Matrix & Correlation ====== -->
+  <div class="section">
+    <div class="section-title"><span class="num">3</span> Distance Matrix &amp; Correlation Analysis</div>
+    <div class="grid-2">
+      <!-- Distance Matrix -->
+      <div class="card">
+        <div class="card-title">Pairwise Store Distance Matrix (km)</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>US001</th><th>US002</th><th>US003</th><th>US004</th><th>US005</th><th>US006</th><th>US008</th><th>US000</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="color:#ff4444;font-weight:600">US001</td>
+                <td class="text-muted">&mdash;</td>
+                <td class="dist-close">1.7</td>
+                <td class="dist-mid">2.7</td>
+                <td class="dist-mid">2.5</td>
+                <td>3.8</td>
+                <td class="dist-mid">2.8</td>
+                <td class="dist-mid">2.7</td>
+                <td>7.2</td>
+              </tr>
+              <tr>
+                <td>US002</td>
+                <td class="dist-close">1.7</td>
+                <td class="text-muted">&mdash;</td>
+                <td>4.4</td>
+                <td class="dist-close">1.0</td>
+                <td>2.3</td>
+                <td>4.1</td>
+                <td class="dist-close">1.8</td>
+                <td>7.5</td>
+              </tr>
+              <tr>
+                <td>US003</td>
+                <td class="dist-mid">2.7</td>
+                <td>4.4</td>
+                <td class="text-muted">&mdash;</td>
+                <td>5.2</td>
+                <td>6.7</td>
+                <td>0.4</td>
+                <td>5.5</td>
+                <td>6.0</td>
+              </tr>
+              <tr>
+                <td style="color:#4caf50;font-weight:600">US004</td>
+                <td class="dist-mid">2.5</td>
+                <td class="dist-close">1.0</td>
+                <td>5.2</td>
+                <td class="text-muted">&mdash;</td>
+                <td class="dist-close">1.4</td>
+                <td>5.0</td>
+                <td class="dist-close">1.2</td>
+                <td>7.8</td>
+              </tr>
+              <tr>
+                <td>US005</td>
+                <td>3.8</td>
+                <td>2.3</td>
+                <td>6.7</td>
+                <td class="dist-close">1.4</td>
+                <td class="text-muted">&mdash;</td>
+                <td>6.3</td>
+                <td>2.3</td>
+                <td>8.0</td>
+              </tr>
+              <tr>
+                <td>US006</td>
+                <td class="dist-mid">2.8</td>
+                <td>4.1</td>
+                <td>0.4</td>
+                <td>5.0</td>
+                <td>6.3</td>
+                <td class="text-muted">&mdash;</td>
+                <td>5.3</td>
+                <td>6.1</td>
+              </tr>
+              <tr>
+                <td style="color:#4caf50;font-weight:600">US008</td>
+                <td class="dist-mid">2.7</td>
+                <td class="dist-close">1.8</td>
+                <td>5.5</td>
+                <td class="dist-close">1.2</td>
+                <td>2.3</td>
+                <td>5.3</td>
+                <td class="text-muted">&mdash;</td>
+                <td>6.8</td>
+              </tr>
+              <tr>
+                <td class="text-muted">US000</td>
+                <td>7.2</td>
+                <td>7.5</td>
+                <td>6.0</td>
+                <td>7.8</td>
+                <td>8.0</td>
+                <td>6.1</td>
+                <td>6.8</td>
+                <td class="text-muted">&mdash;</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:10px;font-size:10px;color:#8899a6">
+          <span style="display:inline-block;width:10px;height:10px;background:rgba(255,68,68,0.2);border-radius:2px;margin-right:4px;vertical-align:middle"></span> &lt;2 km
+          <span style="display:inline-block;width:10px;height:10px;background:rgba(255,152,0,0.15);border-radius:2px;margin:0 4px 0 12px;vertical-align:middle"></span> 2&ndash;3 km
+        </div>
+      </div>
+
+      <!-- Correlation Analysis -->
+      <div class="card">
+        <div class="card-title">Revenue Correlation with 8th Ave (US00001)</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Store Pair</th>
+                <th>Dist</th>
+                <th>8th Ave MoM</th>
+                <th>Other MoM</th>
+                <th>Correlation</th>
+                <th>Risk</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="color:#e8edf2">8th Ave <span class="text-muted">&harr;</span> <span class="text-green">37th &amp; Bway</span></td>
+                <td>2.5 km</td>
+                <td class="text-red">-19% to -51%</td>
+                <td class="text-green">+$0 &rarr; $55.8K</td>
+                <td style="color:#ff4444">Strong Inverse</td>
+                <td><span class="risk-high">HIGH</span></td>
+              </tr>
+              <tr>
+                <td style="color:#e8edf2">8th Ave <span class="text-muted">&harr;</span> <span class="text-green">33rd &amp; 10th</span></td>
+                <td>2.7 km</td>
+                <td class="text-red">-36% to -51%</td>
+                <td class="text-green">+$0 &rarr; $42.6K</td>
+                <td style="color:#ff9800">Moderate Inverse</td>
+                <td><span class="risk-med">MEDIUM</span></td>
+              </tr>
+              <tr>
+                <td style="color:#e8edf2">8th Ave <span class="text-muted">&harr;</span> <span class="text-blue">28th &amp; 6th</span></td>
+                <td>1.7 km</td>
+                <td class="text-red">-19% to -51%</td>
+                <td>Stable ~$75K</td>
+                <td style="color:#8899a6">Weak</td>
+                <td><span class="risk-low">LOW</span></td>
+              </tr>
+              <tr>
+                <td style="color:#e8edf2">8th Ave <span class="text-muted">&harr;</span> <span class="text-blue">54th &amp; 8th</span></td>
+                <td>3.8 km</td>
+                <td class="text-muted">&mdash;</td>
+                <td class="text-green">Growing</td>
+                <td style="color:#8899a6">None</td>
+                <td><span class="risk-low">LOW</span></td>
+              </tr>
+              <tr>
+                <td style="color:#e8edf2">8th Ave <span class="text-muted">&harr;</span> <span class="text-blue">100 Maiden Ln</span></td>
+                <td>2.7 km</td>
+                <td class="text-muted">&mdash;</td>
+                <td class="text-green">Growing</td>
+                <td style="color:#8899a6">None</td>
+                <td><span class="risk-low">LOW</span></td>
+              </tr>
+              <tr>
+                <td style="color:#e8edf2">8th Ave <span class="text-muted">&harr;</span> <span class="text-blue">102 Fulton</span></td>
+                <td>2.8 km</td>
+                <td class="text-muted">&mdash;</td>
+                <td>Stable</td>
+                <td style="color:#8899a6">None</td>
+                <td><span class="risk-low">LOW</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px;padding:10px;background:#1a2332;border-radius:6px;border-left:3px solid #ff4444;font-size:11px;color:#c8d6e0">
+          <strong class="text-red">Key finding:</strong> Strongest inverse correlation exists between 8th Ave and the two newest stores on the <strong>same midtown corridor</strong> (Broadway / west side), not the geographically closest store (28th &amp; 6th).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== SECTION 4: Radius of Impact ====== -->
+  <div class="section">
+    <div class="section-title"><span class="num">4</span> Radius of Impact &mdash; Cannibalization Risk Zones</div>
+    <div class="card">
+      <div style="display:flex;align-items:flex-start;gap:32px;flex-wrap:wrap">
+        <svg width="420" height="420" viewBox="0 0 420 420">
+          <!-- Concentric risk zones -->
+          <!-- 3+ km: Green zone -->
+          <circle cx="210" cy="210" r="195" fill="rgba(76,175,80,0.06)" stroke="#4caf50" stroke-width="1" stroke-dasharray="6,4" opacity="0.4"/>
+          <text x="210" y="26" fill="#4caf50" font-size="9" text-anchor="middle" opacity="0.6">3+ km: Minimal risk</text>
+
+          <!-- 2-3 km: Yellow zone -->
+          <circle cx="210" cy="210" r="150" fill="rgba(255,152,0,0.06)" stroke="#ff9800" stroke-width="1" stroke-dasharray="5,3" opacity="0.5"/>
+          <text x="210" y="68" fill="#ff9800" font-size="9" text-anchor="middle" opacity="0.7">2&ndash;3 km: Low risk</text>
+
+          <!-- 1-2 km: Orange zone -->
+          <circle cx="210" cy="210" r="100" fill="rgba(255,152,0,0.1)" stroke="#ff9800" stroke-width="1.5" opacity="0.6"/>
+          <text x="210" y="118" fill="#ff9800" font-size="9" text-anchor="middle" opacity="0.8">1&ndash;2 km: Moderate risk</text>
+
+          <!-- 0-1 km: Red zone -->
+          <circle cx="210" cy="210" r="50" fill="rgba(255,68,68,0.12)" stroke="#ff4444" stroke-width="2" opacity="0.7"/>
+          <text x="210" y="175" fill="#ff4444" font-size="8" text-anchor="middle" font-weight="600">High risk</text>
+
+          <!-- Center: 8th & Broadway -->
+          <circle cx="210" cy="210" r="10" fill="#ff4444" stroke="#ff6b6b" stroke-width="2"/>
+          <text x="210" y="230" fill="#ff4444" font-size="9" text-anchor="middle" font-weight="600">8th &amp; Broadway</text>
+
+          <!-- Stores positioned by approximate distance -->
+          <!-- US00002: 1.7km => radius ~85px, angle ~45deg NE -->
+          <circle cx="270" cy="150" r="7" fill="#5dade2" stroke="#7ec8e3" stroke-width="1.5"/>
+          <text x="283" y="148" fill="#5dade2" font-size="8" font-weight="500">28th &amp; 6th</text>
+          <text x="283" y="159" fill="#ff9800" font-size="7">1.7 km (moderate zone)</text>
+
+          <!-- US00004: 2.5km => radius ~125px, angle ~20deg N -->
+          <circle cx="240" cy="90" r="8" fill="#4caf50" stroke="#66bb6a" stroke-width="2"/>
+          <text x="258" y="88" fill="#4caf50" font-size="8" font-weight="600">37th &amp; Bway</text>
+          <text x="258" y="99" fill="#ff9800" font-size="7">2.5 km (low zone)</text>
+
+          <!-- US00008: 2.7km => radius ~135px, angle ~-40deg NW -->
+          <circle cx="115" cy="115" r="7" fill="#4caf50" stroke="#66bb6a" stroke-width="1.5"/>
+          <text x="55" y="113" fill="#4caf50" font-size="8" font-weight="500">33rd &amp; 10th</text>
+          <text x="55" y="124" fill="#ff9800" font-size="7">2.7 km</text>
+
+          <!-- US00003: 2.7km => radius ~135px, angle ~160deg S -->
+          <circle cx="140" cy="330" r="6" fill="#5dade2" stroke="#7ec8e3" stroke-width="1"/>
+          <text x="100" y="345" fill="#5dade2" font-size="8">100 Maiden Ln</text>
+          <text x="100" y="355" fill="#8899a6" font-size="7">2.7 km</text>
+
+          <!-- US00006: 2.8km => radius ~140px, angle ~180deg S -->
+          <circle cx="180" cy="345" r="6" fill="#5dade2" stroke="#7ec8e3" stroke-width="1"/>
+          <text x="194" y="348" fill="#5dade2" font-size="8">102 Fulton</text>
+          <text x="194" y="358" fill="#8899a6" font-size="7">2.8 km</text>
+
+          <!-- US00005: 3.8km => radius ~190px, angle ~0deg N -->
+          <circle cx="220" cy="23" r="6" fill="#5dade2" stroke="#7ec8e3" stroke-width="1"/>
+          <text x="234" y="22" fill="#5dade2" font-size="8">54th &amp; 8th</text>
+          <text x="234" y="32" fill="#4caf50" font-size="7">3.8 km (minimal zone)</text>
+        </svg>
+
+        <div style="flex:1;min-width:280px">
+          <table style="margin-bottom:16px">
+            <thead>
+              <tr><th>Zone</th><th>Radius</th><th>Risk Level</th><th>Stores</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span style="display:inline-block;width:10px;height:10px;background:#ff4444;border-radius:50%;margin-right:6px;vertical-align:middle"></span>Red</td>
+                <td>0 &ndash; 1 km</td>
+                <td><span class="risk-high">HIGH</span></td>
+                <td class="text-muted">None currently</td>
+              </tr>
+              <tr>
+                <td><span style="display:inline-block;width:10px;height:10px;background:#ff9800;border-radius:50%;margin-right:6px;vertical-align:middle"></span>Orange</td>
+                <td>1 &ndash; 2 km</td>
+                <td><span class="risk-med">MODERATE</span></td>
+                <td>US00002 (28th &amp; 6th)</td>
+              </tr>
+              <tr>
+                <td><span style="display:inline-block;width:10px;height:10px;background:#ffeb3b;border-radius:50%;margin-right:6px;vertical-align:middle"></span>Yellow</td>
+                <td>2 &ndash; 3 km</td>
+                <td><span class="risk-low">LOW</span></td>
+                <td>US00004, US00008, US00003, US00006</td>
+              </tr>
+              <tr>
+                <td><span style="display:inline-block;width:10px;height:10px;background:#4caf50;border-radius:50%;margin-right:6px;vertical-align:middle"></span>Green</td>
+                <td>3+ km</td>
+                <td style="color:#8899a6;font-size:10px">MINIMAL</td>
+                <td>US00005 (54th &amp; 8th)</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="padding:12px;background:#1a2332;border-radius:6px;border-left:3px solid #ff9800;font-size:11px;color:#c8d6e0;line-height:1.7">
+            <strong class="text-orange">Insight:</strong> Distance alone does not explain cannibalization. US00002 at <strong>1.7 km</strong> (closest) shows <em>stable</em> revenue, while US00004 at <strong>2.5 km</strong> (farther) shows the strongest inverse correlation. <strong>Corridor alignment</strong> (both on Broadway) and <strong>opening timing</strong> are stronger predictors than raw distance.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== SECTION 5: Key Findings ====== -->
+  <div class="section">
+    <div class="section-title"><span class="num">5</span> Key Findings</div>
+    <div class="card">
+      <ul class="findings-list">
+        <li class="critical">
+          <strong>US00004 "37th &amp; Broadway"</strong> is the <strong>#1 cannibalization suspect</strong>: opened Nov 2025 on the same Broadway corridor, 2.5 km distance. Its revenue growth from $0 to $55.8K/month mirrors 8th Ave's decline from $106K to $51.8K over the same period.
+        </li>
+        <li class="critical">
+          <strong>Revenue transferred:</strong> estimated <span class="mono text-red">$25K&ndash;$40K/month</span> migrated from 8th Ave to 37th &amp; Broadway. The combined revenue of both stores (~$107K in Jan) closely matches 8th Ave's Oct peak ($106K), suggesting near-zero net new demand generation.
+        </li>
+        <li>
+          <strong>US00008 "33rd &amp; 10th"</strong> is a secondary suspect: opened Dec 2025, 2.7 km distance, on the west side. Its opening correlates with the <em>acceleration</em> of 8th Ave's decline (from -19% MoM to -24% MoM).
+        </li>
+        <li class="success">
+          <strong>US00002 "28th &amp; 6th"</strong> (closest at 1.7 km) shows <em>stable</em> revenue (~$74K&ndash;$82K) &mdash; opened same day as 8th Ave in Jun 2025 and serves a distinct customer base (office workers in NoMad vs. commuter foot traffic on Broadway). This indicates <strong>proximity alone</strong> is insufficient to predict cannibalization.
+        </li>
+        <li>
+          <strong>Corridor effect matters more than distance:</strong> stores on the same arterial route (Broadway) compete for the same pedestrian foot traffic flow, even at 2.5 km separation. Cross-avenue stores (28th &amp; 6th vs. 8th &amp; Broadway) capture different flow patterns.
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ====== SECTION 6: Recommendations ====== -->
+  <div class="section">
+    <div class="section-title"><span class="num">6</span> Recommendations</div>
+    <div class="card">
+      <ol class="rec-list">
+        <li>
+          <strong>Mandatory cannibalization impact modeling</strong> before all future store openings. Model should account for corridor alignment, pedestrian flow patterns, and time-of-day demand overlap &mdash; not just geographic radius.
+        </li>
+        <li>
+          <strong>Minimum recommended spacing: 2.5 km for same-corridor stores.</strong> For cross-avenue locations, the minimum can be reduced to 1.5 km, as demonstrated by the stable coexistence of 8th &amp; Broadway and 28th &amp; 6th.
+        </li>
+        <li>
+          <strong>Implement post-opening monitoring:</strong> automatically track the 3 nearest stores' daily revenue for 90 days after each new store opening. Trigger alerts if any nearby store shows &gt;10% MoM decline within 60 days of a new opening.
+        </li>
+        <li>
+          <strong>Consider differentiated offerings</strong> for stores in close proximity: distinct menu emphasis (e.g., morning pastry focus vs. afternoon beverage focus), loyalty program incentives to retain customers at the original location, or staggered operating hours.
+        </li>
+        <li>
+          <strong>Immediate action for 8th &amp; Broadway:</strong> evaluate promotional campaigns, loyalty-based retention offers, and localized menu differentiation to recover lost customer traffic. Monitor whether stabilization occurs naturally as 37th &amp; Broadway matures and saturates.
+        </li>
+      </ol>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  const tooltip = document.getElementById('tooltip');
+  const dots = document.querySelectorAll('.store-dot');
+
+  dots.forEach(dot => {
+    dot.style.cursor = 'pointer';
+    dot.style.transition = 'r 0.15s, opacity 0.15s';
+
+    dot.addEventListener('mouseenter', function(e) {
+      const id = this.dataset.id;
+      const name = this.dataset.name;
+      const status = this.dataset.status;
+      const rev = this.dataset.rev;
+      const dist = this.dataset.dist;
+      const opened = this.dataset.opened;
+
+      let statusColor = '#5dade2';
+      if (status.includes('Declining')) statusColor = '#ff4444';
+      else if (status.includes('Growing') || status.includes('NEW')) statusColor = '#4caf50';
+      else if (status === 'Test') statusColor = '#666';
+
+      tooltip.innerHTML = `
+        <div class="tt-name" style="color:${statusColor}">${name}</div>
+        <div class="tt-row"><span>Store ID:</span><span>${id}</span></div>
+        <div class="tt-row"><span>Status:</span><span style="color:${statusColor}">${status}</span></div>
+        <div class="tt-row"><span>Jan 2026 Rev:</span><span>${rev}</span></div>
+        <div class="tt-row"><span>Dist to 8th Ave:</span><span>${dist}</span></div>
+        <div class="tt-row"><span>Opened:</span><span>${opened}</span></div>
+      `;
+
+      const origR = parseFloat(this.getAttribute('r'));
+      this.setAttribute('r', origR + 3);
+      this.setAttribute('opacity', '1');
+
+      tooltip.classList.add('show');
+    });
+
+    dot.addEventListener('mousemove', function(e) {
+      let x = e.clientX + 16;
+      let y = e.clientY - 10;
+      const rect = tooltip.getBoundingClientRect();
+      if (x + rect.width > window.innerWidth - 10) x = e.clientX - rect.width - 16;
+      if (y + rect.height > window.innerHeight - 10) y = e.clientY - rect.height - 10;
+      tooltip.style.left = x + 'px';
+      tooltip.style.top = y + 'px';
+    });
+
+    dot.addEventListener('mouseleave', function() {
+      const origR = this.dataset.id === 'US00001' ? 10 :
+                    (this.dataset.id === 'US00004' ? 8 :
+                    (this.dataset.id === 'US00000' ? 5 :
+                    (this.dataset.id === 'US00006' ? 6 : 7)));
+      this.setAttribute('r', origR);
+      this.setAttribute('opacity', this.dataset.id === 'US00000' ? '0.6' :
+                                    (this.dataset.id === 'US00005' || this.dataset.id === 'US00003' ? '0.8' : '0.85'));
+      tooltip.classList.remove('show');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

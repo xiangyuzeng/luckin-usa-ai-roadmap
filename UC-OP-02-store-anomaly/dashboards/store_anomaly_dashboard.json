@@ -1,0 +1,1236 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_MYSQL_LDAS",
+      "label": "MySQL-Ldas",
+      "description": "MySQL datasource for LDAS store data",
+      "type": "datasource",
+      "pluginId": "mysql",
+      "pluginName": "MySQL"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "mysql",
+      "name": "MySQL",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "barchart",
+      "name": "Bar chart",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "text",
+      "name": "Text",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "UC-OP-02: Store Performance Anomaly Detection using SPC methodology. Monitors store health scores, z-score anomalies, and control chart deviations across all locations.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "panels": [],
+      "title": "Portfolio KPIs / \u7ec4\u5408KPI",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Average composite health score across all stores on the latest date",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "red", "value": 0 },
+              { "color": "yellow", "value": 60 },
+              { "color": "green", "value": 80 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 5, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT AVG(composite_score) as value FROM test.store_health_scores WHERE metric_date = (SELECT MAX(metric_date) FROM test.store_health_scores)",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Portfolio Health Score / \u7ec4\u5408\u5065\u5eb7\u8bc4\u5206",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Number of distinct stores with unacknowledged alerts in the past 7 days",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 3 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 5, "x": 5, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT store_id) as value FROM test.store_anomaly_alerts WHERE acknowledged = FALSE AND alert_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Stores in Alert / \u544a\u8b66\u95e8\u5e97\u6570",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Average z-score for total_revenue across all stores on the latest date",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "red", "value": -3 },
+              { "color": "yellow", "value": -2 },
+              { "color": "green", "value": -1 },
+              { "color": "green", "value": 1 },
+              { "color": "yellow", "value": 2 },
+              { "color": "red", "value": 3 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 5, "x": 10, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT AVG(z_score) as value FROM test.store_anomaly_scores WHERE metric_name = 'total_revenue' AND metric_date = (SELECT MAX(metric_date) FROM test.store_anomaly_scores)",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Avg Z-Score / \u5e73\u5747Z\u5206\u6570",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "datasource", "uid": "-- Dashboard --" },
+      "description": "SPC-based detection identifies performance degradation 4-6 weeks before traditional threshold alerts",
+      "gridPos": { "h": 4, "w": 4, "x": 15, "y": 1 },
+      "id": 4,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "# 4\u20136 Weeks Earlier\n\nSPC-based anomaly detection identifies store performance degradation **4\u20136 weeks before** traditional threshold-based alerting.\n\n\u6bd4\u4f20\u7edf\u9608\u503c\u62a5\u8b66\u63d0\u524d4-6\u5468\u68c0\u6d4b",
+        "mode": "markdown"
+      },
+      "pluginVersion": "10.0.0",
+      "title": "Detection Speed / \u68c0\u6d4b\u901f\u5ea6",
+      "type": "text"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Total anomalies detected across all stores in the past 7 days",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 5 },
+              { "color": "orange", "value": 15 },
+              { "color": "red", "value": 30 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 5, "x": 19, "y": 1 },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) as value FROM test.store_anomaly_scores WHERE anomaly_severity != 'NONE' AND metric_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Weekly Anomalies / \u672c\u5468\u5f02\u5e38\u6570",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 101,
+      "panels": [],
+      "title": "Health Grid / \u5065\u5eb7\u77e9\u9635",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Multi-dimensional health scores for all stores on the latest date. Color-coded by composite score.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Health Score" },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "gauge"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": null },
+                    { "color": "red", "value": 0 },
+                    { "color": "yellow", "value": 60 },
+                    { "color": "green", "value": 80 }
+                  ]
+                }
+              },
+              { "id": "min", "value": 0 },
+              { "id": "max", "value": 100 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Revenue" },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": { "mode": "basic", "type": "gauge" }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": null },
+                    { "color": "red", "value": 0 },
+                    { "color": "yellow", "value": 60 },
+                    { "color": "green", "value": 80 }
+                  ]
+                }
+              },
+              { "id": "min", "value": 0 },
+              { "id": "max", "value": 100 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Operations" },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": { "mode": "basic", "type": "gauge" }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": null },
+                    { "color": "red", "value": 0 },
+                    { "color": "yellow", "value": 60 },
+                    { "color": "green", "value": 80 }
+                  ]
+                }
+              },
+              { "id": "min", "value": 0 },
+              { "id": "max", "value": 100 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Quality" },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": { "mode": "basic", "type": "gauge" }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": null },
+                    { "color": "red", "value": 0 },
+                    { "color": "yellow", "value": 60 },
+                    { "color": "green", "value": 80 }
+                  ]
+                }
+              },
+              { "id": "min", "value": 0 },
+              { "id": "max", "value": 100 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Staffing" },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": { "mode": "basic", "type": "gauge" }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": null },
+                    { "color": "red", "value": 0 },
+                    { "color": "yellow", "value": 60 },
+                    { "color": "green", "value": 80 }
+                  ]
+                }
+              },
+              { "id": "min", "value": 0 },
+              { "id": "max", "value": 100 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Customer" },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": { "mode": "basic", "type": "gauge" }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": null },
+                    { "color": "red", "value": 0 },
+                    { "color": "yellow", "value": 60 },
+                    { "color": "green", "value": 80 }
+                  ]
+                }
+              },
+              { "id": "min", "value": 0 },
+              { "id": "max", "value": 100 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Grade" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  { "options": { "A": { "color": "green", "index": 0, "text": "A" } }, "type": "value" },
+                  { "options": { "B": { "color": "super-light-green", "index": 1, "text": "B" } }, "type": "value" },
+                  { "options": { "C": { "color": "yellow", "index": 2, "text": "C" } }, "type": "value" },
+                  { "options": { "D": { "color": "orange", "index": 3, "text": "D" } }, "type": "value" },
+                  { "options": { "F": { "color": "red", "index": 4, "text": "F" } }, "type": "value" }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": { "type": "color-text" }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Trend" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  { "options": { "UP": { "color": "green", "index": 0, "text": "\u2191 UP" } }, "type": "value" },
+                  { "options": { "STABLE": { "color": "blue", "index": 1, "text": "\u2194 STABLE" } }, "type": "value" },
+                  { "options": { "DOWN": { "color": "red", "index": 2, "text": "\u2193 DOWN" } }, "type": "value" }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": { "type": "color-text" }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 16, "x": 0, "y": 6 },
+      "id": 6,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          { "desc": true, "displayName": "Health Score" }
+        ]
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  h.store_name as \"Store\",\n  h.composite_score as \"Health Score\",\n  h.health_grade as \"Grade\",\n  h.revenue_score as \"Revenue\",\n  h.ops_score as \"Operations\",\n  h.quality_score as \"Quality\",\n  h.staffing_score as \"Staffing\",\n  h.customer_score as \"Customer\",\n  h.trend_direction as \"Trend\"\nFROM test.store_health_scores h\nWHERE h.metric_date = (SELECT MAX(metric_date) FROM test.store_health_scores)\nORDER BY h.composite_score DESC",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Store Health Heatmap / \u95e8\u5e97\u5065\u5eb7\u70ed\u529b\u56fe",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Composite health score trend over time for selected stores",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Health Score",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "green", "value": 80 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 10, "w": 8, "x": 16, "y": 6 },
+      "id": 7,
+      "options": {
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_date as time, store_name, composite_score\nFROM test.store_health_scores\nWHERE store_name IN ($store)\nAND metric_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)\nORDER BY metric_date",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Health Score Trend / \u5065\u5eb7\u8bc4\u5206\u8d8b\u52bf",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+      "id": 102,
+      "panels": [],
+      "title": "SPC Charts / SPC\u63a7\u5236\u56fe",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Statistical Process Control chart with 28-day rolling mean and 2\u03c3/3\u03c3 control limits for the selected metric",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Actual" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } },
+              { "id": "custom.lineWidth", "value": 2 },
+              { "id": "custom.lineStyle", "value": { "fill": "solid" } },
+              { "id": "custom.showPoints", "value": "always" },
+              { "id": "custom.pointSize", "value": 4 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Mean (28d)" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "white", "mode": "fixed" } },
+              { "id": "custom.lineWidth", "value": 2 },
+              { "id": "custom.lineStyle", "value": { "dash": [10, 5], "fill": "dash" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byRegexp", "options": "UCL 2\u03c3|LCL 2\u03c3" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } },
+              { "id": "custom.lineWidth", "value": 1 },
+              { "id": "custom.lineStyle", "value": { "dash": [8, 4], "fill": "dash" } },
+              { "id": "custom.showPoints", "value": "never" }
+            ]
+          },
+          {
+            "matcher": { "id": "byRegexp", "options": "UCL 3\u03c3|LCL 3\u03c3" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } },
+              { "id": "custom.lineWidth", "value": 1 },
+              { "id": "custom.lineStyle", "value": { "dash": [6, 3], "fill": "dash" } },
+              { "id": "custom.showPoints", "value": "never" }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 16, "x": 0, "y": 17 },
+      "id": 8,
+      "options": {
+        "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_date as time, metric_value as \"Actual\"\nFROM test.store_anomaly_scores\nWHERE store_name IN ($store) AND metric_name = '$metric'\nORDER BY metric_date",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        },
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_date as time, rolling_mean_28d as \"Mean (28d)\"\nFROM test.store_anomaly_scores\nWHERE store_name IN ($store) AND metric_name = '$metric'\nORDER BY metric_date",
+          "refId": "B",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 },
+          "hide": false
+        },
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_date as time, ucl_2sigma as \"UCL 2\u03c3\"\nFROM test.store_anomaly_scores\nWHERE store_name IN ($store) AND metric_name = '$metric'\nORDER BY metric_date",
+          "refId": "C",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 },
+          "hide": false
+        },
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_date as time, lcl_2sigma as \"LCL 2\u03c3\"\nFROM test.store_anomaly_scores\nWHERE store_name IN ($store) AND metric_name = '$metric'\nORDER BY metric_date",
+          "refId": "D",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 },
+          "hide": false
+        },
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_date as time, ucl_3sigma as \"UCL 3\u03c3\"\nFROM test.store_anomaly_scores\nWHERE store_name IN ($store) AND metric_name = '$metric'\nORDER BY metric_date",
+          "refId": "E",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 },
+          "hide": false
+        },
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_date as time, lcl_3sigma as \"LCL 3\u03c3\"\nFROM test.store_anomaly_scores\nWHERE store_name IN ($store) AND metric_name = '$metric'\nORDER BY metric_date",
+          "refId": "F",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 },
+          "hide": false
+        }
+      ],
+      "title": "Revenue SPC Control Chart / \u8425\u6536SPC\u63a7\u5236\u56fe",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Distribution of z-scores across all stores for the selected metric, bucketed by sigma bands",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Count",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineWidth": 1,
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "count" },
+            "properties": [
+              {
+                "id": "color",
+                "value": { "fixedColor": "blue", "mode": "fixed" }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 8, "x": 16, "y": 17 },
+      "id": 9,
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": false },
+        "orientation": "vertical",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xField": "z_bucket",
+        "xTickLabelRotation": -45
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  CASE \n    WHEN z_score < -3 THEN '< -3\u03c3'\n    WHEN z_score < -2 THEN '-3\u03c3 to -2\u03c3'\n    WHEN z_score < -1 THEN '-2\u03c3 to -1\u03c3'\n    WHEN z_score < 0 THEN '-1\u03c3 to 0'\n    WHEN z_score < 1 THEN '0 to 1\u03c3'\n    WHEN z_score < 2 THEN '1\u03c3 to 2\u03c3'\n    WHEN z_score < 3 THEN '2\u03c3 to 3\u03c3'\n    ELSE '> 3\u03c3'\n  END as z_bucket,\n  COUNT(*) as count\nFROM test.store_anomaly_scores\nWHERE metric_name = '$metric'\nGROUP BY z_bucket\nORDER BY MIN(z_score)",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Z-Score Distribution / Z\u5206\u6570\u5206\u5e03",
+      "type": "barchart"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 },
+      "id": 103,
+      "panels": [],
+      "title": "8th Ave Focus / \u7b2c\u516b\u5927\u9053\u4e13\u9898",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Daily revenue timeline for 8th Ave store (ID: 1127) with anomaly detection annotations",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Revenue ($)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "scheme",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 28 },
+      "id": 10,
+      "options": {
+        "legend": { "calcs": ["mean", "min", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_date as time, total_revenue as \"Daily Revenue\"\nFROM test.store_kpi_daily\nWHERE store_id = 1127\nORDER BY metric_date",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "8th Ave Revenue Timeline / \u7b2c\u516b\u5927\u9053\u8425\u6536\u65f6\u95f4\u7ebf",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Z-score timeline for 8th Ave total_revenue showing when SPC detection triggers vs traditional thresholds",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": true,
+            "axisColorMode": "text",
+            "axisLabel": "Z-Score",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": {
+              "mode": "line+area"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "transparent", "value": null },
+              { "color": "rgba(255, 0, 0, 0.1)", "value": -3 },
+              { "color": "rgba(255, 255, 0, 0.05)", "value": -2 },
+              { "color": "transparent", "value": 0 }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Z-Score" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } },
+              { "id": "custom.lineWidth", "value": 2 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Warning Threshold" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } },
+              { "id": "custom.lineWidth", "value": 1 },
+              { "id": "custom.lineStyle", "value": { "dash": [10, 5], "fill": "dash" } },
+              { "id": "custom.showPoints", "value": "never" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Critical Threshold" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } },
+              { "id": "custom.lineWidth", "value": 1 },
+              { "id": "custom.lineStyle", "value": { "dash": [6, 3], "fill": "dash" } },
+              { "id": "custom.showPoints", "value": "never" }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 28 },
+      "id": 11,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "min"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_date as time, z_score as \"Z-Score\", \n  -2 as \"Warning Threshold\", -3 as \"Critical Threshold\"\nFROM test.store_anomaly_scores\nWHERE store_id = 1127 AND metric_name = 'total_revenue'\nORDER BY metric_date",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "8th Ave Detection Timeline / \u68c0\u6d4b\u65f6\u95f4\u7ebf\u5bf9\u6bd4",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 38 },
+      "id": 104,
+      "panels": [],
+      "title": "Alerts / \u544a\u8b66\u7ba1\u7406",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Unacknowledged anomaly alerts ordered by severity. CRITICAL alerts require immediate attention.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "filterable": true,
+            "inspect": true
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "severity" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  { "options": { "CRITICAL": { "color": "red", "index": 0, "text": "CRITICAL" } }, "type": "value" },
+                  { "options": { "WARNING": { "color": "orange", "index": 1, "text": "WARNING" } }, "type": "value" },
+                  { "options": { "INFO": { "color": "blue", "index": 2, "text": "INFO" } }, "type": "value" }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": { "type": "color-background" }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "z_score" },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": null },
+                    { "color": "red", "value": -999 },
+                    { "color": "orange", "value": -3 },
+                    { "color": "yellow", "value": -2 },
+                    { "color": "green", "value": -1 }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": { "type": "color-text" }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "alert_date" },
+            "properties": [
+              { "id": "custom.width", "value": 120 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "description" },
+            "properties": [
+              { "id": "custom.width", "value": 350 }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 14, "x": 0, "y": 39 },
+      "id": 12,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          { "desc": true, "displayName": "alert_date" }
+        ]
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT alert_date, store_name, severity, metric_name, \n  ROUND(z_score, 2) as z_score, we_rule_violated,\n  description_en as description\nFROM test.store_anomaly_alerts\nWHERE acknowledged = FALSE\nORDER BY FIELD(severity, 'CRITICAL', 'WARNING', 'INFO'), alert_date DESC\nLIMIT 50",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Active Anomaly Alerts / \u6d3b\u8dc3\u5f02\u5e38\u544a\u8b66",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+      "description": "Alert count trend over time grouped by severity level",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Alert Count",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 70,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "normal" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "CRITICAL" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "WARNING" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "INFO" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 10, "x": 14, "y": 39 },
+      "id": 13,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(alert_date) as time, severity, COUNT(*) as count\nFROM test.store_anomaly_alerts\nWHERE alert_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)\nGROUP BY DATE(alert_date), severity\nORDER BY time",
+          "refId": "A",
+          "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+        }
+      ],
+      "title": "Alert Trend by Severity / \u544a\u8b66\u8d8b\u52bf",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "uc-op-02",
+    "anomaly-detection",
+    "spc",
+    "store-health",
+    "ai-analytics"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "datasource": { "type": "mysql", "uid": "ef5ay9lchfg1sa" },
+        "definition": "SELECT DISTINCT store_name FROM test.store_kpi_daily ORDER BY store_name",
+        "description": "Select one or more stores to filter dashboard panels",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Store",
+        "multi": true,
+        "name": "store",
+        "options": [],
+        "query": "SELECT DISTINCT store_name FROM test.store_kpi_daily ORDER BY store_name",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "total_revenue",
+          "value": "total_revenue"
+        },
+        "description": "Select a KPI metric for SPC chart analysis",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Metric",
+        "multi": false,
+        "name": "metric",
+        "options": [
+          { "selected": true, "text": "total_revenue", "value": "total_revenue" },
+          { "selected": false, "text": "order_count", "value": "order_count" },
+          { "selected": false, "text": "avg_order_value", "value": "avg_order_value" },
+          { "selected": false, "text": "production_count", "value": "production_count" },
+          { "selected": false, "text": "avg_production_time_sec", "value": "avg_production_time_sec" },
+          { "selected": false, "text": "scheduled_hours", "value": "scheduled_hours" },
+          { "selected": false, "text": "revenue_per_labor_hour", "value": "revenue_per_labor_hour" }
+        ],
+        "query": "total_revenue,order_count,avg_order_value,production_count,avg_production_time_sec,scheduled_hours,revenue_per_labor_hour",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+    "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d", "90d"]
+  },
+  "timezone": "America/New_York",
+  "title": "UC-OP-02: Store Anomaly Detection / \u95e8\u5e97\u5f02\u5e38\u68c0\u6d4b",
+  "uid": "uc-op-02-store-anomaly",
+  "version": 1,
+  "weekStart": ""
+}
