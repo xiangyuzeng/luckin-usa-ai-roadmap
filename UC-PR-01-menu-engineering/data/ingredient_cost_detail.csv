@@ -1,0 +1,316 @@
+spu_code,product_name,ingredient_code,ingredient_name,quantity,unit,unit_price,line_cost
+PR000021,Iced Coconut Latte,GS07465,Medium Roast Espresso,14,g,0.02,0.28
+PR000021,Iced Coconut Latte,GS07506,Barista Coconut Milk,210,ml,0.004,0.84
+PR000021,Iced Coconut Latte,GS07437,Straw,1,pc,0.02,0.02
+PR000021,Iced Coconut Latte,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000021,Iced Coconut Latte,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000005,Drip Coffee,GS07470,Drip Coffee Blend,20,g,0.016,0.32
+PR000005,Drip Coffee,GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000005,Drip Coffee,GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000071,Iced Kyoto Matcha Latte,PFM000020,Kyoto Matcha Pre-mix,120,g,0.012,1.44
+PR000071,Iced Kyoto Matcha Latte,GS07494,DVG Cane Sugar Syrup,30,ml,0.011,0.33
+PR000071,Iced Kyoto Matcha Latte,GS07437,Straw,1,pc,0.02,0.02
+PR000071,Iced Kyoto Matcha Latte,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000071,Iced Kyoto Matcha Latte,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000016,Latte (Hot),GS07465,Medium Roast Espresso,14,g,0.02,0.28
+PR000016,Latte (Hot),GS07571,Tuscan 2% Reduced Fat Milk,350,ml,0.0012,0.42
+PR000016,Latte (Hot),GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000016,Latte (Hot),GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000023,Iced Velvet Latte,GS07465,Medium Roast Espresso,21,g,0.02,0.42
+PR000023,Iced Velvet Latte,PFM000005,Velvet/Thick Milk Base,96,g,0.006,0.576
+PR000023,Iced Velvet Latte,GS07566,Tuscan Whole Milk,122,ml,0.0012,0.1464
+PR000023,Iced Velvet Latte,GS07437,Straw,1,pc,0.02,0.02
+PR000023,Iced Velvet Latte,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000023,Iced Velvet Latte,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000015,Iced Latte,GS07465,Medium Roast Espresso,14,g,0.02,0.28
+PR000015,Iced Latte,GS07571,Tuscan 2% Reduced Fat Milk,210,ml,0.0012,0.252
+PR000015,Iced Latte,GS07437,Straw,1,pc,0.02,0.02
+PR000015,Iced Latte,GS07438,16oz Iced Cup Flat Lid,1,pc,0.04,0.04
+PR000015,Iced Latte,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000031,Cold Brew,PFM000009,Cold Brew Concentrate,120,ml,0.012,1.44
+PR000031,Cold Brew,GS07437,Straw,1,pc,0.02,0.02
+PR000031,Cold Brew,GS07448,16oz Iced Cup Sipper Lid,1,pc,0.04,0.04
+PR000031,Cold Brew,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000022,Coconut Latte (Hot),GS07465,Medium Roast Espresso,14,g,0.02,0.28
+PR000022,Coconut Latte (Hot),GS07506,Barista Coconut Milk,350,ml,0.004,1.4
+PR000022,Coconut Latte (Hot),GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000022,Coconut Latte (Hot),GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000073,Iced Kyoto Matcha Coconut Latte,PFM000020,Kyoto Matcha Pre-mix,60,g,0.012,0.72
+PR000073,Iced Kyoto Matcha Coconut Latte,GS07506,Barista Coconut Milk,270,ml,0.004,1.08
+PR000073,Iced Kyoto Matcha Coconut Latte,GS07494,DVG Cane Sugar Syrup,15,ml,0.011,0.165
+PR000073,Iced Kyoto Matcha Coconut Latte,GS07437,Straw,1,pc,0.02,0.02
+PR000073,Iced Kyoto Matcha Coconut Latte,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000073,Iced Kyoto Matcha Coconut Latte,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000072,Kyoto Matcha Latte (Hot),PFM000020,Kyoto Matcha Pre-mix,60,g,0.012,0.72
+PR000072,Kyoto Matcha Latte (Hot),GS07566,Tuscan Whole Milk,350,ml,0.0012,0.42
+PR000072,Kyoto Matcha Latte (Hot),GS07494,DVG Cane Sugar Syrup,15,ml,0.011,0.165
+PR000072,Kyoto Matcha Latte (Hot),GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000072,Kyoto Matcha Latte (Hot),GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000080,Iced Caramel Popcorn Latte,GS07465,Medium Roast Espresso,14,g,0.02,0.28
+PR000080,Iced Caramel Popcorn Latte,PFM000005,Velvet/Thick Milk Base,96,g,0.006,0.576
+PR000080,Iced Caramel Popcorn Latte,GS08300,Popcorn Syrup,15,ml,0.015,0.225
+PR000080,Iced Caramel Popcorn Latte,GS07566,Tuscan Whole Milk,210,ml,0.0012,0.252
+PR000080,Iced Caramel Popcorn Latte,GS07437,Straw,1,pc,0.02,0.02
+PR000080,Iced Caramel Popcorn Latte,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000080,Iced Caramel Popcorn Latte,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000063,Sausage Egg Cheese Croissant,GS07859,Sausage Egg Cheese Croissant,1,pc,2.5,2.5
+PR000063,Sausage Egg Cheese Croissant,GS07447,Paper Bag,1,pc,0.06,0.06
+PR000018,Cappuccino (Hot),GS07465,Medium Roast Espresso,14,g,0.02,0.28
+PR000018,Cappuccino (Hot),GS07571,Tuscan 2% Reduced Fat Milk,270,ml,0.0012,0.324
+PR000018,Cappuccino (Hot),GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000018,Cappuccino (Hot),GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000024,Velvet Latte (Hot),GS07465,Medium Roast Espresso,21,g,0.02,0.42
+PR000024,Velvet Latte (Hot),PFM000005,Velvet/Thick Milk Base,96,g,0.006,0.576
+PR000024,Velvet Latte (Hot),GS07566,Tuscan Whole Milk,250,ml,0.0012,0.3
+PR000024,Velvet Latte (Hot),GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000024,Velvet Latte (Hot),GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000014,Americano (Hot),GS07465,Medium Roast Espresso,21,g,0.02,0.42
+PR000014,Americano (Hot),GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000014,Americano (Hot),GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000014,Americano (Hot),GS07638,Cup Label Sticker,1,pc,0.03,0.03
+PR000006,Iced Americano,GS07465,Medium Roast Espresso,21,g,0.02,0.42
+PR000006,Iced Americano,GS07437,Straw,1,pc,0.02,0.02
+PR000006,Iced Americano,GS07438,16oz Iced Cup Flat Lid,1,pc,0.04,0.04
+PR000006,Iced Americano,GS07638,Cup Label Sticker,1,pc,0.03,0.03
+PR000006,Iced Americano,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000033,Pineapple Cold Brew,PFM000011,Pineapple Mix/Puree,90,g,0.008,0.72
+PR000033,Pineapple Cold Brew,GS07739,DVG Pineapple Syrup,15,ml,0.013,0.195
+PR000033,Pineapple Cold Brew,PFM000009,Cold Brew Concentrate,90,ml,0.012,1.08
+PR000033,Pineapple Cold Brew,GS07437,Straw,1,pc,0.02,0.02
+PR000033,Pineapple Cold Brew,GS07438,16oz Iced Cup Flat Lid,1,pc,0.04,0.04
+PR000033,Pineapple Cold Brew,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000039,Vital Kale,GS07504,Green Juice Blend,180,ml,0.005,0.9
+PR000039,Vital Kale,PFM000006,Kale/Green Concentrate,60,ml,0.008,0.48
+PR000039,Vital Kale,GS07494,DVG Cane Sugar Syrup,7.5,ml,0.011,0.0825
+PR000039,Vital Kale,GS07442,Thick Straw (PLA),1,pc,0.04,0.04
+PR000039,Vital Kale,GS07445,PET Bottle Green,1,pc,0.15,0.15
+PR000087,Spanish Latte (Hot),GS07763,Condensed Milk Sweetened,22,g,0.008,0.176
+PR000087,Spanish Latte (Hot),GS07465,Medium Roast Espresso,21,g,0.02,0.42
+PR000087,Spanish Latte (Hot),PFM000005,Velvet/Thick Milk Base,32,g,0.006,0.192
+PR000087,Spanish Latte (Hot),GS07566,Tuscan Whole Milk,345,ml,0.0012,0.414
+PR000087,Spanish Latte (Hot),GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000087,Spanish Latte (Hot),GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000091,Toffee Hazelnut Latte (Hot),GS07466,Dark Roast Espresso,14,g,0.02,0.28
+PR000091,Toffee Hazelnut Latte (Hot),GS08917,Toffee Nut Syrup,22.5,ml,0.016,0.36
+PR000091,Toffee Hazelnut Latte (Hot),PFM000023,Popcorn/Toffee Topping,25.5,g,0.018,0.459
+PR000091,Toffee Hazelnut Latte (Hot),GS07769,Caramel Sauce (Lyons Magnus),5,g,0.012,0.06
+PR000091,Toffee Hazelnut Latte (Hot),GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000091,Toffee Hazelnut Latte (Hot),GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000043,Mango Coconut Sunrise,GS07506,Barista Coconut Milk,150,ml,0.004,0.6
+PR000043,Mango Coconut Sunrise,GS07737,DVG Mango Syrup,7.5,ml,0.013,0.0975
+PR000043,Mango Coconut Sunrise,GS07568,Tuscan Fat Free Milk,80,ml,0.0011,0.088
+PR000043,Mango Coconut Sunrise,GS07749,DVG Strawberry Syrup,22.5,ml,0.013,0.2925
+PR000043,Mango Coconut Sunrise,PFM000015,Mango Puree/Juice,60,ml,0.009,0.54
+PR000043,Mango Coconut Sunrise,GS07437,Straw,1,pc,0.02,0.02
+PR000043,Mango Coconut Sunrise,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000043,Mango Coconut Sunrise,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000074,Kyoto Matcha Coconut Latte (Hot),GS07506,Barista Coconut Milk,390,ml,0.004,1.56
+PR000074,Kyoto Matcha Coconut Latte (Hot),PFM000020,Kyoto Matcha Pre-mix,60,g,0.012,0.72
+PR000074,Kyoto Matcha Coconut Latte (Hot),GS07439,20oz Hot Cup,1,pc,0.1,0.1
+PR000074,Kyoto Matcha Coconut Latte (Hot),GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000090,Iced Toffee Hazelnut Latte,GS07466,Dark Roast Espresso,14,g,0.02,0.28
+PR000090,Iced Toffee Hazelnut Latte,GS08917,Toffee Nut Syrup,22.5,ml,0.016,0.36
+PR000090,Iced Toffee Hazelnut Latte,PFM000023,Popcorn/Toffee Topping,46.4,g,0.018,0.8352
+PR000090,Iced Toffee Hazelnut Latte,GS07769,Caramel Sauce (Lyons Magnus),5,g,0.012,0.06
+PR000090,Iced Toffee Hazelnut Latte,GS07437,Straw,1,pc,0.02,0.02
+PR000090,Iced Toffee Hazelnut Latte,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000090,Iced Toffee Hazelnut Latte,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000027,Iced Matcha Latte,GS07566,Tuscan Whole Milk,210,ml,0.0012,0.252
+PR000027,Iced Matcha Latte,GS07743,Heavy Whipping Cream,35.7,g,0.0035,0.125
+PR000027,Iced Matcha Latte,GS07494,DVG Cane Sugar Syrup,7.5,ml,0.011,0.0825
+PR000027,Iced Matcha Latte,GS07509,Matcha Sweet Blend,25.2,g,0.035,0.882
+PR000027,Iced Matcha Latte,GS07437,Straw,1,pc,0.02,0.02
+PR000027,Iced Matcha Latte,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000027,Iced Matcha Latte,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000030,Iced Matcha Coconut Latte,GS07506,Barista Coconut Milk,270,ml,0.004,1.08
+PR000030,Iced Matcha Coconut Latte,GS07509,Matcha Sweet Blend,25.2,g,0.035,0.882
+PR000030,Iced Matcha Coconut Latte,GS07437,Straw,1,pc,0.02,0.02
+PR000030,Iced Matcha Coconut Latte,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000030,Iced Matcha Coconut Latte,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000108,Iced Pistachio Matcha Coconut Latte,PFM000020,Kyoto Matcha Pre-mix,45,g,0.012,0.54
+PR000108,Iced Pistachio Matcha Coconut Latte,GS07506,Barista Coconut Milk,270,ml,0.004,1.08
+PR000108,Iced Pistachio Matcha Coconut Latte,GS07494,DVG Cane Sugar Syrup,7.5,ml,0.011,0.0825
+PR000108,Iced Pistachio Matcha Coconut Latte,GS07437,Straw,1,pc,0.02,0.02
+PR000108,Iced Pistachio Matcha Coconut Latte,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000108,Iced Pistachio Matcha Coconut Latte,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000086,Iced Spanish Latte,GS07763,Condensed Milk Sweetened,22,g,0.008,0.176
+PR000086,Iced Spanish Latte,GS07465,Medium Roast Espresso,21,g,0.02,0.42
+PR000086,Iced Spanish Latte,PFM000005,Velvet/Thick Milk Base,32,g,0.006,0.192
+PR000086,Iced Spanish Latte,GS07437,Straw,1,pc,0.02,0.02
+PR000086,Iced Spanish Latte,GS07438,16oz Iced Cup Flat Lid,1,pc,0.04,0.04
+PR000086,Iced Spanish Latte,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000088,Iced Creme Brulee Latte,GS07466,Dark Roast Espresso,14,g,0.02,0.28
+PR000088,Iced Creme Brulee Latte,GS08916,Creme Brulee Syrup,15,ml,0.016,0.24
+PR000088,Iced Creme Brulee Latte,PFM000005,Velvet/Thick Milk Base,64,g,0.006,0.384
+PR000088,Iced Creme Brulee Latte,PFM000023,Popcorn/Toffee Topping,46.4,g,0.018,0.8352
+PR000088,Iced Creme Brulee Latte,GS07437,Straw,1,pc,0.02,0.02
+PR000088,Iced Creme Brulee Latte,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000088,Iced Creme Brulee Latte,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000081,Caramel Popcorn Latte (Hot),GS07465,Medium Roast Espresso,14,g,0.02,0.28
+PR000081,Caramel Popcorn Latte (Hot),PFM000005,Velvet/Thick Milk Base,96,g,0.006,0.576
+PR000081,Caramel Popcorn Latte (Hot),GS08300,Popcorn Syrup,15,ml,0.015,0.225
+PR000081,Caramel Popcorn Latte (Hot),GS07566,Tuscan Whole Milk,270,ml,0.0012,0.324
+PR000081,Caramel Popcorn Latte (Hot),GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000081,Caramel Popcorn Latte (Hot),GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000089,Creme Brulee Latte (Hot),GS07466,Dark Roast Espresso,14,g,0.02,0.28
+PR000089,Creme Brulee Latte (Hot),GS08916,Creme Brulee Syrup,15,ml,0.016,0.24
+PR000089,Creme Brulee Latte (Hot),PFM000005,Velvet/Thick Milk Base,64,g,0.006,0.384
+PR000089,Creme Brulee Latte (Hot),PFM000023,Popcorn/Toffee Topping,25.5,g,0.018,0.459
+PR000089,Creme Brulee Latte (Hot),GS07769,Caramel Sauce (Lyons Magnus),5,g,0.012,0.06
+PR000089,Creme Brulee Latte (Hot),GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000089,Creme Brulee Latte (Hot),GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000032,Blood Orange Cold Brew,GS07742,Blood Orange,157.5,g,0.01,1.575
+PR000032,Blood Orange Cold Brew,PFM000017,Cold Brew Concentrate v2,90,ml,0.012,1.08
+PR000032,Blood Orange Cold Brew,GS07437,Straw,1,pc,0.02,0.02
+PR000032,Blood Orange Cold Brew,GS07438,16oz Iced Cup Flat Lid,1,pc,0.04,0.04
+PR000032,Blood Orange Cold Brew,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000034,Raspberry Cold Brew,GS07564,Andros Raspberry Puree,98.1,g,0.013,1.2753
+PR000034,Raspberry Cold Brew,PFM000017,Cold Brew Concentrate v2,90,ml,0.012,1.08
+PR000034,Raspberry Cold Brew,GS07736,Raspberry IQF,32,g,0.009,0.288
+PR000034,Raspberry Cold Brew,GS07437,Straw,1,pc,0.02,0.02
+PR000034,Raspberry Cold Brew,GS07438,16oz Iced Cup Flat Lid,1,pc,0.04,0.04
+PR000034,Raspberry Cold Brew,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000109,Pistachio Matcha Coconut Latte (Hot),PFM000020,Kyoto Matcha Pre-mix,45,g,0.012,0.54
+PR000109,Pistachio Matcha Coconut Latte (Hot),GS07506,Barista Coconut Milk,322.5,ml,0.004,1.29
+PR000109,Pistachio Matcha Coconut Latte (Hot),GS07494,DVG Cane Sugar Syrup,7.5,ml,0.011,0.0825
+PR000109,Pistachio Matcha Coconut Latte (Hot),PFM000029,Pistachio Cream/Paste,111.5,g,0.012,1.338
+PR000109,Pistachio Matcha Coconut Latte (Hot),GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000109,Pistachio Matcha Coconut Latte (Hot),GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000041,Strawberry Refresher,GS07749,DVG Strawberry Syrup,15,ml,0.013,0.195
+PR000041,Strawberry Refresher,PFM000012,Strawberry Smoothie Base,120,g,0.01,1.2
+PR000041,Strawberry Refresher,PFM000007,Fruit Juice Base,60,ml,0.006,0.36
+PR000041,Strawberry Refresher,GS07494,DVG Cane Sugar Syrup,7.5,ml,0.011,0.0825
+PR000041,Strawberry Refresher,GS07437,Straw,1,pc,0.02,0.02
+PR000041,Strawberry Refresher,GS07438,16oz Iced Cup Flat Lid,1,pc,0.04,0.04
+PR000041,Strawberry Refresher,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000076,Almond Croissant,GS08252,Almond Croissant,1,pc,1.8,1.8
+PR000076,Almond Croissant,GS07447,Paper Bag,1,pc,0.06,0.06
+PR000042,Pineapple Refresher,GS07739,DVG Pineapple Syrup,15,ml,0.013,0.195
+PR000042,Pineapple Refresher,PFM000011,Pineapple Mix/Puree,120,g,0.008,0.96
+PR000042,Pineapple Refresher,PFM000007,Fruit Juice Base,60,ml,0.006,0.36
+PR000042,Pineapple Refresher,GS07437,Straw,1,pc,0.02,0.02
+PR000042,Pineapple Refresher,GS07438,16oz Iced Cup Flat Lid,1,pc,0.04,0.04
+PR000042,Pineapple Refresher,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000036,Green Cold Brew,PFM000006,Kale/Green Concentrate,90,ml,0.008,0.72
+PR000036,Green Cold Brew,PFM000009,Cold Brew Concentrate,120,ml,0.012,1.44
+PR000036,Green Cold Brew,GS07437,Straw,1,pc,0.02,0.02
+PR000036,Green Cold Brew,GS07448,16oz Iced Cup Sipper Lid,1,pc,0.04,0.04
+PR000036,Green Cold Brew,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000077,Chocolate Croissant,GS08254,Chocolate Croissant,1,pc,1.6,1.6
+PR000077,Chocolate Croissant,GS07447,Paper Bag,1,pc,0.06,0.06
+PR000045,Iced Coconut Velvet Latte,GS07465,Medium Roast Espresso,14,g,0.02,0.28
+PR000045,Iced Coconut Velvet Latte,GS07506,Barista Coconut Milk,150,ml,0.004,0.6
+PR000045,Iced Coconut Velvet Latte,PFM000005,Velvet/Thick Milk Base,64,g,0.006,0.384
+PR000045,Iced Coconut Velvet Latte,GS07437,Straw,1,pc,0.02,0.02
+PR000045,Iced Coconut Velvet Latte,GS07438,16oz Iced Cup Flat Lid,1,pc,0.04,0.04
+PR000045,Iced Coconut Velvet Latte,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000083,Iced Pumpkin Spice Latte,GS08279,Canned Pumpkin,23,g,0.005,0.115
+PR000083,Iced Pumpkin Spice Latte,GS07465,Medium Roast Espresso,14,g,0.02,0.28
+PR000083,Iced Pumpkin Spice Latte,GS08285,DVG Pumpkin Pie Syrup,15,ml,0.015,0.225
+PR000083,Iced Pumpkin Spice Latte,GS07490,DVG Cinnamon Bark Syrup,7.5,ml,0.013,0.0975
+PR000083,Iced Pumpkin Spice Latte,GS07437,Straw,1,pc,0.02,0.02
+PR000083,Iced Pumpkin Spice Latte,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000083,Iced Pumpkin Spice Latte,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000051,Dreamy Strawberry,GS07513,Andros Strawberry Chunks,88,g,0.012,1.056
+PR000051,Dreamy Strawberry,GS07749,DVG Strawberry Syrup,22.5,ml,0.013,0.2925
+PR000051,Dreamy Strawberry,GS07568,Tuscan Fat Free Milk,80,ml,0.0011,0.088
+PR000051,Dreamy Strawberry,GS07743,Heavy Whipping Cream,45.5,g,0.0035,0.1593
+PR000051,Dreamy Strawberry,GS07494,DVG Cane Sugar Syrup,7.5,ml,0.011,0.0825
+PR000051,Dreamy Strawberry,GS07437,Straw,1,pc,0.02,0.02
+PR000051,Dreamy Strawberry,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000051,Dreamy Strawberry,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000084,Pumpkin Spice Latte (Hot),GS08279,Canned Pumpkin,23,g,0.005,0.115
+PR000084,Pumpkin Spice Latte (Hot),GS07465,Medium Roast Espresso,14,g,0.02,0.28
+PR000084,Pumpkin Spice Latte (Hot),GS08285,DVG Pumpkin Pie Syrup,15,ml,0.015,0.225
+PR000084,Pumpkin Spice Latte (Hot),GS07490,DVG Cinnamon Bark Syrup,7.5,ml,0.013,0.0975
+PR000084,Pumpkin Spice Latte (Hot),PFM000005,Velvet/Thick Milk Base,32,g,0.006,0.192
+PR000084,Pumpkin Spice Latte (Hot),GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000084,Pumpkin Spice Latte (Hot),GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000044,Grapefruit Mango Drink,GS07742,Blood Orange,126,g,0.01,1.26
+PR000044,Grapefruit Mango Drink,GS07745,Canned Grapefruit in Syrup,10,g,0.008,0.08
+PR000044,Grapefruit Mango Drink,PFM000015,Mango Puree/Juice,60,ml,0.009,0.54
+PR000044,Grapefruit Mango Drink,GS07758,Florida's Natural Grapefruit Juice,30,ml,0.003,0.09
+PR000044,Grapefruit Mango Drink,GS07437,Straw,1,pc,0.02,0.02
+PR000044,Grapefruit Mango Drink,GS07438,16oz Iced Cup Flat Lid,1,pc,0.04,0.04
+PR000044,Grapefruit Mango Drink,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000047,Coconut Velvet Latte (Hot),GS07465,Medium Roast Espresso,14,g,0.02,0.28
+PR000047,Coconut Velvet Latte (Hot),GS07506,Barista Coconut Milk,290,ml,0.004,1.16
+PR000047,Coconut Velvet Latte (Hot),PFM000005,Velvet/Thick Milk Base,64,g,0.006,0.384
+PR000047,Coconut Velvet Latte (Hot),GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000047,Coconut Velvet Latte (Hot),GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000025,Iced Chocolate,GS07566,Tuscan Whole Milk,30,ml,0.0012,0.036
+PR000025,Iced Chocolate,GS07743,Heavy Whipping Cream,45.5,g,0.0035,0.1593
+PR000025,Iced Chocolate,GS07744,Cocoa Powder,0.1,g,0.015,0.0015
+PR000025,Iced Chocolate,GS07494,DVG Cane Sugar Syrup,7.5,ml,0.011,0.0825
+PR000025,Iced Chocolate,GS07437,Straw,1,pc,0.02,0.02
+PR000025,Iced Chocolate,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000025,Iced Chocolate,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000050,Mango Pomelo Sago,GS07568,Tuscan Fat Free Milk,150,ml,0.0011,0.165
+PR000050,Mango Pomelo Sago,GS07745,Canned Grapefruit in Syrup,10,g,0.008,0.08
+PR000050,Mango Pomelo Sago,GS07737,DVG Mango Syrup,15,ml,0.013,0.195
+PR000050,Mango Pomelo Sago,GS07743,Heavy Whipping Cream,35.7,g,0.0035,0.125
+PR000050,Mango Pomelo Sago,GS07494,DVG Cane Sugar Syrup,7.5,ml,0.011,0.0825
+PR000050,Mango Pomelo Sago,GS07437,Straw,1,pc,0.02,0.02
+PR000050,Mango Pomelo Sago,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000050,Mango Pomelo Sago,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000048,Smoothie,GS07574,Hazelnut Dark Cocoa Spread,3,g,0.02,0.06
+PR000048,Smoothie,GS07492,BC Vanilla Smoothie Base,24,g,0.008,0.192
+PR000048,Smoothie,GS07566,Tuscan Whole Milk,120,ml,0.0012,0.144
+PR000048,Smoothie,GS07442,Thick Straw (PLA),1,pc,0.04,0.04
+PR000048,Smoothie,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000048,Smoothie,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000075,Kyoto Matcha Smoothie,PFM000020,Kyoto Matcha Pre-mix,125,g,0.012,1.5
+PR000075,Kyoto Matcha Smoothie,PFM000005,Velvet/Thick Milk Base,64,g,0.006,0.384
+PR000075,Kyoto Matcha Smoothie,GS07492,BC Vanilla Smoothie Base,40.5,g,0.008,0.324
+PR000075,Kyoto Matcha Smoothie,PFM000023,Popcorn/Toffee Topping,46.4,g,0.018,0.8352
+PR000075,Kyoto Matcha Smoothie,GS07442,Thick Straw (PLA),1,pc,0.04,0.04
+PR000075,Kyoto Matcha Smoothie,GS07444,16oz Iced Cup Dome Lid,1,pc,0.05,0.05
+PR000075,Kyoto Matcha Smoothie,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000070,Iced Matcha Coconut Water,PFM000020,Kyoto Matcha Pre-mix,60,g,0.012,0.72
+PR000070,Iced Matcha Coconut Water,GS07494,DVG Cane Sugar Syrup,15,ml,0.011,0.165
+PR000070,Iced Matcha Coconut Water,GS07510,Coconut Water,330,ml,0.003,0.99
+PR000070,Iced Matcha Coconut Water,GS07437,Straw,1,pc,0.02,0.02
+PR000070,Iced Matcha Coconut Water,GS07438,16oz Iced Cup Flat Lid,1,pc,0.04,0.04
+PR000070,Iced Matcha Coconut Water,GS07440,24oz Iced Cup,1,pc,0.12,0.12
+PR000078,Double Chocolate Muffin,GS08251,Double Chocolate Muffin,1,pc,1.5,1.5
+PR000078,Double Chocolate Muffin,GS07447,Paper Bag,1,pc,0.06,0.06
+PR000026,Hot Chocolate,GS07566,Tuscan Whole Milk,322.5,ml,0.0012,0.387
+PR000026,Hot Chocolate,PFM000005,Velvet/Thick Milk Base,64,g,0.006,0.384
+PR000026,Hot Chocolate,GS07494,DVG Cane Sugar Syrup,7.5,ml,0.011,0.0825
+PR000026,Hot Chocolate,GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000026,Hot Chocolate,GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000079,Chocolate Chip Cookies,GS08253,Chocolate Chip Cookies,1,pc,1.0,1.0
+PR000079,Chocolate Chip Cookies,GS07447,Paper Bag,1,pc,0.06,0.06
+PR000068,Zen Berry,PFM000019,Juice Additive,30,ml,0.008,0.24
+PR000068,Zen Berry,GS07965,Mulberry Purple Cabbage Juice,180,ml,0.005,0.9
+PR000068,Zen Berry,PFM000014,Fruit/Veg Juice Concentrate,60,ml,0.008,0.48
+PR000068,Zen Berry,GS07494,DVG Cane Sugar Syrup,7.5,ml,0.011,0.0825
+PR000068,Zen Berry,GS07442,Thick Straw (PLA),1,pc,0.04,0.04
+PR000068,Zen Berry,GS08037,PET Bottle (Universal),1,pc,0.15,0.15
+PR000069,Sunny Citrus,GS07966,Orange Carrot Juice,180,ml,0.005,0.9
+PR000069,Sunny Citrus,PFM000014,Fruit/Veg Juice Concentrate,60,ml,0.008,0.48
+PR000069,Sunny Citrus,GS07494,DVG Cane Sugar Syrup,7.5,ml,0.011,0.0825
+PR000069,Sunny Citrus,GS07442,Thick Straw (PLA),1,pc,0.04,0.04
+PR000069,Sunny Citrus,GS08037,PET Bottle (Universal),1,pc,0.15,0.15
+PR000110,Iced Pistachio Oat Latte,GS07465,Medium Roast Espresso,14,g,0.02,0.28
+PR000110,Iced Pistachio Oat Latte,GS07491,DVG Hazelnut Syrup,15,ml,0.013,0.195
+PR000110,Iced Pistachio Oat Latte,PFM000029,Pistachio Cream/Paste,111.5,g,0.012,1.338
+PR000110,Iced Pistachio Oat Latte,GS07437,Straw,1,pc,0.02,0.02
+PR000110,Iced Pistachio Oat Latte,GS07448,16oz Iced Cup Sipper Lid,1,pc,0.04,0.04
+PR000110,Iced Pistachio Oat Latte,GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000017,Iced Latte (Flat White variant),GS07466,Dark Roast Espresso,14,g,0.02,0.28
+PR000017,Iced Latte (Flat White variant),GS07571,Tuscan 2% Reduced Fat Milk,210,ml,0.0012,0.252
+PR000017,Iced Latte (Flat White variant),GS07437,Straw,1,pc,0.02,0.02
+PR000017,Iced Latte (Flat White variant),GS07438,16oz Iced Cup Flat Lid,1,pc,0.04,0.04
+PR000017,Iced Latte (Flat White variant),GS07451,16oz Iced Cup,1,pc,0.08,0.08
+PR000111,Pistachio Oat Latte (Hot),GS07465,Medium Roast Espresso,14,g,0.02,0.28
+PR000111,Pistachio Oat Latte (Hot),GS07491,DVG Hazelnut Syrup,22.5,ml,0.013,0.2925
+PR000111,Pistachio Oat Latte (Hot),PFM000029,Pistachio Cream/Paste,111.5,g,0.012,1.338
+PR000111,Pistachio Oat Latte (Hot),GS07565,Oatly Oat Milk,307.5,ml,0.005,1.5375
+PR000111,Pistachio Oat Latte (Hot),GS07441,16oz Hot Cup,1,pc,0.08,0.08
+PR000111,Pistachio Oat Latte (Hot),GS07443,16oz Hot Cup Lid,1,pc,0.04,0.04
+PR000020,Iced Flat White,GS07466,Dark Roast Espresso,21,g,0.02,0.42
+PR000020,Iced Flat White,GS07566,Tuscan Whole Milk,208,ml,0.0012,0.2496
+PR000020,Iced Flat White,GS07437,Straw,1,pc,0.02,0.02
+PR000020,Iced Flat White,GS07438,16oz Iced Cup Flat Lid,1,pc,0.04,0.04
+PR000020,Iced Flat White,GS07451,16oz Iced Cup,1,pc,0.08,0.08

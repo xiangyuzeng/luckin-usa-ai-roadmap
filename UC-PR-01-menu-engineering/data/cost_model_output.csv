@@ -1,0 +1,59 @@
+spu_code,product_name,category,size,cogs,avg_list_price,avg_paid_price,cm_dollar,cm_pct,cogs_pct,discount_depth,qty_sold,sales_mix_pct,total_revenue,total_cm,classification,ingredient_count
+PR000021,Iced Coconut Latte,beverage_iced,16oz,1.27,6.47,3.28,2.01,61.3,38.7,49.3,70044,12.5,229547,140788.44,Star,5
+PR000005,Drip Coffee,beverage_hot,16oz,0.44,3.45,2.46,2.02,82.1,17.9,28.7,40813,7.29,100318,82442.26,Star,3
+PR000071,Iced Kyoto Matcha Latte,beverage_iced,16oz,1.92,6.47,3.47,1.55,44.7,55.3,46.4,37263,6.65,129208,57757.65,Plow Horse,5
+PR000016,Latte (Hot),beverage_hot,16oz,0.82,5.76,3.26,2.44,74.8,25.2,43.4,28483,5.08,92968,69498.52,Star,4
+PR000023,Iced Velvet Latte,beverage_iced,16oz,1.29,6.49,3.52,2.23,63.4,36.6,45.8,25526,4.56,89764,56922.98,Star,6
+PR000015,Iced Latte,beverage_iced,16oz,0.67,5.78,3.43,2.76,80.5,19.5,40.7,23546,4.2,80866,64986.96,Star,5
+PR000031,Cold Brew,beverage_iced,16oz,1.58,4.96,3.13,1.55,49.5,50.5,36.9,19431,3.47,60863,30118.05,Plow Horse,4
+PR000022,Coconut Latte (Hot),beverage_hot,16oz,1.8,6.46,3.3,1.5,45.5,54.5,48.9,18738,3.34,61826,28107.0,Plow Horse,4
+PR000073,Iced Kyoto Matcha Coconut Latte,beverage_iced,16oz,2.12,6.78,3.54,1.42,40.1,59.9,47.8,18208,3.25,64433,25855.36,Plow Horse,6
+PR000072,Kyoto Matcha Latte (Hot),beverage_hot,16oz,1.43,6.45,3.38,1.95,57.7,42.3,47.6,14892,2.66,50321,29039.4,Star,5
+PR000080,Iced Caramel Popcorn Latte,beverage_iced,16oz,1.48,6.79,3.71,2.23,60.1,39.9,45.4,13682,2.44,50807,30510.86,Star,7
+PR000063,Sausage Egg Cheese Croissant,food,piece,2.56,5.72,4.98,2.42,48.6,51.4,12.9,11790,2.1,58718,28531.8,Plow Horse,2
+PR000018,Cappuccino (Hot),beverage_hot,16oz,0.72,5.75,3.34,2.62,78.4,21.6,41.9,10779,1.92,36040,28240.98,Star,4
+PR000024,Velvet Latte (Hot),beverage_hot,16oz,1.42,6.48,3.59,2.17,60.4,39.6,44.6,10714,1.91,38503,23249.38,Star,5
+PR000014,Americano (Hot),beverage_hot,16oz,0.57,4.46,2.84,2.27,79.9,20.1,36.3,10612,1.89,30180,24089.24,Star,4
+PR000006,Iced Americano,beverage_iced,16oz,0.59,4.47,2.91,2.32,79.7,20.3,34.9,10233,1.83,29828,23740.56,Star,5
+PR000033,Pineapple Cold Brew,beverage_iced,16oz,2.14,6.25,3.11,0.97,31.2,68.8,50.2,10027,1.79,31186,9726.19,Plow Horse,6
+PR000039,Vital Kale,beverage_iced,bottle,1.65,7.97,3.53,1.88,53.3,46.7,55.7,9865,1.76,34813,18546.2,Star,5
+PR000087,Spanish Latte (Hot),beverage_hot,16oz,1.32,6.76,3.47,2.15,62.0,38.0,48.7,8985,1.6,31191,19317.75,Star,6
+PR000091,Toffee Hazelnut Latte (Hot),beverage_hot,16oz,1.28,6.96,3.36,2.08,61.9,38.1,51.7,8714,1.56,29279,18125.12,Star,6
+PR000043,Mango Coconut Sunrise,beverage_iced,16oz,1.77,6.25,3.09,1.32,42.7,57.3,50.6,8412,1.5,25960,11103.84,Plow Horse,8
+PR000074,Kyoto Matcha Coconut Latte (Hot),beverage_hot,20oz,2.42,6.78,3.42,1.0,29.2,70.8,49.6,7860,1.4,26881,7860.0,Plow Horse,4
+PR000090,Iced Toffee Hazelnut Latte,beverage_iced,16oz,1.69,6.96,3.39,1.7,50.1,49.9,51.3,7604,1.36,25786,12926.8,Plow Horse,7
+PR000027,Iced Matcha Latte,beverage_iced,16oz,1.49,6.45,3.12,1.63,52.2,47.8,51.6,6941,1.24,21666,11313.83,Plow Horse,7
+PR000030,Iced Matcha Coconut Latte,beverage_iced,16oz,2.11,6.45,3.17,1.06,33.4,66.6,50.9,6756,1.21,21431,7161.36,Plow Horse,5
+PR000108,Iced Pistachio Matcha Coconut Latte,beverage_iced,16oz,1.85,6.76,3.42,1.57,45.9,54.1,49.4,6350,1.13,21717,9969.5,Dog,6
+PR000086,Iced Spanish Latte,beverage_iced,16oz,0.93,6.76,3.42,2.49,72.8,27.2,49.4,6238,1.11,21326,15532.62,Puzzle,6
+PR000088,Iced Creme Brulee Latte,beverage_iced,16oz,1.89,6.96,3.48,1.59,45.7,54.3,50.0,5987,1.07,20838,9519.33,Dog,7
+PR000081,Caramel Popcorn Latte (Hot),beverage_hot,16oz,1.52,6.79,3.68,2.16,58.7,41.3,45.8,5641,1.01,20759,12184.56,Puzzle,6
+PR000089,Creme Brulee Latte (Hot),beverage_hot,16oz,1.54,6.96,3.41,1.87,54.8,45.2,51.0,5502,0.98,18771,10288.74,Puzzle,7
+PR000032,Blood Orange Cold Brew,beverage_iced,16oz,2.8,6.25,3.08,0.28,9.1,90.9,50.7,5436,0.97,16737,1522.08,Dog,5
+PR000034,Raspberry Cold Brew,beverage_iced,16oz,2.78,6.25,3.06,0.28,9.2,90.8,51.0,5153,0.92,15760,1442.84,Dog,6
+PR000109,Pistachio Matcha Coconut Latte (Hot),beverage_hot,16oz,3.37,6.76,3.38,0.01,0.3,99.7,50.0,4892,0.87,16530,48.92,Dog,6
+PR000041,Strawberry Refresher,beverage_iced,16oz,1.98,6.25,3.15,1.17,37.1,62.9,49.6,4756,0.85,14985,5564.52,Dog,7
+PR000076,Almond Croissant,food,piece,1.86,4.95,4.32,2.46,56.9,43.1,12.7,4532,0.81,19578,11148.72,Puzzle,2
+PR000042,Pineapple Refresher,beverage_iced,16oz,1.66,6.25,3.12,1.46,46.8,53.2,50.1,4298,0.77,13402,6275.08,Dog,6
+PR000036,Green Cold Brew,beverage_iced,16oz,2.3,5.47,3.18,0.88,27.7,72.3,41.9,4156,0.74,13206,3657.28,Dog,5
+PR000077,Chocolate Croissant,food,piece,1.66,4.95,4.28,2.62,61.2,38.8,13.5,3987,0.71,17064,10445.94,Puzzle,2
+PR000045,Iced Coconut Velvet Latte,beverage_iced,16oz,1.4,6.49,3.48,2.08,59.8,40.2,46.4,3876,0.69,13488,8062.08,Puzzle,6
+PR000083,Iced Pumpkin Spice Latte,beverage_iced,16oz,0.87,6.76,3.35,2.48,74.0,26.0,50.4,3654,0.65,12247,9061.92,Puzzle,7
+PR000051,Dreamy Strawberry,beverage_iced,16oz,1.83,6.47,3.22,1.39,43.2,56.8,50.2,3521,0.63,11327,4894.19,Dog,8
+PR000084,Pumpkin Spice Latte (Hot),beverage_hot,16oz,1.03,6.76,3.38,2.35,69.5,30.5,50.0,3412,0.61,11535,8018.2,Puzzle,7
+PR000044,Grapefruit Mango Drink,beverage_iced,16oz,2.11,6.25,3.08,0.97,31.5,68.5,50.7,3287,0.59,10124,3188.39,Dog,7
+PR000047,Coconut Velvet Latte (Hot),beverage_hot,16oz,1.94,6.49,3.52,1.58,44.9,55.1,45.8,3198,0.57,11257,5052.84,Dog,5
+PR000025,Iced Chocolate,beverage_iced,16oz,0.43,5.97,3.18,2.75,86.5,13.5,46.7,3156,0.56,10026,8679.0,Puzzle,7
+PR000050,Mango Pomelo Sago,beverage_iced,16oz,0.8,6.47,3.15,2.35,74.6,25.4,51.3,3089,0.55,9730,7259.15,Puzzle,8
+PR000048,Smoothie,beverage_iced,16oz,0.57,6.47,3.25,2.68,82.5,17.5,49.8,2876,0.51,9347,7707.68,Puzzle,6
+PR000075,Kyoto Matcha Smoothie,beverage_iced,16oz,3.21,6.78,3.48,0.27,7.8,92.2,48.7,2654,0.47,9236,716.58,Dog,7
+PR000070,Iced Matcha Coconut Water,beverage_iced,24oz,2.06,6.47,3.22,1.16,36.0,64.0,50.2,2543,0.45,8189,2949.88,Dog,6
+PR000078,Double Chocolate Muffin,food,piece,1.56,3.95,3.45,1.89,54.8,45.2,12.7,2432,0.43,8390,4596.48,Puzzle,2
+PR000026,Hot Chocolate,beverage_hot,16oz,0.97,5.97,3.22,2.25,69.9,30.1,46.1,2398,0.43,7721,5395.5,Puzzle,5
+PR000079,Chocolate Chip Cookies,food,piece,1.06,3.45,2.98,1.92,64.4,35.6,13.6,2187,0.39,6517,4199.04,Puzzle,2
+PR000068,Zen Berry,beverage_iced,bottle,1.89,7.97,3.48,1.59,45.7,54.3,56.3,2134,0.38,7426,3393.06,Dog,6
+PR000069,Sunny Citrus,beverage_iced,bottle,1.65,7.97,3.45,1.8,52.2,47.8,56.7,1987,0.35,6855,3576.6,Dog,5
+PR000110,Iced Pistachio Oat Latte,beverage_iced,16oz,1.95,7.46,3.52,1.57,44.6,55.4,52.8,1876,0.33,6603,2945.32,Dog,6
+PR000017,Iced Latte (Flat White variant),beverage_iced,16oz,0.67,5.78,3.38,2.71,80.2,19.8,41.5,1823,0.33,6162,4940.33,Puzzle,5
+PR000111,Pistachio Oat Latte (Hot),beverage_hot,16oz,3.57,7.46,3.48,-0.09,-2.6,102.6,53.4,1654,0.3,5756,-148.86,Dog,6
+PR000020,Iced Flat White,beverage_iced,16oz,0.81,5.97,3.45,2.64,76.5,23.5,42.2,1611,0.29,5558,4253.04,Puzzle,5

@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UC-PR-01 Menu Engineering Dashboard — Luckin Coffee USA</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --star: #e74c3c; --plow: #3498db; --puzzle: #f39c12; --dog: #95a5a6;
+  --uncosted: #bdc3c7; --bg: #f8f9fa; --card: #fff; --text: #2c3e50;
+  --border: #dee2e6; --accent: #2980b9; --green: #27ae60; --red: #c0392b;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:var(--bg); color:var(--text); font-size:14px; }
+.header { background:linear-gradient(135deg,#1a1a2e,#16213e); color:#fff; padding:20px 30px; display:flex; justify-content:space-between; align-items:center; }
+.header h1 { font-size:20px; font-weight:600; }
+.header .subtitle { opacity:0.7; font-size:12px; margin-top:4px; }
+.header .badge { background:var(--green); padding:4px 12px; border-radius:12px; font-size:11px; }
+.tabs { display:flex; gap:2px; background:#e9ecef; padding:4px; margin:0 20px; border-radius:8px; margin-top:-16px; position:relative; z-index:1; }
+.tab { padding:10px 18px; border:none; background:transparent; cursor:pointer; border-radius:6px; font-size:13px; font-weight:500; color:#666; transition:all 0.2s; }
+.tab.active { background:var(--card); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+.tab:hover:not(.active) { color:var(--text); }
+.content { padding:20px; display:none; }
+.content.active { display:block; }
+.grid { display:grid; gap:16px; }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.card { background:var(--card); border-radius:10px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+.card h3 { font-size:13px; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; }
+.kpi { font-size:28px; font-weight:700; }
+.kpi-sub { font-size:12px; color:#888; margin-top:4px; }
+.legend-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { background:#f1f3f5; padding:10px 12px; text-align:left; font-weight:600; border-bottom:2px solid var(--border); cursor:pointer; white-space:nowrap; }
+th:hover { background:#e9ecef; }
+td { padding:8px 12px; border-bottom:1px solid #f1f3f5; }
+tr:hover td { background:#f8f9fa; }
+.cls-badge { display:inline-block; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:600; color:#fff; }
+.cls-Star { background:var(--star); } .cls-Plow { background:var(--plow); }
+.cls-Puzzle { background:var(--puzzle); } .cls-Dog { background:var(--dog); }
+.cls-Uncosted { background:var(--uncosted); color:#555; }
+.dir-Growing { color:var(--green); font-weight:600; }
+.dir-Stable { color:var(--puzzle); font-weight:600; }
+.dir-Declining { color:var(--red); font-weight:600; }
+.search-box { padding:8px 14px; border:1px solid var(--border); border-radius:6px; width:300px; font-size:13px; }
+.filter-bar { display:flex; gap:10px; margin-bottom:16px; align-items:center; flex-wrap:wrap; }
+.filter-btn { padding:5px 14px; border:1px solid var(--border); border-radius:16px; background:var(--card); cursor:pointer; font-size:12px; transition:all 0.15s; }
+.filter-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+.chart-wrap { position:relative; height:400px; }
+.chart-wrap-sm { position:relative; height:300px; }
+select { padding:6px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:var(--card); }
+.insight-card { border-left:4px solid; padding:12px 16px; margin-bottom:10px; border-radius:0 8px 8px 0; background:#fff; }
+.insight-card.watch { border-color:var(--red); }
+.insight-card.promote { border-color:var(--green); }
+.insight-card.bundle { border-color:var(--accent); }
+.insight-title { font-weight:600; font-size:14px; margin-bottom:4px; }
+.insight-detail { font-size:12px; color:#666; }
+.scroll-table { max-height:500px; overflow-y:auto; }
+@media (max-width:900px) { .grid-4,.grid-3 { grid-template-columns:repeat(2,1fr); } }
+@media (max-width:600px) { .grid-4,.grid-3,.grid-2 { grid-template-columns:1fr; } .tabs { flex-wrap:wrap; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Menu Engineering Dashboard</h1>
+    <div class="subtitle">UC-PR-01 | Luckin Coffee USA | BCG/Kasavana-Smith Matrix Analysis</div>
+  </div>
+  <div>
+    <span class="badge">Phase 6 — Interactive</span>
+  </div>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" onclick="showTab('overview')">Overview</button>
+  <button class="tab" onclick="showTab('bcg')">BCG Matrix</button>
+  <button class="tab" onclick="showTab('explorer')">Product Explorer</button>
+  <button class="tab" onclick="showTab('trends')">Trends</button>
+  <button class="tab" onclick="showTab('affinity')">Affinity</button>
+  <button class="tab" onclick="showTab('actions')">Strategic Actions</button>
+</div>
+
+<!-- ==================== OVERVIEW TAB ==================== -->
+<div class="content active" id="tab-overview">
+  <div class="grid grid-4" style="margin-bottom:16px">
+    <div class="card"><h3>Total Revenue</h3><div class="kpi">$1.86M</div><div class="kpi-sub">560,214 units sold</div></div>
+    <div class="card"><h3>Avg CM%</h3><div class="kpi">56.8%</div><div class="kpi-sub">Revenue-weighted average</div></div>
+    <div class="card"><h3>Avg Discount</h3><div class="kpi">48.0%</div><div class="kpi-sub">Heavy promotional pricing</div></div>
+    <div class="card"><h3>Order Growth</h3><div class="kpi" style="color:var(--green)">+18.0%</div><div class="kpi-sub">CMGR Jun '25 — Jan '26</div></div>
+  </div>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Classification Distribution</h3>
+      <div class="chart-wrap-sm"><canvas id="chartClassDist"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Revenue by Classification</h3>
+      <div class="chart-wrap-sm"><canvas id="chartRevClass"></canvas></div>
+    </div>
+  </div>
+  <div class="grid grid-2" style="margin-top:16px">
+    <div class="card">
+      <h3>Trend Direction Summary (66 Analyzed SPUs)</h3>
+      <div class="chart-wrap-sm"><canvas id="chartTrendDir"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Trend x Classification</h3>
+      <div class="chart-wrap-sm"><canvas id="chartTrendClass"></canvas></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>Monthly Order Volume</h3>
+    <div class="chart-wrap"><canvas id="chartMonthlyOrders"></canvas></div>
+  </div>
+</div>
+
+<!-- ==================== BCG MATRIX TAB ==================== -->
+<div class="content" id="tab-bcg">
+  <div class="card">
+    <h3>Interactive BCG Matrix — Sales Mix % vs Contribution Margin %</h3>
+    <div class="filter-bar">
+      <span style="font-size:12px;color:#888;">Category:</span>
+      <button class="filter-btn active" data-cat="all" onclick="filterBCG('all',this)">All</button>
+      <button class="filter-btn" data-cat="beverage_hot" onclick="filterBCG('beverage_hot',this)">Hot Beverages</button>
+      <button class="filter-btn" data-cat="beverage_iced" onclick="filterBCG('beverage_iced',this)">Iced Beverages</button>
+      <button class="filter-btn" data-cat="food" onclick="filterBCG('food',this)">Food</button>
+    </div>
+    <div class="chart-wrap" style="height:500px"><canvas id="chartBCG"></canvas></div>
+    <div style="margin-top:12px;display:flex;gap:20px;font-size:12px;color:#888;justify-content:center;">
+      <span><span class="legend-dot" style="background:var(--star)"></span>Star (High Pop + High CM)</span>
+      <span><span class="legend-dot" style="background:var(--plow)"></span>Plow Horse (High Pop + Low CM)</span>
+      <span><span class="legend-dot" style="background:var(--puzzle)"></span>Puzzle (Low Pop + High CM)</span>
+      <span><span class="legend-dot" style="background:var(--dog)"></span>Dog (Low Pop + Low CM)</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PRODUCT EXPLORER TAB ==================== -->
+<div class="content" id="tab-explorer">
+  <div class="card">
+    <div class="filter-bar">
+      <input type="text" class="search-box" placeholder="Search products..." id="searchInput" oninput="filterTable()">
+      <button class="filter-btn active" data-cls="all" onclick="filterCls('all',this)">All (83)</button>
+      <button class="filter-btn" data-cls="Star" onclick="filterCls('Star',this)"><span class="legend-dot" style="background:var(--star)"></span>Stars (14)</button>
+      <button class="filter-btn" data-cls="Plow Horse" onclick="filterCls('Plow Horse',this)"><span class="legend-dot" style="background:var(--plow)"></span>Plow (11)</button>
+      <button class="filter-btn" data-cls="Puzzle" onclick="filterCls('Puzzle',this)"><span class="legend-dot" style="background:var(--puzzle)"></span>Puzzles (16)</button>
+      <button class="filter-btn" data-cls="Dog" onclick="filterCls('Dog',this)"><span class="legend-dot" style="background:var(--dog)"></span>Dogs (17)</button>
+      <button class="filter-btn" data-cls="Uncosted" onclick="filterCls('Uncosted',this)"><span class="legend-dot" style="background:var(--uncosted)"></span>Uncosted (25)</button>
+    </div>
+    <div class="scroll-table">
+      <table id="productTable">
+        <thead><tr>
+          <th onclick="sortTable(0)">Product</th>
+          <th onclick="sortTable(1)">Category</th>
+          <th onclick="sortTable(2)">Class</th>
+          <th onclick="sortTable(3)">Qty Sold</th>
+          <th onclick="sortTable(4)">Revenue</th>
+          <th onclick="sortTable(5)">CM%</th>
+          <th onclick="sortTable(6)">Mix%</th>
+          <th onclick="sortTable(7)">Direction</th>
+          <th onclick="sortTable(8)">Trend%/mo</th>
+          <th onclick="sortTable(9)">Momentum</th>
+        </tr></thead>
+        <tbody id="productBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TRENDS TAB ==================== -->
+<div class="content" id="tab-trends">
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Monthly Sales — Select Product</h3>
+      <select id="trendSelect" onchange="drawTrendChart()" style="margin-bottom:12px;width:100%"></select>
+      <div class="chart-wrap"><canvas id="chartTrend"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Market Share Trend — Top 10 by Volume</h3>
+      <div class="chart-wrap"><canvas id="chartShareTrend"></canvas></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>Weekly Momentum: Recent 4wk vs Prior 4wk Market Share</h3>
+    <div class="chart-wrap"><canvas id="chartMomentum"></canvas></div>
+  </div>
+</div>
+
+<!-- ==================== AFFINITY TAB ==================== -->
+<div class="content" id="tab-affinity">
+  <div class="grid grid-4" style="margin-bottom:16px">
+    <div class="card"><h3>Orders Analyzed</h3><div class="kpi">501K</div><div class="kpi-sub">94,313 multi-item (18.8%)</div></div>
+    <div class="card"><h3>Avg Basket Size</h3><div class="kpi">1.26</div><div class="kpi-sub">Significant upsell opportunity</div></div>
+    <div class="card"><h3>Pairs with Lift >1</h3><div class="kpi">29</div><div class="kpi-sub">of 98 unique pairs</div></div>
+    <div class="card"><h3>Cross-Category Pairs</h3><div class="kpi">46</div><div class="kpi-sub">Beverage x Food combos</div></div>
+  </div>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Top 15 Pairs by Lift</h3>
+      <div class="chart-wrap"><canvas id="chartLift"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Top 15 Cross-Category Pairs (Bev x Food)</h3>
+      <div class="chart-wrap"><canvas id="chartCrossCat"></canvas></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>All Affinity Pairs (sorted by Lift)</h3>
+    <div class="scroll-table">
+      <table>
+        <thead><tr><th>Item A</th><th>Item B</th><th>Co-occur</th><th>Lift</th><th>Combined CM$</th><th>Cross-Cat</th></tr></thead>
+        <tbody id="affinityBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== STRATEGIC ACTIONS TAB ==================== -->
+<div class="content" id="tab-actions">
+  <div class="grid grid-2">
+    <div class="card">
+      <h3 style="color:var(--red)">Watch List — Declining Stars</h3>
+      <div id="watchList"></div>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--green)">Promotion Candidates — Growing Puzzles</h3>
+      <div id="promoteList"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3 style="color:var(--accent)">Bundle Recommendations (Lift > 1.5)</h3>
+    <div class="grid grid-3" id="bundleList"></div>
+  </div>
+  <div class="grid grid-2" style="margin-top:16px">
+    <div class="card">
+      <h3>Seasonal Products — High Volatility</h3>
+      <div id="volatileList"></div>
+    </div>
+    <div class="card">
+      <h3>Emerging — Growing Dogs</h3>
+      <div id="emergingList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== DATA ====================
+const products = [
+  {spu:"PR000021",name:"Iced Coconut Latte",cat:"beverage_iced",cls:"Star",cogs:1.27,avgPaid:3.28,cm:2.01,cmPct:61.3,disc:49.3,qty:70044,mix:12.5,rev:229547,totalCm:140788.44},
+  {spu:"PR000005",name:"Drip Coffee",cat:"beverage_hot",cls:"Star",cogs:0.44,avgPaid:2.46,cm:2.02,cmPct:82.1,disc:28.7,qty:40813,mix:7.29,rev:100318,totalCm:82442.26},
+  {spu:"PR000071",name:"Iced Kyoto Matcha Latte",cat:"beverage_iced",cls:"Plow Horse",cogs:1.92,avgPaid:3.47,cm:1.55,cmPct:44.7,disc:46.4,qty:37263,mix:6.65,rev:129208,totalCm:57757.65},
+  {spu:"PR000016",name:"Latte (Hot)",cat:"beverage_hot",cls:"Star",cogs:0.82,avgPaid:3.26,cm:2.44,cmPct:74.8,disc:43.4,qty:28483,mix:5.08,rev:92968,totalCm:69498.52},
+  {spu:"PR000023",name:"Iced Velvet Latte",cat:"beverage_iced",cls:"Star",cogs:1.29,avgPaid:3.52,cm:2.23,cmPct:63.4,disc:45.8,qty:25526,mix:4.56,rev:89764,totalCm:56922.98},
+  {spu:"PR000015",name:"Iced Latte",cat:"beverage_iced",cls:"Star",cogs:0.67,avgPaid:3.43,cm:2.76,cmPct:80.5,disc:40.7,qty:23546,mix:4.2,rev:80866,totalCm:64986.96},
+  {spu:"PR000031",name:"Cold Brew",cat:"beverage_iced",cls:"Plow Horse",cogs:1.58,avgPaid:3.13,cm:1.55,cmPct:49.5,disc:36.9,qty:19431,mix:3.47,rev:60863,totalCm:30118.05},
+  {spu:"PR000022",name:"Coconut Latte (Hot)",cat:"beverage_hot",cls:"Plow Horse",cogs:1.8,avgPaid:3.3,cm:1.5,cmPct:45.5,disc:48.9,qty:18738,mix:3.34,rev:61826,totalCm:28107},
+  {spu:"PR000073",name:"Iced Kyoto Matcha Coconut",cat:"beverage_iced",cls:"Plow Horse",cogs:2.12,avgPaid:3.54,cm:1.42,cmPct:40.1,disc:47.8,qty:18208,mix:3.25,rev:64433,totalCm:25855.36},
+  {spu:"PR000072",name:"Kyoto Matcha Latte (Hot)",cat:"beverage_hot",cls:"Star",cogs:1.43,avgPaid:3.38,cm:1.95,cmPct:57.7,disc:47.6,qty:14892,mix:2.66,rev:50321,totalCm:29039.4},
+  {spu:"PR000080",name:"Iced Caramel Popcorn Latte",cat:"beverage_iced",cls:"Star",cogs:1.48,avgPaid:3.71,cm:2.23,cmPct:60.1,disc:45.4,qty:13682,mix:2.44,rev:50807,totalCm:30510.86},
+  {spu:"PR000063",name:"Sausage Egg Cheese Croissant",cat:"food",cls:"Plow Horse",cogs:2.56,avgPaid:4.98,cm:2.42,cmPct:48.6,disc:12.9,qty:11790,mix:2.1,rev:58718,totalCm:28531.8},
+  {spu:"PR000018",name:"Cappuccino (Hot)",cat:"beverage_hot",cls:"Star",cogs:0.72,avgPaid:3.34,cm:2.62,cmPct:78.4,disc:41.9,qty:10779,mix:1.92,rev:36040,totalCm:28240.98},
+  {spu:"PR000024",name:"Velvet Latte (Hot)",cat:"beverage_hot",cls:"Star",cogs:1.42,avgPaid:3.59,cm:2.17,cmPct:60.4,disc:44.6,qty:10714,mix:1.91,rev:38503,totalCm:23249.38},
+  {spu:"PR000014",name:"Americano (Hot)",cat:"beverage_hot",cls:"Star",cogs:0.57,avgPaid:2.84,cm:2.27,cmPct:79.9,disc:36.3,qty:10612,mix:1.89,rev:30180,totalCm:24089.24},
+  {spu:"PR000006",name:"Iced Americano",cat:"beverage_iced",cls:"Star",cogs:0.59,avgPaid:2.91,cm:2.32,cmPct:79.7,disc:34.9,qty:10233,mix:1.83,rev:29828,totalCm:23740.56},
+  {spu:"PR000033",name:"Pineapple Cold Brew",cat:"beverage_iced",cls:"Plow Horse",cogs:2.14,avgPaid:3.11,cm:0.97,cmPct:31.2,disc:50.2,qty:10027,mix:1.79,rev:31186,totalCm:9726.19},
+  {spu:"PR000039",name:"Vital Kale",cat:"beverage_iced",cls:"Star",cogs:1.65,avgPaid:3.53,cm:1.88,cmPct:53.3,disc:55.7,qty:9865,mix:1.76,rev:34813,totalCm:18546.2},
+  {spu:"PR000087",name:"Spanish Latte (Hot)",cat:"beverage_hot",cls:"Star",cogs:1.32,avgPaid:3.47,cm:2.15,cmPct:62,disc:48.7,qty:8985,mix:1.6,rev:31191,totalCm:19317.75},
+  {spu:"PR000091",name:"Toffee Hazelnut Latte (Hot)",cat:"beverage_hot",cls:"Star",cogs:1.28,avgPaid:3.36,cm:2.08,cmPct:61.9,disc:51.7,qty:8714,mix:1.56,rev:29279,totalCm:18125.12},
+  {spu:"PR000043",name:"Mango Coconut Sunrise",cat:"beverage_iced",cls:"Plow Horse",cogs:1.77,avgPaid:3.09,cm:1.32,cmPct:42.7,disc:50.6,qty:8412,mix:1.5,rev:25960,totalCm:11103.84},
+  {spu:"PR000074",name:"Kyoto Matcha Coconut (Hot)",cat:"beverage_hot",cls:"Plow Horse",cogs:2.42,avgPaid:3.42,cm:1,cmPct:29.2,disc:49.6,qty:7860,mix:1.4,rev:26881,totalCm:7860},
+  {spu:"PR000090",name:"Iced Toffee Hazelnut Latte",cat:"beverage_iced",cls:"Plow Horse",cogs:1.69,avgPaid:3.39,cm:1.7,cmPct:50.1,disc:51.3,qty:7604,mix:1.36,rev:25786,totalCm:12926.8},
+  {spu:"PR000027",name:"Iced Matcha Latte",cat:"beverage_iced",cls:"Plow Horse",cogs:1.49,avgPaid:3.12,cm:1.63,cmPct:52.2,disc:51.6,qty:6941,mix:1.24,rev:21666,totalCm:11313.83},
+  {spu:"PR000030",name:"Iced Matcha Coconut Latte",cat:"beverage_iced",cls:"Plow Horse",cogs:2.11,avgPaid:3.17,cm:1.06,cmPct:33.4,disc:50.9,qty:6756,mix:1.21,rev:21431,totalCm:7161.36},
+  {spu:"PR000108",name:"Iced Pistachio Matcha Coconut",cat:"beverage_iced",cls:"Dog",cogs:1.85,avgPaid:3.42,cm:1.57,cmPct:45.9,disc:49.4,qty:6350,mix:1.13,rev:21717,totalCm:9969.5},
+  {spu:"PR000086",name:"Iced Spanish Latte",cat:"beverage_iced",cls:"Puzzle",cogs:0.93,avgPaid:3.42,cm:2.49,cmPct:72.8,disc:49.4,qty:6238,mix:1.11,rev:21326,totalCm:15532.62},
+  {spu:"PR000088",name:"Iced Creme Brulee Latte",cat:"beverage_iced",cls:"Dog",cogs:1.89,avgPaid:3.48,cm:1.59,cmPct:45.7,disc:50,qty:5987,mix:1.07,rev:20838,totalCm:9519.33},
+  {spu:"PR000081",name:"Caramel Popcorn Latte (Hot)",cat:"beverage_hot",cls:"Puzzle",cogs:1.52,avgPaid:3.68,cm:2.16,cmPct:58.7,disc:45.8,qty:5641,mix:1.01,rev:20759,totalCm:12184.56},
+  {spu:"PR000089",name:"Creme Brulee Latte (Hot)",cat:"beverage_hot",cls:"Puzzle",cogs:1.54,avgPaid:3.41,cm:1.87,cmPct:54.8,disc:51,qty:5502,mix:0.98,rev:18771,totalCm:10288.74},
+  {spu:"PR000032",name:"Blood Orange Cold Brew",cat:"beverage_iced",cls:"Dog",cogs:2.8,avgPaid:3.08,cm:0.28,cmPct:9.1,disc:50.7,qty:5436,mix:0.97,rev:16737,totalCm:1522.08},
+  {spu:"PR000034",name:"Raspberry Cold Brew",cat:"beverage_iced",cls:"Dog",cogs:2.78,avgPaid:3.06,cm:0.28,cmPct:9.2,disc:51,qty:5153,mix:0.92,rev:15760,totalCm:1442.84},
+  {spu:"PR000109",name:"Pistachio Matcha Coconut (Hot)",cat:"beverage_hot",cls:"Dog",cogs:3.37,avgPaid:3.38,cm:0.01,cmPct:0.3,disc:50,qty:4892,mix:0.87,rev:16530,totalCm:48.92},
+  {spu:"PR000041",name:"Strawberry Refresher",cat:"beverage_iced",cls:"Dog",cogs:1.98,avgPaid:3.15,cm:1.17,cmPct:37.1,disc:49.6,qty:4756,mix:0.85,rev:14985,totalCm:5564.52},
+  {spu:"PR000076",name:"Almond Croissant",cat:"food",cls:"Puzzle",cogs:1.86,avgPaid:4.32,cm:2.46,cmPct:56.9,disc:12.7,qty:4532,mix:0.81,rev:19578,totalCm:11148.72},
+  {spu:"PR000042",name:"Pineapple Refresher",cat:"beverage_iced",cls:"Dog",cogs:1.66,avgPaid:3.12,cm:1.46,cmPct:46.8,disc:50.1,qty:4298,mix:0.77,rev:13402,totalCm:6275.08},
+  {spu:"PR000036",name:"Green Cold Brew",cat:"beverage_iced",cls:"Dog",cogs:2.3,avgPaid:3.18,cm:0.88,cmPct:27.7,disc:41.9,qty:4156,mix:0.74,rev:13206,totalCm:3657.28},
+  {spu:"PR000077",name:"Chocolate Croissant",cat:"food",cls:"Puzzle",cogs:1.66,avgPaid:4.28,cm:2.62,cmPct:61.2,disc:13.5,qty:3987,mix:0.71,rev:17064,totalCm:10445.94},
+  {spu:"PR000045",name:"Iced Coconut Velvet Latte",cat:"beverage_iced",cls:"Puzzle",cogs:1.4,avgPaid:3.48,cm:2.08,cmPct:59.8,disc:46.4,qty:3876,mix:0.69,rev:13488,totalCm:8062.08},
+  {spu:"PR000083",name:"Iced Pumpkin Spice Latte",cat:"beverage_iced",cls:"Puzzle",cogs:0.87,avgPaid:3.35,cm:2.48,cmPct:74,disc:50.4,qty:3654,mix:0.65,rev:12247,totalCm:9061.92},
+  {spu:"PR000051",name:"Dreamy Strawberry",cat:"beverage_iced",cls:"Dog",cogs:1.83,avgPaid:3.22,cm:1.39,cmPct:43.2,disc:50.2,qty:3521,mix:0.63,rev:11327,totalCm:4894.19},
+  {spu:"PR000084",name:"Pumpkin Spice Latte (Hot)",cat:"beverage_hot",cls:"Puzzle",cogs:1.03,avgPaid:3.38,cm:2.35,cmPct:69.5,disc:50,qty:3412,mix:0.61,rev:11535,totalCm:8018.2},
+  {spu:"PR000044",name:"Grapefruit Mango Drink",cat:"beverage_iced",cls:"Dog",cogs:2.11,avgPaid:3.08,cm:0.97,cmPct:31.5,disc:50.7,qty:3287,mix:0.59,rev:10124,totalCm:3188.39},
+  {spu:"PR000047",name:"Coconut Velvet Latte (Hot)",cat:"beverage_hot",cls:"Dog",cogs:1.94,avgPaid:3.52,cm:1.58,cmPct:44.9,disc:45.8,qty:3198,mix:0.57,rev:11257,totalCm:5052.84},
+  {spu:"PR000025",name:"Iced Chocolate",cat:"beverage_iced",cls:"Puzzle",cogs:0.43,avgPaid:3.18,cm:2.75,cmPct:86.5,disc:46.7,qty:3156,mix:0.56,rev:10026,totalCm:8679},
+  {spu:"PR000050",name:"Mango Pomelo Sago",cat:"beverage_iced",cls:"Puzzle",cogs:0.8,avgPaid:3.15,cm:2.35,cmPct:74.6,disc:51.3,qty:3089,mix:0.55,rev:9730,totalCm:7259.15},
+  {spu:"PR000048",name:"Smoothie",cat:"beverage_iced",cls:"Puzzle",cogs:0.57,avgPaid:3.25,cm:2.68,cmPct:82.5,disc:49.8,qty:2876,mix:0.51,rev:9347,totalCm:7707.68},
+  {spu:"PR000075",name:"Kyoto Matcha Smoothie",cat:"beverage_iced",cls:"Dog",cogs:3.21,avgPaid:3.48,cm:0.27,cmPct:7.8,disc:48.7,qty:2654,mix:0.47,rev:9236,totalCm:716.58},
+  {spu:"PR000070",name:"Iced Matcha Coconut Water",cat:"beverage_iced",cls:"Dog",cogs:2.06,avgPaid:3.22,cm:1.16,cmPct:36,disc:50.2,qty:2543,mix:0.45,rev:8189,totalCm:2949.88},
+  {spu:"PR000078",name:"Double Chocolate Muffin",cat:"food",cls:"Puzzle",cogs:1.56,avgPaid:3.45,cm:1.89,cmPct:54.8,disc:12.7,qty:2432,mix:0.43,rev:8390,totalCm:4596.48},
+  {spu:"PR000026",name:"Hot Chocolate",cat:"beverage_hot",cls:"Puzzle",cogs:0.97,avgPaid:3.22,cm:2.25,cmPct:69.9,disc:46.1,qty:2398,mix:0.43,rev:7721,totalCm:5395.5},
+  {spu:"PR000079",name:"Chocolate Chip Cookies",cat:"food",cls:"Puzzle",cogs:1.06,avgPaid:2.98,cm:1.92,cmPct:64.4,disc:13.6,qty:2187,mix:0.39,rev:6517,totalCm:4199.04},
+  {spu:"PR000068",name:"Zen Berry",cat:"beverage_iced",cls:"Dog",cogs:1.89,avgPaid:3.48,cm:1.59,cmPct:45.7,disc:56.3,qty:2134,mix:0.38,rev:7426,totalCm:3393.06},
+  {spu:"PR000069",name:"Sunny Citrus",cat:"beverage_iced",cls:"Dog",cogs:1.65,avgPaid:3.45,cm:1.8,cmPct:52.2,disc:56.7,qty:1987,mix:0.35,rev:6855,totalCm:3576.6},
+  {spu:"PR000110",name:"Iced Pistachio Oat Latte",cat:"beverage_iced",cls:"Dog",cogs:1.95,avgPaid:3.52,cm:1.57,cmPct:44.6,disc:52.8,qty:1876,mix:0.33,rev:6603,totalCm:2945.32},
+  {spu:"PR000017",name:"Iced Latte (Flat White)",cat:"beverage_iced",cls:"Puzzle",cogs:0.67,avgPaid:3.38,cm:2.71,cmPct:80.2,disc:41.5,qty:1823,mix:0.33,rev:6162,totalCm:4940.33},
+  {spu:"PR000111",name:"Pistachio Oat Latte (Hot)",cat:"beverage_hot",cls:"Dog",cogs:3.57,avgPaid:3.48,cm:-0.09,cmPct:-2.6,disc:53.4,qty:1654,mix:0.3,rev:5756,totalCm:-148.86},
+  {spu:"PR000020",name:"Iced Flat White",cat:"beverage_iced",cls:"Puzzle",cogs:0.81,avgPaid:3.45,cm:2.64,cmPct:76.5,disc:42.2,qty:1611,mix:0.29,rev:5558,totalCm:4253.04}
+];
+
+const trends = [
+  {spu:"PR000005",name:"Drip Coffee",cls:"Star",avgShare:13.097,trendPct:-52.3,r2:0.303,mom:43.4,cv:217.9,dir:"Declining"},
+  {spu:"PR000021",name:"Iced Coconut Latte",cls:"Star",avgShare:12.376,trendPct:-7.8,r2:0.103,mom:-25.7,cv:55.3,dir:"Declining"},
+  {spu:"PR000071",name:"Iced Kyoto Matcha Latte",cls:"Plow Horse",avgShare:7.014,trendPct:0.3,r2:0,mom:-26.2,cv:38,dir:"Stable"},
+  {spu:"PR000016",name:"Latte (Hot)",cls:"Star",avgShare:3.793,trendPct:28.4,r2:0.989,mom:42.4,cv:65.4,dir:"Growing"},
+  {spu:"PR000023",name:"Iced Velvet Latte",cls:"Star",avgShare:4.374,trendPct:-4.7,r2:0.046,mom:-23.9,cv:49.6,dir:"Stable"},
+  {spu:"PR000015",name:"Iced Latte",cls:"Star",avgShare:3.807,trendPct:0.7,r2:0.001,mom:-17.7,cv:45.4,dir:"Stable"},
+  {spu:"PR000080",name:"Iced Caramel Popcorn Latte",cls:"Star",avgShare:3.698,trendPct:-34.9,r2:0.762,mom:-48.5,cv:44.7,dir:"Declining"},
+  {spu:"PR000091",name:"Toffee Hazelnut Latte (Hot)",cls:"Star",avgShare:3.159,trendPct:-29.2,r2:0.675,mom:-51,cv:29.1,dir:"Declining"},
+  {spu:"PR000072",name:"Kyoto Matcha Latte (Hot)",cls:"Star",avgShare:2.572,trendPct:30.3,r2:0.876,mom:35.4,cv:55.3,dir:"Growing"},
+  {spu:"PR000087",name:"Spanish Latte (Hot)",cls:"Star",avgShare:2.341,trendPct:17.2,r2:0.283,mom:33.7,cv:36.2,dir:"Growing"},
+  {spu:"PR000039",name:"Vital Kale",cls:"Star",avgShare:1.744,trendPct:-8.2,r2:0.104,mom:7.1,cv:58,dir:"Declining"},
+  {spu:"PR000006",name:"Iced Americano",cls:"Star",avgShare:1.595,trendPct:4.1,r2:0.072,mom:-20.4,cv:35.3,dir:"Stable"},
+  {spu:"PR000018",name:"Cappuccino (Hot)",cls:"Star",avgShare:1.487,trendPct:25.5,r2:0.965,mom:37.4,cv:59.5,dir:"Growing"},
+  {spu:"PR000024",name:"Velvet Latte (Hot)",cls:"Star",avgShare:1.43,trendPct:30.1,r2:0.952,mom:48.7,cv:70.6,dir:"Growing"},
+  {spu:"PR000014",name:"Americano (Hot)",cls:"Star",avgShare:1.428,trendPct:28.4,r2:0.921,mom:44.4,cv:67.9,dir:"Growing"},
+  {spu:"PR000026",name:"Hot Chocolate",cls:"Puzzle",avgShare:0.781,trendPct:35.9,r2:0.761,mom:56.8,cv:94.2,dir:"Growing"},
+  {spu:"PR000081",name:"Caramel Popcorn Latte (Hot)",cls:"Puzzle",avgShare:1.495,trendPct:22.7,r2:0.394,mom:0.3,cv:51.1,dir:"Growing"},
+  {spu:"PR000089",name:"Creme Brulee Latte (Hot)",cls:"Puzzle",avgShare:2.166,trendPct:13.4,r2:0.157,mom:29.2,cv:37.9,dir:"Growing"},
+  {spu:"PR000076",name:"Almond Croissant",cls:"Puzzle",avgShare:0.867,trendPct:23.9,r2:0.773,mom:23.8,cv:46.4,dir:"Growing"},
+  {spu:"PR000077",name:"Chocolate Croissant",cls:"Puzzle",avgShare:0.906,trendPct:20.6,r2:0.608,mom:8.7,cv:45.1,dir:"Growing"},
+  {spu:"PR000079",name:"Chocolate Chip Cookies",cls:"Puzzle",avgShare:0.478,trendPct:25.6,r2:0.813,mom:30.6,cv:48.5,dir:"Growing"},
+  {spu:"PR000078",name:"Double Chocolate Muffin",cls:"Puzzle",avgShare:0.397,trendPct:19.3,r2:0.582,mom:2.2,cv:43.2,dir:"Growing"},
+  {spu:"PR000047",name:"Coconut Velvet Latte (Hot)",cls:"Dog",avgShare:0.482,trendPct:25,r2:0.943,mom:52,cv:58.9,dir:"Growing"},
+  {spu:"PR000063",name:"Sausage Egg Cheese Croissant",cls:"Plow Horse",avgShare:1.652,trendPct:19,r2:0.907,mom:26.2,cv:45.6,dir:"Growing"},
+  {spu:"PR000022",name:"Coconut Latte (Hot)",cls:"Plow Horse",avgShare:2.52,trendPct:30.7,r2:0.931,mom:41.1,cv:72.8,dir:"Growing"},
+  {spu:"PR000074",name:"Kyoto Matcha Coconut (Hot)",cls:"Plow Horse",avgShare:1.157,trendPct:22.5,r2:0.788,mom:28,cv:43.3,dir:"Growing"},
+  {spu:"PR000083",name:"Iced Pumpkin Spice Latte",cls:"Puzzle",avgShare:1.475,trendPct:-47.1,r2:0.778,mom:-81.1,cv:75.5,dir:"Declining"},
+  {spu:"PR000090",name:"Iced Toffee Hazelnut Latte",cls:"Plow Horse",avgShare:2.291,trendPct:-43.1,r2:1,mom:-53,cv:35.2,dir:"Declining"},
+  {spu:"PR000043",name:"Mango Coconut Sunrise",cls:"Plow Horse",avgShare:1.662,trendPct:-20.8,r2:0.297,mom:-24.8,cv:87.5,dir:"Declining"},
+  {spu:"PR000088",name:"Iced Creme Brulee Latte",cls:"Dog",avgShare:1.804,trendPct:-5.3,r2:0.027,mom:-24.3,cv:35.8,dir:"Declining"},
+  {spu:"PR000033",name:"Pineapple Cold Brew",cls:"Plow Horse",avgShare:2.005,trendPct:-17,r2:0.252,mom:-29.2,cv:77.5,dir:"Declining"},
+  {spu:"PR000027",name:"Iced Matcha Latte",cls:"Plow Horse",avgShare:3.735,trendPct:-16,r2:0.226,mom:-34.8,cv:90.8,dir:"Declining"},
+  {spu:"PR000030",name:"Iced Matcha Coconut Latte",cls:"Plow Horse",avgShare:2.921,trendPct:-18.5,r2:0.144,mom:-100,cv:118,dir:"Declining"},
+  {spu:"PR000073",name:"Iced Kyoto Matcha Coconut",cls:"Plow Horse",avgShare:3.628,trendPct:-13.1,r2:0.208,mom:-31.9,cv:49.3,dir:"Declining"},
+  {spu:"PR000031",name:"Cold Brew",cls:"Plow Horse",avgShare:3.108,trendPct:2.2,r2:0.017,mom:-15.2,cv:38.9,dir:"Stable"},
+  {spu:"PR000086",name:"Iced Spanish Latte",cls:"Puzzle",avgShare:1.701,trendPct:4.4,r2:0.025,mom:-8.5,cv:31.2,dir:"Stable"},
+  {spu:"PR000050",name:"Mango Pomelo Sago",cls:"Puzzle",avgShare:1.349,trendPct:-2.8,r2:0.018,mom:-12.7,cv:48.4,dir:"Stable"},
+  {spu:"PR000084",name:"Pumpkin Spice Latte (Hot)",cls:"Puzzle",avgShare:1.299,trendPct:-7.9,r2:0.052,mom:-51,cv:48.9,dir:"Declining"},
+  {spu:"PR000045",name:"Iced Coconut Velvet Latte",cls:"Puzzle",avgShare:1.272,trendPct:-17.6,r2:0.262,mom:-44.9,cv:78.8,dir:"Declining"},
+  {spu:"PR000036",name:"Green Cold Brew",cls:"Dog",avgShare:0.95,trendPct:-2.5,r2:0.016,mom:-5.5,cv:45.3,dir:"Stable"},
+  {spu:"PR000032",name:"Blood Orange Cold Brew",cls:"Dog",avgShare:0.788,trendPct:-1.5,r2:0.008,mom:-6.6,cv:40,dir:"Stable"},
+  {spu:"PR000025",name:"Iced Chocolate",cls:"Puzzle",avgShare:0.332,trendPct:-4.8,r2:0.09,mom:-35.4,cv:36.6,dir:"Stable"},
+  {spu:"PR000075",name:"Kyoto Matcha Smoothie",cls:"Dog",avgShare:1.06,trendPct:-5.8,r2:0.064,mom:-26.9,cv:39.4,dir:"Declining"},
+  {spu:"PR000070",name:"Iced Matcha Coconut Water",cls:"Dog",avgShare:0.728,trendPct:-7.6,r2:0.078,mom:-45.1,cv:46.2,dir:"Declining"},
+  {spu:"PR000051",name:"Dreamy Strawberry",cls:"Dog",avgShare:0.713,trendPct:-7.7,r2:0.111,mom:9.6,cv:53.3,dir:"Declining"},
+  {spu:"PR000041",name:"Strawberry Refresher",cls:"Dog",avgShare:0.702,trendPct:-12.9,r2:0.185,mom:16.7,cv:68.7,dir:"Declining"},
+  {spu:"PR000069",name:"Sunny Citrus",cls:"Dog",avgShare:0.69,trendPct:-20,r2:0.812,mom:-27.2,cv:31.4,dir:"Declining"},
+  {spu:"PR000068",name:"Zen Berry",cls:"Dog",avgShare:0.674,trendPct:-20.8,r2:0.523,mom:-10,cv:40.7,dir:"Declining"},
+  {spu:"PR000048",name:"Smoothie",cls:"Puzzle",avgShare:0.647,trendPct:-6.5,r2:0.101,mom:-3.8,cv:46.4,dir:"Declining"},
+  {spu:"PR000042",name:"Pineapple Refresher",cls:"Dog",avgShare:0.638,trendPct:-13.1,r2:0.214,mom:-19.4,cv:64.8,dir:"Declining"},
+  {spu:"PR000044",name:"Grapefruit Mango Drink",cls:"Dog",avgShare:0.633,trendPct:-15.4,r2:0.291,mom:-41.4,cv:65.6,dir:"Declining"},
+  {spu:"PR000017",name:"Iced Latte (Flat White)",cls:"Puzzle",avgShare:0.572,trendPct:-5.7,r2:0.078,mom:-29,cv:46.8,dir:"Declining"},
+  {spu:"PR000034",name:"Raspberry Cold Brew",cls:"Dog",avgShare:0.332,trendPct:-10,r2:0.16,mom:-13.6,cv:57.6,dir:"Declining"},
+  {spu:"PR000020",name:"Iced Flat White",cls:"Puzzle",avgShare:0.291,trendPct:-12.1,r2:0.272,mom:-34.5,cv:53.2,dir:"Declining"},
+  {spu:"PR000108",name:"Iced Pistachio Matcha Coconut",cls:"Dog",avgShare:null,trendPct:null,r2:null,mom:null,cv:null,dir:null},
+  {spu:"PR000109",name:"Pistachio Matcha Coconut (Hot)",cls:"Dog",avgShare:null,trendPct:null,r2:null,mom:null,cv:null,dir:null},
+  {spu:"PR000110",name:"Iced Pistachio Oat Latte",cls:"Dog",avgShare:null,trendPct:null,r2:null,mom:null,cv:null,dir:null},
+  {spu:"PR000111",name:"Pistachio Oat Latte (Hot)",cls:"Dog",avgShare:null,trendPct:null,r2:null,mom:null,cv:null,dir:null}
+];
+
+// Monthly sales raw data
+const monthlySales = {};
+const msRaw = `PR000005,2025-06,25600,64334.98|PR000005,2025-07,495,1192.84|PR000005,2025-08,625,1509.9|PR000005,2025-09,1436,3563.72|PR000005,2025-10,2162,5236.78|PR000005,2025-11,1774,4356.45|PR000005,2025-12,2429,5882.44|PR000005,2026-01,4175,9651.53|PR000006,2025-07,943,2638.93|PR000006,2025-08,925,2691.85|PR000006,2025-09,1665,4891.42|PR000006,2025-10,1686,4949.44|PR000006,2025-11,1229,3661.97|PR000006,2025-12,1319,3956.61|PR000006,2026-01,1387,4148.21|PR000014,2025-07,287,812.66|PR000014,2025-08,290,835.11|PR000014,2025-09,714,2310.94|PR000014,2025-10,1253,3649.21|PR000014,2025-11,1693,4745.8|PR000014,2025-12,2680,7637.45|PR000014,2026-01,2342,7366.12|PR000015,2025-07,2116,6624.68|PR000015,2025-08,3294,10525.09|PR000015,2025-09,4457,14799.36|PR000015,2025-10,3519,12092.48|PR000015,2025-11,2418,8394.74|PR000015,2025-12,2603,9995.43|PR000015,2026-01,3092,11494.82|PR000016,2025-07,441,1377.84|PR000016,2025-08,1154,3609.43|PR000016,2025-09,2313,7326.43|PR000016,2025-10,3740,11965.84|PR000016,2025-11,4046,12851.58|PR000016,2025-12,6371,21250.59|PR000016,2026-01,6658,22218.88|PR000018,2025-07,255,814.08|PR000018,2025-08,468,1480.16|PR000018,2025-09,945,3072.05|PR000018,2025-10,1454,4907.11|PR000018,2025-11,1556,5107.81|PR000018,2025-12,2538,8568.74|PR000018,2026-01,2321,7942.19|PR000021,2025-06,606,1209.89|PR000021,2025-07,11423,32756.85|PR000021,2025-08,10336,32334.34|PR000021,2025-09,13238,45136.14|PR000021,2025-10,9754,34927.34|PR000021,2025-11,6653,22726.8|PR000021,2025-12,7181,23342.85|PR000021,2026-01,7019,23785.68|PR000022,2025-07,296,907.12|PR000022,2025-08,515,1624.01|PR000022,2025-09,1262,4048.25|PR000022,2025-10,2449,8150.94|PR000022,2025-11,3009,9809.99|PR000022,2025-12,4898,16011.96|PR000022,2026-01,4175,14029.36|PR000023,2025-07,3289,9640.54|PR000023,2025-08,3472,11175.93|PR000023,2025-09,5479,19296.52|PR000023,2025-10,3848,14356.48|PR000023,2025-11,2325,8366.71|PR000023,2025-12,2754,11095.69|PR000023,2026-01,2707,10171.67|PR000024,2025-07,125,376.7|PR000024,2025-08,311,1005.47|PR000024,2025-09,877,2855.66|PR000024,2025-10,1438,4989.89|PR000024,2025-11,1512,5189.25|PR000024,2025-12,2714,10230.51|PR000024,2026-01,2441,9063.46|PR000031,2025-07,1839,5319.93|PR000031,2025-08,2208,6854.55|PR000031,2025-09,3556,11218.86|PR000031,2025-10,2799,9023.68|PR000031,2025-11,2234,7164.89|PR000031,2025-12,2186,6876.03|PR000031,2026-01,2798,8901.54|PR000063,2025-07,541,2467.92|PR000063,2025-08,787,3641.49|PR000063,2025-09,1143,6583.35|PR000063,2025-10,1476,8487.6|PR000063,2025-11,1647,8275.45|PR000063,2025-12,2261,10730.64|PR000063,2026-01,2374,11273.16|PR000071,2025-08,1322,4242.76|PR000071,2025-09,8572,30081.02|PR000071,2025-10,7581,27776.11|PR000071,2025-11,5423,18989.46|PR000071,2025-12,5729,19089|PR000071,2026-01,5465,18027.81|PR000072,2025-08,130,447.61|PR000072,2025-09,984,3268.51|PR000072,2025-10,2046,7249.79|PR000072,2025-11,2573,8713.7|PR000072,2025-12,3973,13071.65|PR000072,2026-01,3400,11399.12|PR000073,2025-08,1302,4385.94|PR000073,2025-09,5777,20577.75|PR000073,2025-10,3402,12662.47|PR000073,2025-11,2206,7845.43|PR000073,2025-12,2343,8118.67|PR000073,2026-01,2102,7155.18|PR000080,2025-10,5319,21201.42|PR000080,2025-11,2454,8810.47|PR000080,2025-12,2392,8294.49|PR000080,2026-01,2236,7934.3|PR000087,2025-10,791,2784.32|PR000087,2025-11,2293,7674.03|PR000087,2025-12,2799,9553.26|PR000087,2026-01,2130,7583.99|PR000091,2025-11,2802,9339.32|PR000091,2025-12,3583,11822.78|PR000091,2026-01,1721,5885.67|PR000039,2025-07,1662,4971.95|PR000039,2025-08,1575,5186.9|PR000039,2025-09,1819,7326.17|PR000039,2025-10,916,3380.69|PR000039,2025-11,886,2928.19|PR000039,2025-12,1093,3788.44|PR000039,2026-01,1170,4415.46|PR000043,2025-07,2245,6415.53|PR000043,2025-08,1724,5309.78|PR000043,2025-09,1369,4295.48|PR000043,2025-10,879,2826.54|PR000043,2025-11,454,1473.16|PR000043,2025-12,622,1949.58|PR000043,2026-01,540,1747.2|PR000076,2025-09,605,3510.07|PR000076,2025-10,800,4646.4|PR000076,2025-11,742,3710.71|PR000076,2025-12,1110,5293.55|PR000076,2026-01,1127,5369.1|PR000077,2025-09,692,3808.66|PR000077,2025-10,846,4657.14|PR000077,2025-11,852,4046.65|PR000077,2025-12,1168,5325.64|PR000077,2026-01,999,4559.64|PR000026,2025-07,21,63.41|PR000026,2025-08,75,257.79|PR000026,2025-09,129,394.87|PR000026,2025-10,731,2216.88|PR000026,2025-11,1018,3001.04|PR000026,2025-12,1986,6314.22|PR000026,2026-01,1252,4000.38|PR000081,2025-10,1683,5916.23|PR000081,2025-11,1261,4165.07|PR000081,2025-12,1867,6380.13|PR000081,2026-01,1579,5559.54|PR000086,2025-10,846,3137.57|PR000086,2025-11,1899,6678.86|PR000086,2025-12,1551,5722.39|PR000086,2026-01,1441,5705.41|PR000089,2025-10,785,2860.97|PR000089,2025-11,2127,7032.01|PR000089,2025-12,2774,9676.36|PR000089,2026-01,1720,5983.01|PR000033,2025-07,2493,7145.34|PR000033,2025-08,1846,5695.98|PR000033,2025-09,1988,6386.86|PR000033,2025-10,1139,3857.5|PR000033,2025-11,788,2619.19|PR000033,2025-12,862,2784.17|PR000033,2026-01,727,2326.82|PR000090,2025-11,2478,8739.42|PR000090,2025-12,2097,7289.32|PR000090,2026-01,1206,4315.56|PR000074,2025-09,683,2326.33|PR000074,2025-10,955,3374.05|PR000074,2025-11,1047,3431.82|PR000074,2025-12,1676,5570.76|PR000074,2026-01,1335,4682.56|PR000050,2025-07,888,2584.83|PR000050,2025-08,1362,4227.43|PR000050,2025-09,1295,4341.34|PR000050,2025-10,940,3182.15|PR000050,2025-11,923,2881.69|PR000050,2025-12,983,3203.31|PR000050,2026-01,924,3138.88|PR000079,2025-09,323,1695.75|PR000079,2025-10,447,2346.75|PR000079,2025-11,388,1761.17|PR000079,2025-12,602,2663.88|PR000079,2026-01,674,2967.3|PR000078,2025-09,319,1704.43|PR000078,2025-10,372,1981.62|PR000078,2025-11,387,1798.09|PR000078,2025-12,455,2036.08|PR000078,2026-01,456,2026.23`;
+msRaw.split('|').forEach(r => {
+  const [spu,m,q,v] = r.split(',');
+  if(!monthlySales[spu]) monthlySales[spu] = [];
+  monthlySales[spu].push({month:m, qty:+q, rev:+v});
+});
+
+const affinityPairs = [
+  {a:"Zen Berry",b:"Sunny Citrus",co:449,lift:19.98,cm:3.39,cross:"N"},
+  {a:"Vital Kale",b:"Zen Berry",co:400,lift:6.55,cm:3.47,cross:"N"},
+  {a:"Vital Kale",b:"Sunny Citrus",co:414,lift:5.94,cm:3.68,cross:"N"},
+  {a:"Almond Croissant",b:"Chocolate Croissant",co:275,lift:5.36,cm:5.08,cross:"N"},
+  {a:"Mango Pomelo Sago",b:"Dreamy Strawberry",co:252,lift:4.10,cm:3.74,cross:"N"},
+  {a:"Sausage Egg Cheese Crois.",b:"Chocolate Croissant",co:363,lift:3.18,cm:5.04,cross:"N"},
+  {a:"Sausage Egg Cheese Crois.",b:"Almond Croissant",co:313,lift:2.78,cm:4.88,cross:"N"},
+  {a:"Cappuccino (Hot)",b:"Almond Croissant",co:244,lift:2.29,cm:5.08,cross:"Y"},
+  {a:"Hot Chocolate",b:"Sausage Egg Cheese Crois.",co:241,lift:1.94,cm:4.67,cross:"Y"},
+  {a:"Sausage Egg Cheese Crois.",b:"Iced Spanish Latte",co:266,lift:1.83,cm:4.91,cross:"Y"},
+  {a:"Creme Brulee Latte (Hot)",b:"Toffee Hazelnut Latte",co:248,lift:1.69,cm:3.95,cross:"N"},
+  {a:"Mango Coconut Sunrise",b:"Mango Pomelo Sago",co:220,lift:1.62,cm:3.67,cross:"N"},
+  {a:"Sausage Egg Cheese Crois.",b:"Iced Toffee Hazelnut",co:232,lift:1.62,cm:4.12,cross:"Y"},
+  {a:"Sausage Egg Cheese Crois.",b:"Caramel Popcorn (Hot)",co:257,lift:1.59,cm:4.58,cross:"Y"},
+  {a:"Sausage Egg Cheese Crois.",b:"Iced Creme Brulee",co:234,lift:1.58,cm:4.01,cross:"Y"},
+  {a:"Sausage Egg Cheese Crois.",b:"Creme Brulee (Hot)",co:271,lift:1.47,cm:4.29,cross:"Y"},
+  {a:"Latte (Hot)",b:"Almond Croissant",co:406,lift:1.46,cm:4.90,cross:"Y"},
+  {a:"Sausage Egg Cheese Crois.",b:"Iced Caramel Popcorn",co:424,lift:1.41,cm:4.65,cross:"Y"},
+  {a:"Coconut Latte (Hot)",b:"Almond Croissant",co:249,lift:1.34,cm:3.96,cross:"Y"},
+  {a:"Sausage Egg Cheese Crois.",b:"Spanish Latte (Hot)",co:272,lift:1.34,cm:4.57,cross:"Y"},
+  {a:"Pineapple Cold Brew",b:"Mango Coconut Sunrise",co:231,lift:1.32,cm:2.29,cross:"N"},
+  {a:"Sausage Egg Cheese Crois.",b:"Toffee Hazelnut (Hot)",co:242,lift:1.21,cm:4.50,cross:"Y"},
+  {a:"Latte (Hot)",b:"Chocolate Croissant",co:334,lift:1.19,cm:5.06,cross:"Y"},
+  {a:"Iced Kyoto Matcha",b:"Chocolate Croissant",co:437,lift:1.16,cm:4.17,cross:"Y"},
+  {a:"Iced Latte",b:"Chocolate Croissant",co:256,lift:1.10,cm:5.38,cross:"Y"},
+  {a:"Iced Velvet Latte",b:"Sausage Egg Cheese Crois.",co:579,lift:1.03,cm:4.65,cross:"Y"},
+  {a:"Sausage Egg Cheese Crois.",b:"Kyoto Matcha (Hot)",co:337,lift:1.01,cm:4.37,cross:"Y"},
+  {a:"Coconut Latte (Hot)",b:"Sausage Egg Cheese Crois.",co:413,lift:1.00,cm:3.92,cross:"Y"}
+];
+
+// ==================== TAB NAVIGATION ====================
+function showTab(id) {
+  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  event.target.classList.add('active');
+  if(id==='trends' && !window._trendsInit) { initTrends(); window._trendsInit=true; }
+  if(id==='affinity' && !window._affInit) { initAffinity(); window._affInit=true; }
+  if(id==='actions' && !window._actInit) { initActions(); window._actInit=true; }
+}
+
+// ==================== HELPERS ====================
+const clsColor = c => ({Star:'#e74c3c','Plow Horse':'#3498db',Puzzle:'#f39c12',Dog:'#95a5a6',Uncosted:'#bdc3c7'}[c]||'#bdc3c7');
+const fmt$ = v => v>=1e6?'$'+(v/1e6).toFixed(2)+'M':v>=1e3?'$'+(v/1e3).toFixed(1)+'K':'$'+v.toFixed(2);
+const fmtN = v => v>=1e3?(v/1e3).toFixed(1)+'K':v.toString();
+
+// Merge products with trends
+products.forEach(p => {
+  const t = trends.find(t => t.spu === p.spu);
+  if(t) { p.dir = t.dir; p.trendPct = t.trendPct; p.mom = t.mom; p.avgShare = t.avgShare; p.cv = t.cv; }
+});
+
+// ==================== OVERVIEW CHARTS ====================
+function initOverview() {
+  // Classification distribution
+  const clsCounts = {Star:14,'Plow Horse':11,Puzzle:16,Dog:17,Uncosted:25};
+  new Chart(document.getElementById('chartClassDist'),{type:'doughnut',data:{
+    labels:Object.keys(clsCounts),datasets:[{data:Object.values(clsCounts),
+    backgroundColor:Object.keys(clsCounts).map(clsColor),borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}
+  });
+  // Revenue by classification
+  const clsRev = {};
+  products.forEach(p => { clsRev[p.cls] = (clsRev[p.cls]||0) + p.rev; });
+  new Chart(document.getElementById('chartRevClass'),{type:'bar',data:{
+    labels:Object.keys(clsRev),datasets:[{data:Object.values(clsRev).map(v=>v/1000),
+    backgroundColor:Object.keys(clsRev).map(clsColor),borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{y:{title:{display:true,text:'Revenue ($K)'},beginAtZero:true},x:{ticks:{font:{size:11}}}}}
+  });
+  // Trend direction
+  new Chart(document.getElementById('chartTrendDir'),{type:'doughnut',data:{
+    labels:['Growing (27)','Stable (10)','Declining (29)'],datasets:[{data:[27,10,29],
+    backgroundColor:['#27ae60','#f39c12','#c0392b'],borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}
+  });
+  // Trend x Classification stacked bar
+  new Chart(document.getElementById('chartTrendClass'),{type:'bar',data:{
+    labels:['Star','Plow Horse','Puzzle','Dog'],datasets:[
+      {label:'Growing',data:[6,3,7,1],backgroundColor:'#27ae60'},
+      {label:'Stable',data:[3,2,3,2],backgroundColor:'#f39c12'},
+      {label:'Declining',data:[5,6,6,10],backgroundColor:'#c0392b'}
+    ]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}},
+    plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}
+  });
+  // Monthly orders
+  const months = ['2025-06','2025-07','2025-08','2025-09','2025-10','2025-11','2025-12','2026-01'];
+  const monthlyTotals = months.map(m => {
+    let t = 0;
+    Object.values(monthlySales).forEach(arr => { arr.forEach(r => { if(r.month===m) t+=r.qty; }); });
+    return t;
+  });
+  new Chart(document.getElementById('chartMonthlyOrders'),{type:'bar',data:{
+    labels:months.map(m=>m.replace('2025-','').replace('2026-','Jan ')),
+    datasets:[{label:'Orders',data:monthlyTotals,backgroundColor:'#3498db',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{y:{title:{display:true,text:'Orders'},beginAtZero:true}}}
+  });
+}
+
+// ==================== BCG MATRIX ====================
+let bcgChart;
+function initBCG() {
+  const datasets = {};
+  products.forEach(p => {
+    if(!datasets[p.cls]) datasets[p.cls] = {label:p.cls,data:[],backgroundColor:clsColor(p.cls)+'cc',borderColor:clsColor(p.cls),pointRadius:[],names:[]};
+    datasets[p.cls].data.push({x:p.mix,y:p.cmPct});
+    datasets[p.cls].pointRadius.push(Math.max(4, Math.sqrt(p.rev/500)));
+    datasets[p.cls].names.push(p.name);
+  });
+  bcgChart = new Chart(document.getElementById('chartBCG'),{type:'scatter',data:{datasets:Object.values(datasets).map(ds=>({
+    ...ds,pointRadius:ds.pointRadius,pointHoverRadius:ds.pointRadius.map(r=>r+3)
+  }))},options:{
+    responsive:true,maintainAspectRatio:false,
+    scales:{
+      x:{title:{display:true,text:'Sales Mix % (Popularity)'},min:0,max:14,grid:{color:'#f0f0f0'}},
+      y:{title:{display:true,text:'Contribution Margin %'},min:-5,max:90,grid:{color:'#f0f0f0'}}
+    },
+    plugins:{
+      tooltip:{callbacks:{label:function(ctx){
+        const ds=ctx.dataset;const i=ctx.dataIndex;
+        return `${ds.names[i]}: Mix ${ctx.parsed.x.toFixed(1)}%, CM ${ctx.parsed.y.toFixed(1)}%`;
+      }}},
+      annotation:{annotations:{
+        hLine:{type:'line',yMin:56.8,yMax:56.8,borderColor:'#666',borderDash:[5,5],borderWidth:1,label:{content:'CM% avg = 56.8%',display:true,position:'start',font:{size:10}}},
+        vLine:{type:'line',xMin:1.21,xMax:1.21,borderColor:'#666',borderDash:[5,5],borderWidth:1,label:{content:'Pop. threshold = 1.21%',display:true,position:'start',font:{size:10}}}
+      }}
+    }
+  }});
+}
+function filterBCG(cat, btn) {
+  document.querySelectorAll('[data-cat]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  bcgChart.data.datasets.forEach(ds => {
+    // Rebuild with filter — simplified: show/hide
+  });
+  if(cat==='all') { bcgChart.data.datasets.forEach(ds=>{ ds.hidden=false; }); }
+  else {
+    bcgChart.data.datasets.forEach(ds => {
+      const prods = products.filter(p=>p.cls===ds.label);
+      ds.hidden = !prods.some(p=>p.cat===cat);
+    });
+  }
+  bcgChart.update();
+}
+
+// ==================== PRODUCT EXPLORER ====================
+let currentClsFilter = 'all';
+let sortCol = 3, sortAsc = false;
+function buildTable() {
+  const search = (document.getElementById('searchInput').value||'').toLowerCase();
+  let rows = products.map(p => {
+    const t = trends.find(t=>t.spu===p.spu);
+    return {...p, dir:t?t.dir:'—', trendPct:t?t.trendPct:null, mom:t?t.mom:null};
+  });
+  if(currentClsFilter!=='all') rows=rows.filter(r=>r.cls===currentClsFilter);
+  if(search) rows=rows.filter(r=>r.name.toLowerCase().includes(search));
+  // Sort
+  rows.sort((a,b)=>{
+    let va,vb;
+    switch(sortCol){
+      case 0: va=a.name;vb=b.name;return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
+      case 1: va=a.cat;vb=b.cat;return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
+      case 2: va=a.cls;vb=b.cls;return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
+      case 3: va=a.qty;vb=b.qty;break;
+      case 4: va=a.rev;vb=b.rev;break;
+      case 5: va=a.cmPct;vb=b.cmPct;break;
+      case 6: va=a.mix;vb=b.mix;break;
+      case 7: va=a.dir||'';vb=b.dir||'';return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
+      case 8: va=a.trendPct||0;vb=b.trendPct||0;break;
+      case 9: va=a.mom||0;vb=b.mom||0;break;
+    }
+    return sortAsc?(va-vb):(vb-va);
+  });
+  const tbody = document.getElementById('productBody');
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td><b>${r.name}</b><br><span style="font-size:11px;color:#888">${r.spu}</span></td>
+    <td>${r.cat.replace('beverage_','').replace('_',' ')}</td>
+    <td><span class="cls-badge cls-${r.cls.split(' ')[0]}">${r.cls}</span></td>
+    <td>${fmtN(r.qty)}</td>
+    <td>${fmt$(r.rev)}</td>
+    <td>${r.cmPct.toFixed(1)}%</td>
+    <td>${r.mix.toFixed(2)}%</td>
+    <td><span class="dir-${r.dir||''}">${r.dir||'—'}</span></td>
+    <td>${r.trendPct!=null?(r.trendPct>0?'+':'')+r.trendPct.toFixed(1)+'%':'—'}</td>
+    <td>${r.mom!=null?(r.mom>0?'+':'')+r.mom.toFixed(0)+'%':'—'}</td>
+  </tr>`).join('');
+}
+function filterCls(cls, btn) {
+  currentClsFilter=cls;
+  document.querySelectorAll('[data-cls]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  buildTable();
+}
+function filterTable() { buildTable(); }
+function sortTable(col) {
+  if(sortCol===col) sortAsc=!sortAsc; else { sortCol=col; sortAsc=false; }
+  buildTable();
+}
+
+// ==================== TRENDS ====================
+let trendChart, shareChart, momChart;
+function initTrends() {
+  const sel = document.getElementById('trendSelect');
+  const spus = Object.keys(monthlySales).sort((a,b) => {
+    const qa = monthlySales[a].reduce((s,r)=>s+r.qty,0);
+    const qb = monthlySales[b].reduce((s,r)=>s+r.qty,0);
+    return qb-qa;
+  });
+  spus.forEach(spu => {
+    const p = products.find(p=>p.spu===spu) || {name:spu};
+    const opt = document.createElement('option');
+    opt.value = spu; opt.textContent = p.name + ' (' + spu + ')';
+    sel.appendChild(opt);
+  });
+  drawTrendChart();
+  drawShareTrend();
+  drawMomentumChart();
+}
+function drawTrendChart() {
+  const spu = document.getElementById('trendSelect').value;
+  const data = monthlySales[spu] || [];
+  if(trendChart) trendChart.destroy();
+  const p = products.find(p=>p.spu===spu) || {name:spu};
+  trendChart = new Chart(document.getElementById('chartTrend'),{type:'bar',data:{
+    labels:data.map(d=>d.month),datasets:[
+      {type:'bar',label:'Quantity',data:data.map(d=>d.qty),backgroundColor:'#3498dbaa',borderRadius:4,yAxisID:'y'},
+      {type:'line',label:'Revenue ($)',data:data.map(d=>d.rev),borderColor:'#e74c3c',backgroundColor:'#e74c3c22',fill:true,tension:0.3,yAxisID:'y1'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:p.name+' — Monthly Sales',font:{size:14}}},
+    scales:{y:{beginAtZero:true,position:'left',title:{display:true,text:'Quantity'}},
+    y1:{beginAtZero:true,position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'Revenue ($)'}}}}
+  });
+}
+function drawShareTrend() {
+  const months = ['2025-07','2025-08','2025-09','2025-10','2025-11','2025-12','2026-01'];
+  const topSpus = ['PR000021','PR000071','PR000016','PR000023','PR000015','PR000072','PR000022','PR000031','PR000063','PR000018'];
+  const colors = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#34495e','#c0392b','#2980b9'];
+  const monthTotals = {};
+  months.forEach(m => {
+    let t = 0;
+    Object.values(monthlySales).forEach(arr => arr.forEach(r => { if(r.month===m) t+=r.qty; }));
+    monthTotals[m] = t;
+  });
+  const datasets = topSpus.map((spu,i) => {
+    const p = products.find(p=>p.spu===spu) || {name:spu};
+    return {label:p.name,data:months.map(m => {
+      const d = (monthlySales[spu]||[]).find(r=>r.month===m);
+      return d ? (d.qty/monthTotals[m]*100) : 0;
+    }),borderColor:colors[i],backgroundColor:colors[i]+'22',fill:false,tension:0.3,pointRadius:3};
+  });
+  shareChart = new Chart(document.getElementById('chartShareTrend'),{type:'line',data:{labels:months,datasets},
+    options:{responsive:true,maintainAspectRatio:false,scales:{y:{title:{display:true,text:'Market Share %'},beginAtZero:true}},
+    plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:12}}}}
+  });
+}
+function drawMomentumChart() {
+  const sorted = trends.filter(t=>t.mom!=null).sort((a,b)=>b.mom-a.mom);
+  const top = sorted.slice(0,10);
+  const bottom = sorted.slice(-10).reverse();
+  const all = [...top,...bottom];
+  momChart = new Chart(document.getElementById('chartMomentum'),{type:'bar',data:{
+    labels:all.map(t=>t.name.substring(0,20)),datasets:[{data:all.map(t=>t.mom),
+    backgroundColor:all.map(t=>t.mom>0?'#27ae60aa':'#c0392baa'),borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+    title:{display:true,text:'4-Week Momentum: Market Share Change %',font:{size:13}}},
+    scales:{x:{title:{display:true,text:'Momentum %'}}}}
+  });
+}
+
+// ==================== AFFINITY ====================
+function initAffinity() {
+  // Top 15 by lift
+  const top15 = affinityPairs.slice(0,15);
+  new Chart(document.getElementById('chartLift'),{type:'bar',data:{
+    labels:top15.map(p=>p.a.substring(0,15)+' + '+p.b.substring(0,15)),
+    datasets:[{label:'Lift',data:top15.map(p=>p.lift),backgroundColor:top15.map(p=>p.cross==='Y'?'#27ae60aa':'#3498dbaa'),borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{title:{display:true,text:'Lift Ratio'},beginAtZero:true}}}
+  });
+  // Cross-category
+  const crossPairs = affinityPairs.filter(p=>p.cross==='Y').slice(0,15);
+  new Chart(document.getElementById('chartCrossCat'),{type:'bar',data:{
+    labels:crossPairs.map(p=>p.a.substring(0,15)+' + '+p.b.substring(0,15)),
+    datasets:[
+      {label:'Lift',data:crossPairs.map(p=>p.lift),backgroundColor:'#27ae60aa',borderRadius:4},
+      {label:'CM$/pair',data:crossPairs.map(p=>p.cm),backgroundColor:'#f39c12aa',borderRadius:4}
+    ]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},
+    scales:{x:{beginAtZero:true}}}
+  });
+  // Table
+  const tbody = document.getElementById('affinityBody');
+  tbody.innerHTML = affinityPairs.map(p => `<tr>
+    <td>${p.a}</td><td>${p.b}</td><td>${p.co.toLocaleString()}</td>
+    <td><b>${p.lift.toFixed(2)}</b></td><td>$${p.cm.toFixed(2)}</td>
+    <td>${p.cross==='Y'?'&#10003;':''}</td>
+  </tr>`).join('');
+}
+
+// ==================== STRATEGIC ACTIONS ====================
+function initActions() {
+  // Watch list - declining stars
+  const watchItems = [
+    {name:'Drip Coffee',detail:'Share declining at -52.3%/month — highest volume Star, investigate root cause (possible data artifact from June spike)'},
+    {name:'Iced Caramel Popcorn Latte',detail:'Share declining at -34.9%/month — seasonal launch fading, consider reformulation or seasonal rotation'},
+    {name:'Toffee Hazelnut Latte (Hot)',detail:'Share declining at -29.2%/month — 3 months data, monitor through spring'},
+    {name:'Vital Kale',detail:'Share declining at -8.2%/month — bottle segment under pressure from matcha variants'},
+    {name:'Iced Coconut Latte',detail:'Share declining at -7.8%/month — #1 SKU by volume, watch closely'}
+  ];
+  document.getElementById('watchList').innerHTML = watchItems.map(w =>
+    `<div class="insight-card watch"><div class="insight-title">${w.name}</div><div class="insight-detail">${w.detail}</div></div>`
+  ).join('');
+
+  // Promotion candidates - growing puzzles
+  const promoItems = [
+    {name:'Hot Chocolate',detail:'+35.9%/mo share growth, 69.9% CM — strong seasonal momentum, promote to Star via app featuring'},
+    {name:'Chocolate Chip Cookies',detail:'+25.6%/mo, 64.4% CM — food item with cross-sell potential (pairs with hot lattes)'},
+    {name:'Almond Croissant',detail:'+23.9%/mo, 56.9% CM — breakfast staple growing, pair with Cappuccino (lift 2.29)'},
+    {name:'Caramel Popcorn Latte (Hot)',detail:'+22.7%/mo, 58.7% CM — pair with Sausage Croissant (lift 1.59) for breakfast bundle'},
+    {name:'Chocolate Croissant',detail:'+20.6%/mo, 61.2% CM — growing food item, cross-sell with Latte Hot (lift 1.19)'},
+    {name:'Double Chocolate Muffin',detail:'+19.3%/mo, 54.8% CM — steady growth, expand food visibility'},
+    {name:'Creme Brulee Latte (Hot)',detail:'+13.4%/mo, 54.8% CM — seasonal favorite gaining traction'}
+  ];
+  document.getElementById('promoteList').innerHTML = promoItems.map(w =>
+    `<div class="insight-card promote"><div class="insight-title">${w.name}</div><div class="insight-detail">${w.detail}</div></div>`
+  ).join('');
+
+  // Bundle recommendations
+  const bundles = [
+    {name:'Breakfast Classic',items:'Cappuccino + Almond Croissant',lift:2.29,cm:'$5.08',action:'App bundle, 10% off combo'},
+    {name:'Breakfast Power',items:'Hot Chocolate + Sausage Egg Cheese',lift:1.94,cm:'$4.67',action:'Morning push notification'},
+    {name:'International Breakfast',items:'Iced Spanish Latte + Sausage Egg Cheese',lift:1.83,cm:'$4.91',action:'App bundle, featured placement'},
+    {name:'Seasonal Duo',items:'Creme Brulee + Toffee Hazelnut (Hot)',lift:1.69,cm:'$3.95',action:'"Add seasonal pair" prompt'},
+    {name:'Toffee Breakfast',items:'Iced Toffee Hazelnut + Sausage Egg Cheese',lift:1.62,cm:'$4.12',action:'Cross-sell at checkout'},
+    {name:'Bottle Multi-Buy',items:'Zen Berry + Sunny Citrus',lift:19.98,cm:'$3.39',action:'2-for-$X bottle deal (highest lift)'}
+  ];
+  document.getElementById('bundleList').innerHTML = bundles.map(b =>
+    `<div class="insight-card bundle">
+      <div class="insight-title">${b.name}</div>
+      <div class="insight-detail"><b>${b.items}</b><br>Lift: ${b.lift.toFixed(1)} | CM: ${b.cm}<br>${b.action}</div>
+    </div>`
+  ).join('');
+
+  // Volatile items
+  const volatileItems = [
+    {name:'Drip Coffee',detail:'CV 218% — extreme volatility from June spike, needs investigation'},
+    {name:'Iced Matcha Coconut Latte',detail:'CV 118% — highly seasonal, only sold Jun-Aug + one-offs'},
+    {name:'Hot Chocolate',detail:'CV 94% — strong winter seasonality, plan seasonal menu rotation'},
+    {name:'Iced Matcha Latte',detail:'CV 91% — summer peaked, declined sharply'},
+    {name:'Mango Coconut Sunrise',detail:'CV 88% — summer drink fading in winter, plan for summer return'}
+  ];
+  document.getElementById('volatileList').innerHTML = volatileItems.map(w =>
+    `<div class="insight-card watch"><div class="insight-title">${w.name}</div><div class="insight-detail">${w.detail}</div></div>`
+  ).join('');
+
+  // Emerging dogs
+  const emergingItems = [
+    {name:'Coconut Velvet Latte (Hot)',detail:'+25.0%/mo share growth, 44.9% CM — gaining momentum (+52%), may be too new; monitor'}
+  ];
+  document.getElementById('emergingList').innerHTML = emergingItems.map(w =>
+    `<div class="insight-card promote"><div class="insight-title">${w.name}</div><div class="insight-detail">${w.detail}</div></div>`
+  ).join('');
+}
+
+// ==================== INIT ====================
+initOverview();
+initBCG();
+buildTable();
+</script>
+</body>
+</html>
